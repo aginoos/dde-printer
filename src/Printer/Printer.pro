@@ -19,6 +19,7 @@ SOURCES += \
     util/dprintclass.cpp \
     util/ddestination.cpp \ 
     ui/dpropertysetdlg.cpp \
+    ui/custompagedialog.cpp \
     ui/installdriverwindow.cpp \
     ui/renameprinterwindow.cpp \
     ui/jobmanagerwindow.cpp \
@@ -49,6 +50,7 @@ HEADERS += \
     util/ddestination.h \
     util/dprintclass.h \   
     ui/dpropertysetdlg.h \
+    ui/custompagedialog.h \
     ui/installdriverwindow.h \
     ui/renameprinterwindow.h \
     ui/jobmanagerwindow.h \

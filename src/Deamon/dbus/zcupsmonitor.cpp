@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "zcupsmonitor.h"
+#include "smbauth.h"
 #include "zjobmanager.h"
 #include "cupsattrnames.h"
 #include "common.h"
@@ -150,6 +151,10 @@ CupsMonitor::CupsMonitor(QObject *parent)
 {
     m_subId = -1;
     m_seqNumber = -1;
+
+    // jobs held by Windows shares that need a password (queued: the signal comes from the worker thread)
+    auto *smbAuth = new SmbAuthHandler(this);
+    connect(this, &CupsMonitor::signalJobStateChanged, smbAuth, &SmbAuthHandler::onJobStateChanged);
 }
 
 CupsMonitor::~CupsMonitor()

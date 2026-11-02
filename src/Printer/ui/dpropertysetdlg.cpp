@@ -40,6 +40,7 @@
 #include "common.h"
 #include "custompagedialog.h"
 #include "safeprocess.h"
+#include "secretstore.h"
 
 #define FLAGITEMSPACE "\b\b\b\b\b\b\b\b"
 #define ITEMWIDTH 100
@@ -1169,7 +1170,11 @@ void DPropertySetDlg::printUriUI_EditFinished()
     if (pDest != nullptr) {
         if (DESTTYPE::PRINTER == pDest->getType()) {
             DPrinter *pPrinter = static_cast<DPrinter *>(pDest);
-            pPrinter->setPrinterUri(strVal);
+            // a password typed into an smb:// URI goes to the keyring, not into the printer settings
+            const QString storedUri = SecretStore::adoptUriCredentials(strVal);
+            if (storedUri != strVal)
+                pLineEdit->setText(storedUri);
+            pPrinter->setPrinterUri(storedUri);
         }
     }
 }

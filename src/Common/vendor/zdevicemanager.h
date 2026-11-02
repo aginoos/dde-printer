@@ -102,12 +102,6 @@ class RefreshDevicesByHostTask : public RefreshDevicesTask
 public:
     RefreshDevicesByHostTask(const QString &strHost, int id = TASK_RefreshNetDev, QObject *parent = nullptr);
 
-signals:
-    //必须以Qt::BlockingQueuedConnection方式connect，保证阻塞住emit线程
-    //如果确认执行输入密码操作将ret+1,否则取消
-    //槽函数返回之前需要设置password、group、user传回给Samba函数处理
-    void signalSmbPassWord(int &ret, QString host, QString &group, QString &user, QString &password);
-
 protected:
     int doWork();
 
@@ -116,7 +110,6 @@ protected:
     int probe_ipp(const QString &strHost);
     int probe_ipp_service(const QString &strHost);
     int probe_lpd(const QString &strHost);
-    int probe_smb(const QString &strHost);
     int probe_snmp(const QString &strHost);
 
 private:

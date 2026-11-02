@@ -27,7 +27,7 @@ SOURCES += \
     ui/jobmanagerwindow.cpp \
     ui/printerapplication.cpp \
     ui/installprinterwindow.cpp \
-    ui/permissionswindow.cpp \
+    ui/smbprinterpage.cpp \
     util/connectedtask.cpp \
     ui/printertestpagedialog.cpp \
     ui/troubleshootdialog.cpp\
@@ -61,7 +61,7 @@ HEADERS += \
     ui/printerapplication.h \
     ui/installprinterwindow.h \
     ui/uisourcestring.h \
-    ui/permissionswindow.h \
+    ui/smbprinterpage.h \
     util/connectedtask.h \
     ui/printertestpagedialog.h \
     ui/troubleshootdialog.h\

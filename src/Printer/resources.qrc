@@ -17,5 +17,15 @@
         <file>images/logo_lenovo.svg</file>
         <file>images/logo_toshiba.svg</file>
         <file>images/logo_uniontech.svg</file>
+        <file>images/arrow.svg</file>
+        <file>images/arrow_dark.svg</file>
+        <file>images/browse_by_ip.svg</file>
+        <file>images/browse_by_ip_dark.svg</file>
+        <file>images/finish_identify.svg</file>
+        <file>images/finish_identify_dark.svg</file>
+        <file>images/select_printer.svg</file>
+        <file>images/select_printer_dark.svg</file>
+        <file>images/no_printer.svg</file>
+        <file>images/no_printer_dark.svg</file>
     </qresource>
 </RCC>

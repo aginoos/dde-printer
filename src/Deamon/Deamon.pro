@@ -10,6 +10,7 @@ SOURCES += \
         main.cpp \
     dbus/zcupsmonitor.cpp \
     dbus/helperinterface.cpp \
+    dbus/smbauth.cpp \
     usbprinter/usbthread.cpp \
     usbprinter/usbplannerenv.cpp
 
@@ -36,6 +37,7 @@ LIBS += -lcups -lusb-1.0
 HEADERS += \
     dbus/zcupsmonitor.h \
     dbus/helperinterface.h \
+    dbus/smbauth.h \
     usbprinter/usbthread.h \
     usbprinter/usbplannerenv.h
 

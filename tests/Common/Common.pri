@@ -14,4 +14,6 @@ SOURCES += $$PWD/ut_common.cpp \
     $$PWD/ut_joblogreader.cpp \
     $$PWD/../../src/service/joblogreader.cpp \
     $$PWD/../../src/service/repairjobs.cpp \
-    $$PWD/../../src/service/commandrunner.cpp
+    $$PWD/../../src/service/commandrunner.cpp \
+    $$PWD/ut_smburi.cpp \
+    $$PWD/ut_secretstore.cpp

@@ -755,7 +755,7 @@ void CupsMonitor::spoolerEvent(QDBusMessage msg)
 void CupsMonitor::showJobsWindow()
 {
     QProcess process;
-    QString cmd = "dde-printer";
+    QString cmd = "/usr/bin/dde-printer";
     QStringList args;
     args << "-m" << "4";
     if (!process.startDetached(cmd, args)) {

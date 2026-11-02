@@ -77,21 +77,23 @@ void HelperInterface::slotShowTrayIcon(bool bShow)
         m_pSystemTray->hide();
 }
 
-void HelperInterface::registerDBus()
+bool HelperInterface::registerDBus()
 {
-    //注册dbus服务
     QDBusConnection dbus = QDBusConnection::sessionBus();
-    bool ret = dbus.registerService(SERVICE_INTERFACE_NAME);
-    if (ret == false) {
+    // Registration without queueing fails when another process already owns the
+    // name, so an impostor started first is never mistaken for this helper.
+    if (!dbus.registerObject(SERVICE_INTERFACE_PATH, this,
+                             QDBusConnection::ExportScriptableSlots |
+                             QDBusConnection::ExportScriptableSignals)) {
+        qWarning("Register QDBus Object Error!");
+        return false;
+    }
+    if (!dbus.registerService(SERVICE_INTERFACE_NAME)) {
         qWarning("Register QDBus Service Error!");
+        dbus.unregisterObject(SERVICE_INTERFACE_PATH);
+        return false;
     }
-    ret = dbus.registerObject(SERVICE_INTERFACE_PATH, this,
-                              QDBusConnection::ExportAllSlots |
-                              QDBusConnection::ExportAllSignals);
-    if (ret == false) {
-        qDebug("Register QDBus Object Error!");
-    }
-
+    return true;
 }
 
 void HelperInterface::unRegisterDBus()
@@ -110,7 +112,7 @@ void HelperInterface::unRegisterDBus()
 void HelperInterface::showJobsWindow()
 {
     QProcess process;
-    QString cmd = "dde-printer";
+    QString cmd = "/usr/bin/dde-printer";
     QStringList args;
     args << "-m" << "4";
     if (!process.startDetached(cmd, args)) {

@@ -305,7 +305,7 @@ void USBThread::notificationActionInvoked(uint id, const QString &msg)
     Q_UNUSED(msg)
     if (m_pendingNotificationsMap.contains(id)) {
         QProcess process;
-        QString cmd = "dde-printer";
+        QString cmd = "/usr/bin/dde-printer";
         QStringList args;
         args << "-p" << m_pendingNotificationsMap.value(id);
 

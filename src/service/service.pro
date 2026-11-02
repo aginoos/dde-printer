@@ -21,7 +21,8 @@ SOURCES += main.cpp \
     cupsconfig.cpp \
     joblogreader.cpp \
     repairjobs.cpp \
-    ippusbblacklist.cpp
+    ippusbblacklist.cpp \
+    taskquota.cpp
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
@@ -37,7 +38,8 @@ HEADERS += \
     cupsconfig.h \
     joblogreader.h \
     repairjobs.h \
-    ippusbblacklist.h
+    ippusbblacklist.h \
+    taskquota.h
 
 unix {
 isEmpty(PREFIX) {

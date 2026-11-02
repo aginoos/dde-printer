@@ -12,7 +12,10 @@
 #include <QDBusMessage>
 #include <QVariantMap>
 
+#include "taskquota.h"
+
 #include <functional>
+#include <memory>
 
 #define SERVICE_MANAGER_INTERFACE_NAME "com.deepin.printer.manager"
 #define SERVICE_MANAGER_INTERFACE_PATH "/com/deepin/printer/manager"
@@ -40,12 +43,16 @@ public slots:
     int RemoveDeviceFromIppusbBlacklist(const QString &vendorProduct);
 
 private:
-    using GrantedHandler = std::function<void(const QDBusMessage &request)>;
+    using TicketPtr = std::shared_ptr<TaskQuota::Ticket>;
+    using GrantedHandler = std::function<void(const QDBusMessage &request, const TicketPtr &ticket)>;
 
     // Starts an asynchronous polkit check for the current caller. Returns
-    // false (after sending an error reply) when the service is overloaded.
+    // false (after sending an error reply) when the caller has too many
+    // requests in flight. Quotas are per caller uid, see TaskQuota.
     bool authorizeThen(const QString &action, GrantedHandler onGranted);
-    void completeWith(const QDBusMessage &reply);
+    void completeWith(const TicketPtr &ticket, const QDBusMessage &reply);
+    void finishTask(const TicketPtr &ticket);
+    bool callerUid(uint *uid);
     int changeIppusbBlacklist(const QString &vendorProduct, bool add);
     void beginTask();
     void endTask();
@@ -55,5 +62,7 @@ private:
     bool m_canonBusy = false;
     bool m_settingsBusy = false;
     bool m_ippusbBusy = false;
+    bool m_repairBusy = false;
+    TaskQuota m_quota;
     QTimer m_idleTimer;
 };

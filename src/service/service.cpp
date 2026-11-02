@@ -14,6 +14,7 @@
 #include "ippusbblacklist.h"
 #include "polkitauthority.h"
 #include "repairjobs.h"
+#include "taskquota.h"
 
 #include <QCoreApplication>
 #include <QDBusConnection>
@@ -33,7 +34,6 @@ const char kActionAutostart[] = "com.deepin.printer.manager.launch-autostart";
 const char kActionRepair[] = "com.deepin.printer.manager.repair";
 const char kActionIppusbBlacklist[] = "com.deepin.printer.manager.ippusb-blacklist";
 
-constexpr int kMaxActiveTasks = 8;
 constexpr int kIdleExitMs = 30000;
 constexpr int kAutostartTimeoutMs = 120000;
 
@@ -64,16 +64,41 @@ void Service::endTask()
     m_idleTimer.start();
 }
 
-void Service::completeWith(const QDBusMessage &reply)
+void Service::finishTask(const TicketPtr &ticket)
+{
+    m_quota.release(ticket.get());
+    endTask();
+}
+
+void Service::completeWith(const TicketPtr &ticket, const QDBusMessage &reply)
 {
     QDBusConnection::systemBus().send(reply);
-    endTask();
+    finishTask(ticket);
+}
+
+// Uid of the caller as reported by the bus daemon; false (after an error
+// reply) when it cannot be determined.
+bool Service::callerUid(uint *uid)
+{
+    const QDBusReply<uint> reply = connection().interface()->serviceUid(message().service());
+    if (!reply.isValid()) {
+        sendErrorReply(QDBusError::AccessDenied, QStringLiteral("Unknown caller"));
+        return false;
+    }
+    *uid = reply.value();
+    return true;
 }
 
 bool Service::authorizeThen(const QString &action, GrantedHandler onGranted)
 {
-    if (m_activeTasks >= kMaxActiveTasks) {
-        sendErrorReply(QDBusError::LimitsExceeded, QStringLiteral("Service is busy"));
+    uint uid = 0;
+    if (!callerUid(&uid))
+        return false;
+    // Waiting for polkit only costs a per-uid slot; the scarce global
+    // execution slots are taken after the authorization succeeded.
+    const auto ticket = std::make_shared<TaskQuota::Ticket>();
+    if (!m_quota.admit(uid, TaskQuota::Kind::Privileged, ticket.get())) {
+        sendErrorReply(QDBusError::LimitsExceeded, QStringLiteral("Too many pending requests"));
         return false;
     }
 
@@ -83,14 +108,19 @@ bool Service::authorizeThen(const QString &action, GrantedHandler onGranted)
     beginTask();
 
     PolkitAuthority::check(connection(), request.service(), action, this,
-                           [this, request, action, onGranted](AuthResult result) {
+                           [this, request, action, ticket, onGranted](AuthResult result) {
         if (result != AuthResult::Authorized) {
             qWarning() << "Not authorized:" << action << "for" << request.service();
-            completeWith(request.createErrorReply(
+            completeWith(ticket, request.createErrorReply(
                 QDBusError::AccessDenied, QStringLiteral("Not authorized: %1").arg(action)));
             return;
         }
-        onGranted(request);
+        if (!m_quota.startRunning(ticket.get())) {
+            completeWith(ticket, request.createErrorReply(
+                QDBusError::LimitsExceeded, QStringLiteral("Service is busy")));
+            return;
+        }
+        onGranted(request, ticket);
     });
     return true;
 }
@@ -103,14 +133,14 @@ void Service::LaunchAutoStart(const QString &filePath)
         return;
     }
 
-    authorizeThen(kActionAutostart, [this, script](const QDBusMessage &request) {
+    authorizeThen(kActionAutostart, [this, script](const QDBusMessage &request, const TicketPtr &ticket) {
         // Reply as soon as the script is launched; the task stays counted
         // so the service does not exit while the script is still running.
         QDBusConnection::systemBus().send(request.createReply());
-        CommandRunner::run(this, script, {"-c"}, [this](const CommandResult &result) {
+        CommandRunner::run(this, script, {"-c"}, [this, ticket](const CommandResult &result) {
             if (!result.ok())
                 qWarning() << "autostart script failed, exit code" << result.exitCode;
-            endTask();
+            finishTask(ticket);
         }, kAutostartTimeoutMs);
     });
 }
@@ -125,16 +155,16 @@ int Service::CanonPrinterInstall(const QStringList &args)
     }
 
     const CanonInstallRequest req = *parsed;
-    authorizeThen(kActionCanonAdd, [this, req](const QDBusMessage &request) {
+    authorizeThen(kActionCanonAdd, [this, req](const QDBusMessage &request, const TicketPtr &ticket) {
         if (m_canonBusy) {
-            completeWith(request.createErrorReply(QDBusError::LimitsExceeded,
+            completeWith(ticket, request.createErrorReply(QDBusError::LimitsExceeded,
                                                   QStringLiteral("Another Canon job is running")));
             return;
         }
         m_canonBusy = true;
-        CanonJob::install(this, req, [this, request](int code) {
+        CanonJob::install(this, req, [this, request, ticket](int code) {
             m_canonBusy = false;
-            completeWith(request.createReply(code));
+            completeWith(ticket, request.createReply(code));
         });
     });
     return 0; // ignored: the reply is sent later
@@ -150,16 +180,16 @@ int Service::CanonPrinterRemove(const QStringList &args)
     }
 
     const QString printerName = *name;
-    authorizeThen(kActionCanonRemove, [this, printerName](const QDBusMessage &request) {
+    authorizeThen(kActionCanonRemove, [this, printerName](const QDBusMessage &request, const TicketPtr &ticket) {
         if (m_canonBusy) {
-            completeWith(request.createErrorReply(QDBusError::LimitsExceeded,
+            completeWith(ticket, request.createErrorReply(QDBusError::LimitsExceeded,
                                                   QStringLiteral("Another Canon job is running")));
             return;
         }
         m_canonBusy = true;
-        CanonJob::remove(this, printerName, [this, request](int code) {
+        CanonJob::remove(this, printerName, [this, request, ticket](int code) {
             m_canonBusy = false;
-            completeWith(request.createReply(code));
+            completeWith(ticket, request.createReply(code));
         });
     });
     return 0;
@@ -175,9 +205,9 @@ int Service::SetServerSettings(const QVariantMap &settings)
     }
 
     const QVector<ServerSetting> validated = *parsed;
-    authorizeThen(kActionServerSettings, [this, validated](const QDBusMessage &request) {
+    authorizeThen(kActionServerSettings, [this, validated](const QDBusMessage &request, const TicketPtr &ticket) {
         if (m_settingsBusy) {
-            completeWith(request.createErrorReply(QDBusError::LimitsExceeded,
+            completeWith(ticket, request.createErrorReply(QDBusError::LimitsExceeded,
                                                   QStringLiteral("Another settings change is running")));
             return;
         }
@@ -185,16 +215,16 @@ int Service::SetServerSettings(const QVariantMap &settings)
         // libcups blocks (and cupsd restarts) while applying; keep the
         // event loop free for other callers.
         auto *watcher = new QFutureWatcher<QString>(this);
-        connect(watcher, &QFutureWatcher<QString>::finished, this, [this, watcher, request]() {
+        connect(watcher, &QFutureWatcher<QString>::finished, this, [this, watcher, request, ticket]() {
             const QString failure = watcher->result();
             watcher->deleteLater();
             m_settingsBusy = false;
             if (failure.isEmpty()) {
-                completeWith(request.createReply(0));
+                completeWith(ticket, request.createReply(0));
                 return;
             }
             qWarning() << "SetServerSettings failed:" << failure;
-            completeWith(request.createErrorReply(QDBusError::Failed, failure));
+            completeWith(ticket, request.createErrorReply(QDBusError::Failed, failure));
         });
         watcher->setFuture(QtConcurrent::run([validated]() {
             QString failure;
@@ -212,22 +242,21 @@ QString Service::ReadJobErrorLog(const QString &printerName)
         sendErrorReply(QDBusError::InvalidArgs, QStringLiteral("Invalid printer name"));
         return QString();
     }
-    if (m_activeTasks >= kMaxActiveTasks) {
-        sendErrorReply(QDBusError::LimitsExceeded, QStringLiteral("Service is busy"));
+    uint uid = 0;
+    if (!callerUid(&uid))
+        return QString();
+    // No authorization is involved, so this path gets its own tight limits.
+    const auto ticket = std::make_shared<TaskQuota::Ticket>();
+    if (!m_quota.admit(uid, TaskQuota::Kind::LogRead, ticket.get())) {
+        sendErrorReply(QDBusError::LimitsExceeded, QStringLiteral("Too many log requests"));
         return QString();
     }
 
     const QDBusMessage request = message();
-    const QDBusReply<uint> uid = connection().interface()->serviceUid(request.service());
-    if (!uid.isValid()) {
-        sendErrorReply(QDBusError::AccessDenied, QStringLiteral("Unknown caller"));
-        return QString();
-    }
-
     setDelayedReply(true);
     beginTask();
-    JobLogReader::readLatestJobLog(this, uid.value(), printerName, [this, request](const QString &log) {
-        completeWith(request.createReply(log));
+    JobLogReader::readLatestJobLog(this, uid, printerName, [this, request, ticket](const QString &log) {
+        completeWith(ticket, request.createReply(log));
     });
     return QString(); // ignored: the reply is sent later
 }
@@ -239,9 +268,16 @@ int Service::RunRepair(const QString &fixId)
         return 1;
     }
 
-    authorizeThen(kActionRepair, [this, fixId](const QDBusMessage &request) {
-        RepairJobs::run(this, fixId, [this, request](int code) {
-            completeWith(request.createReply(code));
+    authorizeThen(kActionRepair, [this, fixId](const QDBusMessage &request, const TicketPtr &ticket) {
+        if (m_repairBusy) {
+            completeWith(ticket, request.createErrorReply(QDBusError::LimitsExceeded,
+                                                          QStringLiteral("Another repair is running")));
+            return;
+        }
+        m_repairBusy = true;
+        RepairJobs::run(this, fixId, [this, request, ticket](int code) {
+            m_repairBusy = false;
+            completeWith(ticket, request.createReply(code));
         });
     });
     return 0; // ignored: the reply is sent later
@@ -266,16 +302,16 @@ int Service::changeIppusbBlacklist(const QString &vendorProduct, bool add)
     }
 
     const QString device = *normalized;
-    authorizeThen(kActionIppusbBlacklist, [this, device, add](const QDBusMessage &request) {
+    authorizeThen(kActionIppusbBlacklist, [this, device, add](const QDBusMessage &request, const TicketPtr &ticket) {
         if (m_ippusbBusy) {
-            completeWith(request.createErrorReply(QDBusError::LimitsExceeded,
+            completeWith(ticket, request.createErrorReply(QDBusError::LimitsExceeded,
                                                   QStringLiteral("Another ipp-usb change is running")));
             return;
         }
         m_ippusbBusy = true;
-        const auto done = [this, request](int result) {
+        const auto done = [this, request, ticket](int result) {
             m_ippusbBusy = false;
-            completeWith(request.createReply(result));
+            completeWith(ticket, request.createReply(result));
         };
         if (add)
             IppUsbBlacklist::add(this, device, done);

@@ -9,6 +9,8 @@ INCLUDEPATH += $$PWD/../../src/service
 
 SOURCES += $$PWD/../../src/service/commandrunner.cpp \
     $$PWD/../../src/service/cupsconfig.cpp \
+    $$PWD/../../src/service/taskquota.cpp \
+    $$PWD/ut_taskquota.cpp \
     $$PWD/ut_cupsconfig.cpp
 
 HEADERS += \

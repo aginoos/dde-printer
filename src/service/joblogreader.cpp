@@ -10,6 +10,7 @@
 #include <QFile>
 #include <QLocale>
 #include <QRegularExpression>
+#include <QTimeZone>
 
 #include <pwd.h>
 #include <unistd.h>
@@ -55,7 +56,7 @@ qint64 logLineEpoch(const QByteArray &line)
     const int minutes = stamp.mid(24, 2).toInt(&minutesOk);
     if (!time.isValid() || !hoursOk || !minutesOk)
         return 0;
-    time.setTimeSpec(Qt::UTC);
+    time = QDateTime(time.date(), time.time(), QTimeZone::UTC);
     const int offset = (hours * 3600 + minutes * 60) * (stamp.at(21) == QLatin1Char('-') ? -1 : 1);
     return time.toSecsSinceEpoch() - offset;
 }

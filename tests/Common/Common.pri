@@ -7,4 +7,5 @@ SOURCES += $$PWD/ut_common.cpp \
     $$PWD/ut_zsettings.cpp \
     $$PWD/ut_zjobmanager.cpp \
     $$PWD/ut_ztroubleshoot.cpp \
-    $$PWD/ut_zdrivermanager.cpp
+    $$PWD/ut_zdrivermanager.cpp \
+    $$PWD/ut_avahi_tool.cpp

@@ -11,6 +11,10 @@
 #include <dtkwidget_global.h>
 #include <DMainWindow>
 
+#include <QFutureWatcher>
+#include <QMap>
+#include <QVariant>
+
 DWIDGET_USE_NAMESPACE
 DWIDGET_BEGIN_NAMESPACE
 class DIconButton;
@@ -30,6 +34,7 @@ class QLabel;
 class QStandardItemModel;
 class QStackedWidget;
 class QStandardItem;
+class QTimer;
 QT_END_NAMESPACE
 
 class PrinterSearchWindow : public DMainWindow
@@ -58,13 +63,23 @@ private:
     */
     bool autoInstallPrinter(int type, const TDeviceInfo &device);
 
-    QString printerDescription(const TDeviceInfo &info, bool manual = false);
+    QString printerDescription(const TDeviceInfo &info, bool manual = false, const QString &address = QString(), bool shared = false);
     QString driverDescription(const QMap<QString, QVariant> &driver);
     // 驱动未匹配提示
     void driverSearchNoMatchDialog(bool isExist);
     void changeEvent(QEvent *event) override;
     void showHplipDriverInfo(int index);
     void updateHplipTip(DListView *listView, QLabel *tipLabel);
+    // 填充驱动下拉框：驱动已按“免驱、在线、本地”排好序，默认选第一项，最后追加手动选择
+    void fillDriverCombo(QComboBox *combo, const QList<QMap<QString, QVariant>> &drivers);
+    QStandardItem *createDeviceItem(const TDeviceInfo &info, bool manual);
+    // 依据勾选的打印机重建协议下拉框
+    void rebuildAutoProtocolCom();
+    // 后台通过 avahi 补充 ipp-usb 型号、dnssd 地址
+    void refreshAvahiDetails();
+    void applyAvahiDetails(const QMap<QString, QVariantMap> &details);
+    // URI 输入框：防抖后在后台检查免驱
+    void applyUriDriver(const QMap<QString, QVariant> &driver);
 
 private slots:
     void listWidgetClickedSlot(const QModelIndex &previous);
@@ -81,8 +96,9 @@ private slots:
     void refreshPrinterListSlot();
     // 手动查找
     void searchPrintersByManual();
-    // URI输入检查
+    // URI输入检查（300ms 防抖）
     void lineEditURIChanged(const QString &uri);
+    void probeUriDriver();
     // 响应安装打印机
     void installDriverSlot();
     // 驱动下拉框切换
@@ -103,6 +119,7 @@ private:
     DListView *m_pPrinterListViewAuto;
     QStandardItemModel *m_pPrinterListModel;
     QComboBox *m_pAutoDriverCom;
+    QComboBox *m_pAutoProtocolCom;
 
     DSpinner *m_pAutoSpinner;
     DSpinner *m_pAutoListSpinner;
@@ -147,6 +164,9 @@ private:
     // 安装打印机状态界面
     InstallPrinterWindow *m_pInstallPrinterWindow;
     QList<QMap<QString, QVariant>> m_drivers;
+
+    // URI 输入防抖
+    QTimer *m_pUriDebounce;
 };
 
 #endif // PRINTERSEARCHWINDOW_H

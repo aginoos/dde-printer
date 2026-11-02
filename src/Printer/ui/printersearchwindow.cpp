@@ -11,6 +11,7 @@
 #include "permissionswindow.h"
 #include "printerservice.h"
 #include "qtconvert.h"
+#include "avahi_tool.h"
 
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
@@ -41,9 +42,40 @@
 #include <QRegularExpression>
 #include <QScrollArea>
 #include <QTimer>
+#include <QSignalBlocker>
+#include <QtConcurrent/QtConcurrent>
 
 static const QString strHplipName = "hplip";
-static int netCount = 0;
+static const int kUriDebounceMs = 300;
+
+// 协议显示名：ipp-usb 在 CUPS 看来是本地回环上的 ipp，单独显示为 ipp-usb
+static QString protocolFromUri(const QString &uri)
+{
+    if (AvahiTool::isIppUsbUri(uri))
+        return QStringLiteral("ipp-usb");
+    const int sep = uri.indexOf(":/");
+    return sep > 0 ? uri.left(sep) : QString();
+}
+
+// 设备的候选协议（按 URI 顺序去重）；ipp-usb 设备只有一个不可选的 ipp-usb
+static QStringList protocolsForDevice(const TDeviceInfo &info)
+{
+    QStringList protocols;
+    for (const QString &uri : info.uriList) {
+        const QString protocol = protocolFromUri(uri);
+        if (!protocol.isEmpty() && !protocols.contains(protocol))
+            protocols << protocol;
+    }
+    if (protocols.contains(QStringLiteral("ipp-usb")))
+        return QStringList{QStringLiteral("ipp-usb")};
+    return protocols;
+}
+
+static bool isValidUriText(const QString &text)
+{
+    static const QRegularExpression reg(QRegularExpression::anchoredPattern("([^# ]{1,})(:[/]{1,})([^# ]{1,})"));
+    return reg.match(text).hasMatch();
+}
 
 PrinterSearchWindow::PrinterSearchWindow(QWidget *parent)
     : DMainWindow(parent)
@@ -174,6 +206,20 @@ void PrinterSearchWindow::initUi()
     pAutoFrame1->setLayout(pVlayoutAuto1);
     pAutoFrame1->setAccessibleName("autoFrame1_autoWidget");
 
+    QLabel *pLabelProtocol = new QLabel(tr("Protocol"));
+    pLabelProtocol->setFixedWidth(46);
+    pLabelProtocol->setAccessibleName("labelProtocol_autoFrame2");
+    m_pAutoProtocolCom = new QComboBox();
+    m_pAutoProtocolCom->addItem(tr("Auto Select"));
+    m_pAutoProtocolCom->setEnabled(false);
+    m_pAutoProtocolCom->setAccessibleName("autoProtocol_autoFrame2");
+    QHBoxLayout *pHLayoutProtocol = new QHBoxLayout();
+    pHLayoutProtocol->setSpacing(0);
+    pHLayoutProtocol->addWidget(pLabelProtocol);
+    pHLayoutProtocol->addSpacing(14);
+    pHLayoutProtocol->addWidget(m_pAutoProtocolCom, 1);
+    pHLayoutProtocol->setContentsMargins(0, 0, 0, 0);
+
     QLabel *pLabelDriver1 = new QLabel(UI_PRINTERSEARCH_DRIVER);
     pLabelDriver1->setFixedWidth(46);
     pLabelDriver1->setAccessibleName("labelDriver_autoFrame2");
@@ -211,6 +257,8 @@ void PrinterSearchWindow::initUi()
     QWidget *pAutoFrame2 = new QWidget();
     QVBoxLayout *pVLayoutSub1 = new QVBoxLayout();
     pVLayoutSub1->setSpacing(0);
+    pVLayoutSub1->addLayout(pHLayoutProtocol);
+    pVLayoutSub1->addSpacing(4);
     pVLayoutSub1->addLayout(pHLayout2);
     pVLayoutSub1->addSpacing(4);
     pVLayoutSub1->addWidget(m_phplipAutoTipLabel);
@@ -506,6 +554,10 @@ void PrinterSearchWindow::initConnections()
     connect(m_pURIDriverCom, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &PrinterSearchWindow::driverChangedSlot);
 
     connect(m_pLineEditURI, &QLineEdit::textChanged, this, &PrinterSearchWindow::lineEditURIChanged);
+    m_pUriDebounce = new QTimer(this);
+    m_pUriDebounce->setSingleShot(true);
+    m_pUriDebounce->setInterval(kUriDebounceMs);
+    connect(m_pUriDebounce, &QTimer::timeout, this, &PrinterSearchWindow::probeUriDriver);
 
     connect(DGuiApplicationHelper::instance(), &DGuiApplicationHelper::sizeModeChanged, [&]() {
         m_pWidgetItemAuto->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
@@ -619,33 +671,55 @@ void PrinterSearchWindow::updateHplipTip(DListView *listView, QLabel *tipLabel)
     tipLabel->setText(isHp && isPackageInstalled(strHplipName) ? UI_PRINTER_HPLIP_TIPINFO : QString());
 }
 
-QString PrinterSearchWindow::printerDescription(const TDeviceInfo &info, bool manual)
+QString PrinterSearchWindow::printerDescription(const TDeviceInfo &info, bool manual, const QString &address, bool shared)
 {
+    if (info.uriList.isEmpty())
+        return info.strName;
+
     QString strDesc = !info.strName.isEmpty() ? info.strName : !info.strInfo.isEmpty() ? info.strInfo + " " : info.strMakeAndModel;
-    QString strUri = info.uriList[0];
-    if (strDesc.isEmpty())
+    const QString strUri = info.uriList[0];
+    if (strDesc.isEmpty()) {
         strDesc = strUri;
-    else {
+    } else {
         /*
          *网络打印机在局域网中存在多台同型号时，普通用户无法通过ip区分打印机，如果用户设置了打印机位置属性
          * 比如办公室等，显示在查找界面方便用户区分打印机。
         */
-        QString protocol = strUri.left(strUri.indexOf(":/"));
+        const QString protocol = protocolFromUri(strUri);
         if (protocol == "socket" && !info.strLocation.isEmpty() && !isIpv4Address(info.strLocation)) {
             strDesc += "-" + info.strLocation;
         }
-        if (!manual) {
-            QString strHost = getHostFromUri(strUri);
-            if (!strHost.isEmpty())
+        // ipp-usb printers sit behind a loopback port: the address would only confuse
+        if (!manual && protocol != QLatin1String("ipp-usb")) {
+            QString strHost = address.isEmpty() ? getHostFromUri(strUri) : address;
+            if (!strHost.isEmpty()) {
+                if (shared)
+                    strHost = tr("%1 shared").arg(strHost);
                 strDesc += QString(" (%1)").arg(strHost);
+            }
         }
 
         if (!protocol.isEmpty())
             strDesc += QObject::tr("(use %1 protocol)").arg(protocol);
-
     }
 
     return strDesc;
+}
+
+QStandardItem *PrinterSearchWindow::createDeviceItem(const TDeviceInfo &info, bool manual)
+{
+    DStandardItem *pItem = new DStandardItem(info.strName);
+    // 设置item的margin，这两个dataRole的枚举值一样，需要区分开
+    pItem->setData(VListViewItemMargin, Dtk::MarginsRole);
+    pItem->setText(printerDescription(info, manual));
+    // ipp-usb 打印机虽然接在本机 USB 上，但走的是 ipp 网络协议，使用网络打印机图标
+    const bool isIppUsb = !info.uriList.isEmpty() && AvahiTool::isIppUsbUri(info.uriList.first());
+    pItem->setIcon(QIcon::fromTheme(isIppUsb ? "dp_printer_net" : "dp_printer_list"));
+    // 将结构体转化为QVariant,需要再转回来
+    pItem->setData(QVariant::fromValue(info), Dtk::UserRole + 1);
+    pItem->setSizeHint(QSize(480, 60));
+    pItem->setToolTip(info.strName);
+    return pItem;
 }
 
 void PrinterSearchWindow::getDeviceResultSlot(int id, int state)
@@ -666,6 +740,7 @@ void PrinterSearchWindow::getDeviceResultSlot(int id, int state)
         }
         m_pBtnRefresh->blockSignals(false);
         m_pPrinterListViewAuto->blockSignals(false);
+        refreshAvahiDetails();
     } else if (state == ETaskStatus::TStat_Update) {
         RefreshDevicesByBackendTask *task = static_cast<RefreshDevicesByBackendTask *>(sender());
         if (!task)
@@ -681,19 +756,8 @@ void PrinterSearchWindow::getDeviceResultSlot(int id, int state)
                 model->setData(itemIndex, QVariant::fromValue(info), Dtk::UserRole + 1);
             }
         }
-        for (; index < deviceList.count(); index++) {
-            const TDeviceInfo &info = deviceList[index];
-            DStandardItem *pItem = new DStandardItem(info.strName);
-            // 设置item的margin，这两个dataRole的枚举值一样，需要区分开
-            pItem->setData(VListViewItemMargin, Dtk::MarginsRole);
-            pItem->setText(printerDescription(info));
-            pItem->setIcon(QIcon::fromTheme("dp_printer_list"));
-            // 将结构体转化为QVariant,需要再转回来
-            pItem->setData(QVariant::fromValue(info), Dtk::UserRole + 1);
-            pItem->setSizeHint(QSize(480, 60));
-            pItem->setToolTip(info.strName);
-            m_pPrinterListModel->appendRow(pItem);
-        }
+        for (; index < deviceList.count(); index++)
+            m_pPrinterListModel->appendRow(createDeviceItem(deviceList[index], false));
     }
 }
 
@@ -755,19 +819,8 @@ void PrinterSearchWindow::getDeviceResultByManualSlot(int id, int state)
             return;
         QList<TDeviceInfo> deviceList = task->getResult();
         int index = m_pPrinterListViewManual->count();
-        for (; index < deviceList.count(); index++) {
-            const TDeviceInfo &info = deviceList[index];
-            DStandardItem *pItem = new DStandardItem(info.strName);
-            // 设置item的margin，这两个dataRole的枚举值一样，需要区分开
-            pItem->setData(VListViewItemMargin, Dtk::MarginsRole);
-            pItem->setText(printerDescription(info, true));
-            pItem->setIcon(QIcon::fromTheme("dp_printer_list"));
-            // 将结构体转化为QVariant,需要再转回来
-            pItem->setData(QVariant::fromValue(info), Dtk::UserRole + 1);
-            pItem->setSizeHint(QSize(480, 60));
-            pItem->setToolTip(info.strName);
-            m_pPrinterListModelManual->appendRow(pItem);
-        }
+        for (; index < deviceList.count(); index++)
+            m_pPrinterListModelManual->appendRow(createDeviceItem(deviceList[index], true));
     }
 }
 
@@ -786,6 +839,7 @@ void PrinterSearchWindow::printerListClickedSlot(const QModelIndex &index)
                 m_pPrinterListModel->item(row)->setCheckState(Qt::Checked);
             }
         }
+        rebuildAutoProtocolCom();
         m_pPrinterListViewAuto->blockSignals(true);
         m_pAutoInstallDriverBtn->setVisible(false);
         m_pAutoSpinner->setVisible(true);
@@ -877,49 +931,29 @@ void PrinterSearchWindow::driverSearchNoMatchDialog(bool isExist)
     pDialog.exec();
 }
 
+void PrinterSearchWindow::fillDriverCombo(QComboBox *combo, const QList<QMap<QString, QVariant>> &drivers)
+{
+    combo->clear();
+    // 驱动已排序：免驱方案、在线驱动、本地驱动，默认选第一项；最后是手动选择
+    for (const auto &driver : drivers)
+        combo->addItem(driverDescription(driver), QVariant::fromValue(driver));
+    if (!drivers.isEmpty()) {
+        combo->setCurrentIndex(0);
+        showHplipDriverInfo(0);
+    }
+    combo->addItem(UI_PRINTERSEARCH_MANUAL);
+}
+
 void PrinterSearchWindow::driverAutoSearchedSlot()
 {
-    netCount = 0;
     DriverSearcher *pDriverSearcher = static_cast<DriverSearcher *>(sender());
-    if (pDriverSearcher) {
-        m_pAutoDriverCom->clear();
-        m_drivers = pDriverSearcher->getDrivers();
-        pDriverSearcher->deleteLater();
+    if (!pDriverSearcher)
+        return;
+    m_drivers = pDriverSearcher->getDrivers();
+    const bool hasOfflineDriver = pDriverSearcher->hasOfflineDriver();
+    pDriverSearcher->deleteLater();
+    fillDriverCombo(m_pAutoDriverCom, m_drivers);
 
-        bool isInsert = false;
-        int indexSelect = -1;
-
-        int index = 0;
-        foreach (const auto &driver, m_drivers) { // 驱动已排序，网络驱动前ipp居中本地在后
-            QString driverdesc = driverDescription(driver);
-            if (driver[SD_KEY_recommended].toBool() && (indexSelect == -1)) {
-                indexSelect = index;
-                ++netCount;
-            } else if (!driver.contains(SD_KEY_recommended)) { // 处理本地，网络驱动携带is_recommend字段
-                if (netCount >= 1 && !isInsert) {
-                    m_pAutoDriverCom->insertSeparator(m_pAutoDriverCom->count());
-                    isInsert = true;
-                    if ((driver[SD_KEY_from].toInt() == PPDFrom_EveryWhere) && (indexSelect == -1)) {
-                        indexSelect = index;
-                    } else if (indexSelect == -1) {
-                        indexSelect = index;
-                    }
-                }
-            } else {
-                ++netCount;
-            }
-            ++index;
-            m_pAutoDriverCom->addItem(driverdesc, QVariant::fromValue(driver));
-        }
-        if (indexSelect != -1) {
-            if (isInsert && (indexSelect != 0)) {
-                ++indexSelect;
-            }
-            m_pAutoDriverCom->setCurrentIndex(indexSelect);
-            showHplipDriverInfo(indexSelect);
-        }
-        m_pAutoDriverCom->addItem(UI_PRINTERSEARCH_MANUAL);
-    }
     m_pAutoSpinner->stop();
     m_pAutoSpinner->setVisible(false);
     m_pAutoInstallDriverBtn->setVisible(true);
@@ -928,55 +962,22 @@ void PrinterSearchWindow::driverAutoSearchedSlot()
         m_pAutoInstallDriverBtn->setText(UI_PRINTERSEARCH_INSTALLDRIVER_AUTO);
     } else {
         m_pAutoInstallDriverBtn->setText(UI_PRINTERSEARCH_INSTALLDRIVER_NEXT);
-        driverSearchNoMatchDialog(pDriverSearcher->hasOfflineDriver());
+        driverSearchNoMatchDialog(hasOfflineDriver);
     }
     //解除信号阻塞，重新响应列表的点击事件
-
     m_pPrinterListViewAuto->blockSignals(false);
 }
 
 void PrinterSearchWindow::driverManSearchedSlot()
 {
-    netCount = 0;
     DriverSearcher *pDriverSearcher = static_cast<DriverSearcher *>(sender());
-    if (pDriverSearcher) {
-        m_pManDriverCom->clear();
-        m_drivers = pDriverSearcher->getDrivers();
-        pDriverSearcher->deleteLater();
+    if (!pDriverSearcher)
+        return;
+    m_drivers = pDriverSearcher->getDrivers();
+    const bool hasOfflineDriver = pDriverSearcher->hasOfflineDriver();
+    pDriverSearcher->deleteLater();
+    fillDriverCombo(m_pManDriverCom, m_drivers);
 
-        bool isInsert = false;
-        int indexSelect = -1;
-        int index = 0;
-        foreach (const auto &driver, m_drivers) { // 驱动已排序，网络驱动前ipp居中本地在后
-            QString driverdesc = driverDescription(driver);
-            if (driver[SD_KEY_recommended].toBool() && (indexSelect == -1)) {
-                indexSelect = index;
-                ++netCount;
-            } else if (!driver.contains(SD_KEY_recommended)) { // 处理本地，网络驱动携带is_recommend字段
-                if (netCount >= 1 && !isInsert) {
-                    m_pManDriverCom->insertSeparator(m_pManDriverCom->count());
-                    isInsert = true;
-                    if ((driver[SD_KEY_from].toInt() == PPDFrom_EveryWhere) && (indexSelect == -1)) {
-                        indexSelect = index;
-                    } else if (indexSelect == -1) {
-                        indexSelect = index;
-                    }
-                }
-            } else {
-                ++netCount;
-            }
-            ++index;
-            m_pManDriverCom->addItem(driverdesc, QVariant::fromValue(driver));
-        }
-        if (indexSelect != -1) {
-            if (isInsert && (indexSelect != 0)) {
-                ++indexSelect;
-            }
-            m_pManDriverCom->setCurrentIndex(indexSelect);
-            showHplipDriverInfo(indexSelect);
-        }
-        m_pManDriverCom->addItem(UI_PRINTERSEARCH_MANUAL);
-    }
     m_pManSpinner->stop();
     m_pManSpinner->setVisible(false);
     m_pManInstallDriverBtn->setVisible(true);
@@ -985,10 +986,9 @@ void PrinterSearchWindow::driverManSearchedSlot()
         m_pManInstallDriverBtn->setText(UI_PRINTERSEARCH_INSTALLDRIVER_AUTO);
     } else {
         m_pManInstallDriverBtn->setText(UI_PRINTERSEARCH_INSTALLDRIVER_NEXT);
-        driverSearchNoMatchDialog(pDriverSearcher->hasOfflineDriver());
+        driverSearchNoMatchDialog(hasOfflineDriver);
     }
     //解除信号阻塞，重新响应列表的点击事件
-
     m_pPrinterListViewManual->blockSignals(false);
 }
 
@@ -1013,6 +1013,7 @@ void PrinterSearchWindow::refreshPrinterListSlot()
     m_pInfoAuto->setVisible(false);
     m_pAutoSpinner->setVisible(false);
     m_pPrinterListModel->clear();
+    rebuildAutoProtocolCom();
     m_pAutoDriverCom->clear();
     m_pAutoDriverCom->addItem(UI_PRINTERSEARCH_MANUAL);
 }
@@ -1045,30 +1046,47 @@ void PrinterSearchWindow::searchPrintersByManual()
 
 void PrinterSearchWindow::lineEditURIChanged(const QString &uri)
 {
-    //QRegularExpression reg("(\\S+)(://)(\\S+)");
-    QString strVal = uri.trimmed();
-    QRegularExpression reg("([^# ]{1,})(:[/]{1,})([^# ]{1,})");
-    QRegularExpressionValidator v(reg);
-    int pos = 0;
-    QValidator::State state = v.validate(strVal, pos);
-    if (state == QValidator::Acceptable) {
-        QMap<QString, QVariant> driver = g_driverManager->getEveryWhereDriver(uri);
-        if (m_pURIDriverCom->count() < 2 && !driver.isEmpty()) {
-            //手动屏蔽m_pURIDriverCom信号处理，避免清空和插入操作触发currentIndexChanged对应的槽函数，添加完成之后在手动调用修改对应的按钮文案
-            m_pURIDriverCom->blockSignals(true);
-            m_pURIDriverCom->clear();
-            m_pURIDriverCom->addItem(driver[CUPS_PPD_MAKE_MODEL].toString(), QVariant::fromValue(driver));
-            m_pURIDriverCom->addItem(UI_PRINTERSEARCH_MANUAL);
-            m_pURIDriverCom->blockSignals(false);
-            driverChangedSlot(0);
-        } else if (m_pURIDriverCom->count() > 1 && driver.isEmpty()) {
-            m_pURIDriverCom->clear();
-            m_pURIDriverCom->addItem(UI_PRINTERSEARCH_MANUAL);
-        }
-        m_pURIInstallDriverBtn->setEnabled(true);
-    } else {
-        m_pURIInstallDriverBtn->setEnabled(false);
+    // 不在每次按键时探测：先清空旧结果并禁用安装，停顿 300ms 后再在后台检查
+    m_pUriDebounce->stop();
+    m_pURIInstallDriverBtn->setEnabled(false);
+    if (!isValidUriText(uri.trimmed())) {
+        applyUriDriver(QMap<QString, QVariant>());
+        return;
     }
+    m_pUriDebounce->start();
+}
+
+void PrinterSearchWindow::probeUriDriver()
+{
+    const QString uri = m_pLineEditURI->text().trimmed();
+    if (!isValidUriText(uri))
+        return;
+
+    // 免驱检查会直连打印机，最长数秒，放到线程池里做
+    auto *watcher = new QFutureWatcher<QMap<QString, QVariant>>(this);
+    connect(watcher, &QFutureWatcher<QMap<QString, QVariant>>::finished, this, [this, watcher, uri]() {
+        const QMap<QString, QVariant> driver = watcher->result();
+        watcher->deleteLater();
+        // 输入已经变化：这次结果过时，新的探测由防抖定时器负责
+        if (uri != m_pLineEditURI->text().trimmed())
+            return;
+        applyUriDriver(driver);
+        m_pURIInstallDriverBtn->setEnabled(true);
+    });
+    watcher->setFuture(QtConcurrent::run([uri]() { return g_driverManager->getEveryWhereDriver(uri); }));
+}
+
+void PrinterSearchWindow::applyUriDriver(const QMap<QString, QVariant> &driver)
+{
+    {
+        // 屏蔽 currentIndexChanged，填充完成后统一刷新按钮文案
+        const QSignalBlocker blocker(m_pURIDriverCom);
+        m_pURIDriverCom->clear();
+        if (!driver.isEmpty())
+            m_pURIDriverCom->addItem(driver[CUPS_PPD_MAKE_MODEL].toString(), QVariant::fromValue(driver));
+        m_pURIDriverCom->addItem(UI_PRINTERSEARCH_MANUAL);
+    }
+    driverChangedSlot(m_pURIDriverCom->currentIndex());
 }
 
 void PrinterSearchWindow::installDriverSlot()
@@ -1082,6 +1100,16 @@ void PrinterSearchWindow::installDriverSlot()
         }
         QVariant temp = pCheckedItem->data(Dtk::UserRole + 1);
         device = temp.value<TDeviceInfo>();
+        // 用户在协议下拉框里选了别的协议：该协议对应的 URI 放到最前，安装时优先使用
+        if (m_pAutoProtocolCom->isEnabled()) {
+            const QString protocol = m_pAutoProtocolCom->currentText();
+            for (int i = 1; i < device.uriList.size(); ++i) {
+                if (protocolFromUri(device.uriList.at(i)) == protocol) {
+                    device.uriList.move(i, 0);
+                    break;
+                }
+            }
+        }
     } else if (m_pTabListView->currentIndex().row() == 1) { //ip
         QStandardItem *pCheckedItem = getCheckedItem(1);
         if (!pCheckedItem) {
@@ -1146,6 +1174,92 @@ void PrinterSearchWindow::smbInfomationSlot(int &ret, const QString &host, QStri
     pPermissionsWindow->deleteLater();
 }
 
+void PrinterSearchWindow::rebuildAutoProtocolCom()
+{
+    const QSignalBlocker blocker(m_pAutoProtocolCom);
+    m_pAutoProtocolCom->clear();
+
+    QStandardItem *checked = getCheckedItem(0);
+    const TDeviceInfo device = checked ? checked->data(Dtk::UserRole + 1).value<TDeviceInfo>() : TDeviceInfo();
+    const QStringList protocols = protocolsForDevice(device);
+    if (protocols.isEmpty()) {
+        m_pAutoProtocolCom->addItem(tr("Auto Select"));
+        m_pAutoProtocolCom->setEnabled(false);
+        return;
+    }
+
+    m_pAutoProtocolCom->addItems(protocols);
+    // 默认协议是排在最前面的 URI；ipp-usb 只有一种连接方式，不允许切换
+    m_pAutoProtocolCom->setCurrentIndex(0);
+    m_pAutoProtocolCom->setEnabled(protocols.size() > 1);
+}
+
+void PrinterSearchWindow::refreshAvahiDetails()
+{
+    QStringList ippUsbUris, dnssdUris;
+    for (int row = 0; row < m_pPrinterListModel->rowCount(); ++row) {
+        const TDeviceInfo info = m_pPrinterListModel->item(row)->data(Dtk::UserRole + 1).value<TDeviceInfo>();
+        if (info.uriList.isEmpty())
+            continue;
+        const QString uri = info.uriList.first();
+        if (AvahiTool::isIppUsbUri(uri))
+            ippUsbUris << uri;
+        else if (uri.startsWith("dnssd:"))
+            dnssdUris << uri;
+    }
+    if (ippUsbUris.isEmpty() && dnssdUris.isEmpty())
+        return;
+
+    using Details = QMap<QString, QVariantMap>;
+    auto *watcher = new QFutureWatcher<Details>(this);
+    connect(watcher, &QFutureWatcher<Details>::finished, this, [this, watcher]() {
+        applyAvahiDetails(watcher->result());
+        watcher->deleteLater();
+    });
+    watcher->setFuture(QtConcurrent::run([ippUsbUris, dnssdUris]() {
+        Details details;
+        if (!ippUsbUris.isEmpty()) {
+            const QList<AvahiTool::ServiceRecord> services = AvahiTool::localIppUsbServices();
+            for (const QString &uri : ippUsbUris) {
+                for (const AvahiTool::ServiceRecord &service : services) {
+                    if (service.port == QUrl(uri).port())
+                        details[uri].insert("model", service.model());
+                }
+            }
+        }
+        for (const QString &uri : dnssdUris) {
+            const AvahiTool::DnssdInfo info = AvahiTool::resolveDnssdUri(uri);
+            if (info.found) {
+                details[uri].insert("address", info.ip);
+                details[uri].insert("shared", info.isShared);
+            }
+        }
+        return details;
+    }));
+}
+
+void PrinterSearchWindow::applyAvahiDetails(const QMap<QString, QVariantMap> &details)
+{
+    for (int row = 0; row < m_pPrinterListModel->rowCount(); ++row) {
+        QStandardItem *item = m_pPrinterListModel->item(row);
+        TDeviceInfo info = item->data(Dtk::UserRole + 1).value<TDeviceInfo>();
+        if (info.uriList.isEmpty() || !details.contains(info.uriList.first()))
+            continue;
+
+        const QVariantMap detail = details.value(info.uriList.first());
+        // avahi knows the model the way ipp-usb reports it; the IPP query may name it differently
+        const QString model = detail.value("model").toString();
+        if (!model.isEmpty() && !info.strMakeAndModel.contains(model, Qt::CaseInsensitive)) {
+            info.strMakeAndModel = model;
+            info.strInfo = model;
+            info.strName = model;
+        }
+        item->setData(QVariant::fromValue(info), Dtk::UserRole + 1);
+        item->setText(printerDescription(info, false, detail.value("address").toString(), detail.value("shared").toBool()));
+        item->setToolTip(info.strName);
+    }
+}
+
 void PrinterSearchWindow::changeEvent(QEvent *event)
 {
     /* 字体改变时，调整显示 */
@@ -1164,9 +1278,10 @@ void PrinterSearchWindow::changeEvent(QEvent *event)
 
 void PrinterSearchWindow::showHplipDriverInfo(int index)
 {
-    // 存在网络推荐驱动并且索引非网络驱动时，index需-1
-    int realIndex = (netCount == 0 || (index <= netCount - 1)) ? index : (index - 1);
-    if (realIndex <= m_drivers.count() && m_drivers[realIndex][SD_KEY_driver].toString() == strHplipName) {
+    // 下拉框中没有分隔项，下标与驱动列表一一对应
+    if (index < 0 || index >= m_drivers.count())
+        return;
+    if (m_drivers.at(index).value(SD_KEY_driver).toString() == strHplipName) {
         m_phplipTipLabel->setText(UI_PRINTER_HPLIP_TIPINFO);
         m_phplipAutoTipLabel->setText(UI_PRINTER_HPLIP_TIPINFO);
     }

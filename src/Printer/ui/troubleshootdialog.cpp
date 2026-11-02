@@ -19,7 +19,7 @@
 
 #include <QLabel>
 #include <QVBoxLayout>
-#include <QGridLayout>
+#include <QHBoxLayout>
 #include <QPushButton>
 #include <QPaintEvent>
 #include <QPainter>
@@ -37,19 +37,25 @@ TroubleShootItem::TroubleShootItem(TroubleShootJob *job, int index, QWidget *par
     m_titleLabel->setFont(DFontSizeManager::instance()->t5());
     m_messageLabel = new QLabel(this);
     m_messageLabel->setFont(DFontSizeManager::instance()->t7());
+    // long messages (unresolved host, connection errors) wrap instead of being cut off
+    m_messageLabel->setWordWrap(true);
+    m_messageLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
 
     m_iconLabel->setAccessibleName("iconLabel_shootItem");
     m_titleLabel->setAccessibleName("titleLabel_shootItem");
     m_messageLabel->setAccessibleName("msgLabel_shootItem");
 
-    QGridLayout *lay = new QGridLayout(this);
+    QHBoxLayout *topRow = new QHBoxLayout();
+    topRow->setSpacing(5);
+    topRow->addWidget(m_iconLabel);
+    topRow->addWidget(m_titleLabel, 1);
+
+    QVBoxLayout *lay = new QVBoxLayout(this);
     lay->setContentsMargins(10, 5, 10, 5);
-    lay->setColumnStretch(1, 100);
-    lay->addWidget(m_iconLabel, 0, 0, Qt::AlignCenter);
-    lay->addWidget(m_titleLabel, 0, 1, Qt::AlignLeft | Qt::AlignHCenter);
-    lay->addWidget(m_messageLabel, 1, 1, Qt::AlignLeft | Qt::AlignHCenter);
+    lay->setSpacing(5);
+    lay->addLayout(topRow);
+    lay->addWidget(m_messageLabel);
     setLayout(lay);
-    setMaximumHeight(125);
     this->setAccessibleName("shootItem_troubleShoot");
 
     connect(job, &TroubleShootJob::signalStateChanged, this, &TroubleShootItem::slotStateChanged);
@@ -76,10 +82,8 @@ void TroubleShootItem::slotStateChanged(int state, const QString &message)
     if (TStat_Suc == state)
         m_iconLabel->setPixmap(QIcon(":/images/success.svg").pixmap(17, 17));
 
-    QString messageInfo = message;
-    geteElidedText(m_messageLabel->font(), messageInfo, 600);
     m_messageLabel->setToolTip(message);
-    m_messageLabel->setText(messageInfo);
+    m_messageLabel->setText(message);
 }
 
 TroubleShootDialog::TroubleShootDialog(const QString &printerName, QWidget *parent)

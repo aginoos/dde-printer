@@ -51,6 +51,7 @@ protected slots:
     void slotDriverInit(int id, int state);
 
 private:
+    void searchServerDrivers();
     int getLocalDrivers();
     void sortDrivers();
     void askForFinish();

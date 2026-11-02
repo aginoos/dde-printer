@@ -21,6 +21,17 @@
 #include <QDebug>
 #include <QDateTime>
 #include <QLibrary>
+#include <QEventLoop>
+#include <QHostAddress>
+#include <QCoreApplication>
+#include <QDBusConnectionInterface>
+#include <QDBusPendingCall>
+#include <QDBusPendingCallWatcher>
+#include <QDBusError>
+#include <QDBusMessage>
+
+#include "safeprocess.h"
+#include "packageutil.h"
 
 #include <netdb.h>
 #include <sys/socket.h>
@@ -316,26 +327,6 @@ QVariant ipp_attribute_value(ipp_attribute_t *attr, int i)
     }
 
     return val;
-}
-
-int shellCmd(const QString &cmd, QString &out, QString &strErr, int timeout)
-{
-    QProcess proc;
-    proc.startCommand(cmd);
-    if (proc.waitForFinished(timeout)) {
-        out = proc.readAll();
-        if (proc.exitCode() != 0 || proc.exitStatus() != QProcess::NormalExit) {
-            strErr = QString("err %1, string: %2").arg(proc.exitCode()).arg(QString::fromUtf8(proc.readAllStandardError()));
-            qCDebug(COMMONMOUDLE) << cmd;
-            qCWarning(COMMONMOUDLE) << "shellCmd exit with err: " << strErr;
-            return -1;
-        }
-    } else {
-        qCWarning(COMMONMOUDLE) << "shellCmd timeout";
-        return -2;
-    }
-
-    return 0;
 }
 
 //将每个单词统一成首字母大写
@@ -684,30 +675,162 @@ bool isIpv4Address(const QString &str)
     return reg.match(str).hasMatch();
 }
 
+namespace {
+
+const char kManagerService[] = "com.deepin.printer.manager";
+const char kManagerPath[] = "/com/deepin/printer/manager";
+// Polkit may show an authentication dialog and wait for the user.
+const int kManagerTimeoutMs = 120 * 1000;
+
+// The service is root-only by bus policy; verify the owner anyway so that a
+// spoofed service can never answer for it.
+bool isManagerOwnedByRoot()
+{
+    QDBusConnectionInterface *bus = QDBusConnection::systemBus().interface();
+    if (!bus) {
+        return false;
+    }
+    const QString service = QString::fromLatin1(kManagerService);
+    if (!bus->isServiceRegistered(service).value()) {
+        bus->startService(service);
+    }
+    const QDBusReply<uint> uid = bus->serviceUid(service);
+    return uid.isValid() && uid.value() == 0;
+}
+
+// Asynchronous call that keeps painting but ignores user input meanwhile.
+QDBusMessage callManager(const QString &method, const QVariantList &arguments)
+{
+    QDBusMessage msg = QDBusMessage::createMethodCall(kManagerService, kManagerPath, kManagerService, method);
+    msg.setArguments(arguments);
+
+    QDBusPendingCall pending = QDBusConnection::systemBus().asyncCall(msg, kManagerTimeoutMs);
+    QDBusPendingCallWatcher watcher(pending);
+    QEventLoop loop;
+    QObject::connect(&watcher, &QDBusPendingCallWatcher::finished, &loop, &QEventLoop::quit);
+    if (!pending.isFinished()) {
+        loop.exec(QEventLoop::ExcludeUserInputEvents);
+    }
+    return pending.reply();
+}
+
+int errorToCode(const QDBusMessage &reply)
+{
+    const QString name = reply.errorName();
+    qCWarning(COMMONMOUDLE) << "printer manager error:" << name << reply.errorMessage();
+    if (name == QDBusError::errorString(QDBusError::AccessDenied)) {
+        return CanonAccessDenied;
+    }
+    if (name == QDBusError::errorString(QDBusError::InvalidArgs)) {
+        return CanonInvalidArgs;
+    }
+    if (name == QDBusError::errorString(QDBusError::LimitsExceeded)) {
+        return CanonBusy;
+    }
+    if (name == QDBusError::errorString(QDBusError::NoReply) || name == QDBusError::errorString(QDBusError::Timeout)) {
+        return CanonTimeout;
+    }
+    if (name == QDBusError::errorString(QDBusError::ServiceUnknown) || name == QDBusError::errorString(QDBusError::NameHasNoOwner)) {
+        return CanonUnavailable;
+    }
+    return CanonFailed;
+}
+
+// Anything but a well-formed integer reply is a failure: never fail open.
+int replyToCode(const QDBusMessage &reply, bool allowExists)
+{
+    if (reply.type() == QDBusMessage::ErrorMessage) {
+        return errorToCode(reply);
+    }
+    if (reply.type() != QDBusMessage::ReplyMessage || reply.arguments().size() != 1) {
+        return CanonBadReply;
+    }
+    bool isInt = false;
+    const int value = reply.arguments().first().toInt(&isInt);
+    if (!isInt) {
+        return CanonBadReply;
+    }
+    if (value == CanonOk || value == CanonFailed || (allowExists && value == CanonExists)) {
+        return value;
+    }
+    return CanonBadReply;
+}
+
+bool areCanonArgsValid(bool isAdd, const QStringList &args)
+{
+    using namespace SafeProcess;
+    if (!isAdd) {
+        return args.size() == 1 && isValidQueueName(args.first());
+    }
+    if (args.size() != 3 || !isValidQueueName(args.at(0))) {
+        return false;
+    }
+    static const QRegularExpression ppdRe("^CNCUPS[A-Za-z0-9_]*CAPT[A-Za-z0-9_]*\\.ppd$");
+    if (!ppdRe.match(args.at(1)).hasMatch()) {
+        return false;
+    }
+    const QString device = args.at(2);
+    if (device.startsWith("usb:")) {
+        return isValidDeviceToken(device.mid(4));
+    }
+    QHostAddress addr;
+    return device.startsWith("net:") && addr.setAddress(device.mid(4)) && addr.protocol() == QAbstractSocket::IPv4Protocol;
+}
+
+}  // namespace
+
 int managerCanonPrinter(const QString &action, const QStringList &args)
 {
-    QDBusInterface interface("com.deepin.printer.manager", "/com/deepin/printer/manager", "com.deepin.printer.manager", QDBusConnection::systemBus());
-    QDBusReply<int> ret;
-    if (action == "add") {
-        ret = interface.call("CanonPrinterInstall", args);
-    } else {
-        ret = interface.call("CanonPrinterRemove", args);
+    const bool isAdd = (action == "add");
+    if (!areCanonArgsValid(isAdd, args)) {
+        qCWarning(COMMONMOUDLE) << "rejected Canon arguments for" << action;
+        return CanonInvalidArgs;
+    }
+    if (!isManagerOwnedByRoot()) {
+        qCWarning(COMMONMOUDLE) << "printer manager service is missing or not owned by root";
+        return CanonUnavailable;
     }
 
-    if (ret.isValid()) {
-        return ret;
-    }
+    const QDBusMessage reply = callManager(isAdd ? "CanonPrinterInstall" : "CanonPrinterRemove", {QVariant(args)});
+    return replyToCode(reply, isAdd);
+}
 
-    return 0;
+bool managerLaunchAutoStart(const QString &configDir)
+{
+    if (!SafeProcess::isSafeAbsolutePath(configDir) || !isManagerOwnedByRoot()) {
+        return false;
+    }
+    const QDBusMessage reply = callManager("LaunchAutoStart", {configDir});
+    if (reply.type() != QDBusMessage::ReplyMessage) {
+        errorToCode(reply);
+        return false;
+    }
+    return true;
+}
+
+QString canonManagerErrorText(int code)
+{
+    switch (code) {
+    case CanonOk:
+        return QString();
+    case CanonExists:
+        return QCoreApplication::translate("Common", "The Canon capt printer has been added and is not allowed to be added again.");
+    case CanonAccessDenied:
+        return QCoreApplication::translate("Common", "Administrator authorization was denied.");
+    case CanonInvalidArgs:
+        return QCoreApplication::translate("Common", "The printer name, driver or device information is not valid for the Canon driver.");
+    case CanonBusy:
+        return QCoreApplication::translate("Common", "The printer service is busy. Please try again later.");
+    case CanonUnavailable:
+        return QCoreApplication::translate("Common", "The printer management service is not available.");
+    case CanonTimeout:
+        return QCoreApplication::translate("Common", "The printer management service did not respond in time.");
+    default:
+        return QCoreApplication::translate("Common", "The Canon driver could not be configured.");
+    }
 }
 
 bool isPackageInstalled(const QString &packageName)
 {
-    QProcess process;
-    QString cmd = QString("dpkg -l %1 | grep -E '^ii.*%1'").arg(packageName);
-    process.start("/bin/bash", QStringList() << "-c" << cmd);
-    process.waitForFinished();
-    QString output = process.readAllStandardOutput();
-
-    return !output.isEmpty();
+    return PackageUtil::isInstalled(packageName);
 }

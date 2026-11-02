@@ -23,6 +23,10 @@ public:
 
     int doWork();
 
+    // Unattended tasks (USB hot-plug in the helper) never run privileged
+    // steps; they fail and leave the decision to the user in the main window.
+    void setUnattended(bool unattended) { m_unattended = unattended; }
+
     QString getErrorMassge();
 
     virtual void stop();
@@ -67,6 +71,7 @@ protected:
     InstallInterface *m_installDepends;
     InstallDriver *m_installDriver;
     bool m_bQuit;
+    bool m_unattended = false;
     QString m_strErr;
 
     int m_iStep;

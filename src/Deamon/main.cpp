@@ -16,24 +16,97 @@
 #include <QDebug>
 #include <QProcess>
 #include <QIcon>
+#include <QFileInfo>
+#include <QSocketNotifier>
+#include <QThread>
 
+#include <fcntl.h>
+#include <limits.h>
 #include <signal.h>
+#include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 
 DCORE_USE_NAMESPACE
 DWIDGET_USE_NAMESPACE
 
-void handler(int signo)
+namespace {
+
+const QString kHelperPath = QStringLiteral("/usr/bin/dde-printer-helper");
+int g_signalPipe[2] = {-1, -1};
+
+// Only async-signal-safe work here: wake up the event loop through the pipe.
+void onRestartSignal(int)
 {
-    //默认终止的自定义信号，此处作为重启通知
-    if (signo == SIGUSR1) {
-        pid_t pid = getpid();
-        QProcess process;
-        QString cmd = QString("dde-printer-helper -r %1").arg(pid);
-        process.startDetached("bash", QStringList() << "-c" << cmd);
-    }
+    const char wake = 1;
+    const ssize_t written = write(g_signalPipe[1], &wake, 1);
+    (void)written;
 }
+
+bool installRestartSignal()
+{
+    if (pipe2(g_signalPipe, O_CLOEXEC | O_NONBLOCK) != 0) {
+        return false;
+    }
+    struct sigaction action;
+    memset(&action, 0, sizeof(action));
+    action.sa_handler = onRestartSignal;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = SA_RESTART;
+    return sigaction(SIGUSR1, &action, nullptr) == 0;
+}
+
+// "-r <pid>": the old helper (same user, still named dde-printer-helper) to replace.
+bool parseRestartPid(const QStringList &args, pid_t &pid)
+{
+    const int index = args.indexOf("-r");
+    if (index < 0 || index + 1 >= args.size()) {
+        return false;
+    }
+    bool ok = false;
+    const uint value = args.at(index + 1).toUInt(&ok);
+    if (!ok || value <= 1 || value == static_cast<uint>(getpid())) {
+        return false;
+    }
+    pid = static_cast<pid_t>(value);
+    return true;
+}
+
+bool isOwnHelperProcess(pid_t pid)
+{
+    struct stat st;
+    if (stat(QString("/proc/%1").arg(pid).toLocal8Bit().constData(), &st) != 0 || st.st_uid != getuid()) {
+        return false;
+    }
+    char target[PATH_MAX];
+    const ssize_t len = readlink(QString("/proc/%1/exe").arg(pid).toLocal8Bit().constData(), target, sizeof(target) - 1);
+    if (len <= 0) {
+        return false;
+    }
+    // After a package upgrade the kernel appends " (deleted)" to the old binary.
+    QString exe = QString::fromLocal8Bit(target, static_cast<int>(len));
+    exe.remove(QStringLiteral(" (deleted)"));
+    return QFileInfo(exe).fileName() == QFileInfo(kHelperPath).fileName();
+}
+
+void terminateOldHelper(pid_t pid)
+{
+    if (!isOwnHelperProcess(pid)) {
+        qWarning() << "refusing to stop pid" << pid << ": not a dde-printer-helper of this user";
+        return;
+    }
+    kill(pid, SIGTERM);
+    for (int i = 0; i < 30 && kill(pid, 0) == 0; ++i) {
+        QThread::msleep(100);
+    }
+    if (kill(pid, 0) == 0) {
+        kill(pid, SIGKILL);
+    }
+    qInfo() << "stopped old helper" << pid;
+}
+
+}  // namespace
 
 int main(int argc, char *argv[])
 {
@@ -57,21 +130,13 @@ int main(int argc, char *argv[])
     DLogManager::registerJournalAppender();
 
 
+    pid_t oldPid = 0;
     if (qApp->arguments().contains("-r")) {
-        //重启模式先kill原始进程
-        QString originPid = qApp->arguments().at(2).toLocal8Bit();
-        QProcess process;
-        QString cmd = "kill";
-        QStringList args;
-        args << "-9" << originPid;
-        process.start(cmd, args);
-
-        if (process.waitForFinished()) {
-            qInfo() << "kill origin process " << originPid;
+        if (parseRestartPid(qApp->arguments(), oldPid)) {
+            terminateOldHelper(oldPid);
         } else {
-            qInfo() << "kill origin process failed :" << process.errorString();
+            qWarning() << "ignoring -r without a valid process id";
         }
-
     }
 
     if (!DGuiApplicationHelper::setSingleInstance("dde-printer-helper")) {
@@ -79,11 +144,21 @@ int main(int argc, char *argv[])
         qWarning() << "dde-printer-helper is running";
         return -1;
     }
-    // 绑定SIGUSR1信号
-    if (signal(SIGUSR1, handler) == SIG_ERR) {
+    // SIGUSR1 (sent after a package upgrade) asks for a restart onto the new binary
+    if (!installRestartSignal()) {
         qWarning("Can't set handler for SIGUSR1\n");
         return -2;
     }
+    QSocketNotifier restartNotifier(g_signalPipe[0], QSocketNotifier::Read);
+    QObject::connect(&restartNotifier, &QSocketNotifier::activated, [&]() {
+        char drain[16];
+        while (read(g_signalPipe[0], drain, sizeof(drain)) > 0) {
+        }
+        restartNotifier.setEnabled(false);  // restart only once
+        if (!QProcess::startDetached(kHelperPath, QStringList() << "-r" << QString::number(getpid()))) {
+            qWarning() << "failed to start the replacement helper";
+        }
+    });
 
     USBThread usbThread;
 
@@ -91,7 +166,10 @@ int main(int argc, char *argv[])
     cupsMonitor.initTranslations();
 
     HelperInterface helper(&cupsMonitor);
-    helper.registerDBus();
+    if (!helper.registerDBus()) {
+        qWarning() << "dde-printer-helper D-Bus name or object is already taken, exiting";
+        return -3;
+    }
 
     QObject::connect(&usbThread, &USBThread::deviceStatusChanged, &helper, &HelperInterface::deviceStatusChanged);
     QObject::connect(&helper, &HelperInterface::usbDeviceProcess, [&](){

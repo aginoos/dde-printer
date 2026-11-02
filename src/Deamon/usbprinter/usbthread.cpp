@@ -283,6 +283,11 @@ bool USBThread::addArrivedUSBPrinter()
                 emit deviceStatusChanged(m_configingPrinterName, 0);
                 QThread::sleep(3);
                 AddPrinterTask *task = g_addPrinterFactoty->createAddPrinterTask(m_deviceInfo, driver);
+                if (!task) {
+                    emit deviceStatusChanged(m_configingPrinterName, 2);
+                    break;
+                }
+                task->setUnattended(true);
                 connect(task, &AddPrinterTask::signalStatus, this, &USBThread::addingJobFinished);
                 task->doWork();
 
@@ -300,7 +305,7 @@ void USBThread::notificationActionInvoked(uint id, const QString &msg)
     Q_UNUSED(msg)
     if (m_pendingNotificationsMap.contains(id)) {
         QProcess process;
-        QString cmd = "dde-printer";
+        QString cmd = "/usr/bin/dde-printer";
         QStringList args;
         args << "-p" << m_pendingNotificationsMap.value(id);
 

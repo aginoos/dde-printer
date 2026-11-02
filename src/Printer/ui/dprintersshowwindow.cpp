@@ -57,8 +57,6 @@
 
 #define FAQDOCUMENT_MESSAGE QObject::tr("Help on adding and using printers")
 
-static const QString canonRemove = "/opt/deepin/dde-printer/printer-drivers/cndrvcups-capt/canonremove";
-
 static bool isCanonCaptPrinter(const QString &printerName)
 {
     QString printerUri = getPrinterUri(printerName.toUtf8().data());
@@ -650,8 +648,7 @@ void DPrintersShowWindow::showEvent(QShowEvent *event)
         QDBusInterface interface(SERVICE_INTERFACE_NAME, SERVICE_INTERFACE_PATH, SERVICE_INTERFACE_NAME, QDBusConnection::sessionBus());
         if (!interface.isValid()) {
             qCInfo(COMMONMOUDLE) << "start dde-printer-helper";
-            QProcess proces;
-            proces.startDetached("bash", QStringList() << "-c" << "dde-printer-helper");
+            QProcess::startDetached("/usr/bin/dde-printer-helper", QStringList());
         }
 
         //连接dbus信号
@@ -1001,12 +998,15 @@ void DPrintersShowWindow::deletePrinterClickSlot()
         int ret = pDialog->exec();
         if (ret > 0) {
             if (isCanonCaptPrinter(printerName)) { // 判断是否canon capt打印机
-                QFile file(canonRemove);
-                if (file.exists()) {
-                    int bret = managerCanonPrinter("remove", QStringList{printerName});
-                    if (bret != 0) {
-                        return;
-                    }
+                // The service removes the ccpd entry itself; only a missing service
+                // lets the CUPS-only removal go on, every other failure stops here.
+                const int bret = managerCanonPrinter("remove", QStringList{printerName});
+                if (bret != CanonOk && bret != CanonUnavailable) {
+                    DDialog failDialog("", canonManagerErrorText(bret), this);
+                    failDialog.addButton(tr("OK"), true);
+                    failDialog.exec();
+                    pDialog->deleteLater();
+                    return;
                 }
             }
 

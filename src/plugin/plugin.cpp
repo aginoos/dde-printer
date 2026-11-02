@@ -4,7 +4,11 @@
 
 #include <QDBusConnection>
 #include <QDBusInterface>
+#include <QDBusConnectionInterface>
+#include <QDBusReply>
 #include <QDebug>
+
+#include <pwd.h>
 
 #include "service.h"
 #include "signalcups.h"
@@ -88,9 +92,28 @@ bool SignalCups::initWatcher()
     return success;
 }
 
+// The spooler signal is emitted by cupsd (root) or its helpers running as lp.
+// Anyone else on the system bus could forge it to wake the helpers up.
+static bool isTrustedSpoolerSender(const QString &sender)
+{
+    QDBusConnectionInterface *bus = QDBusConnection::systemBus().interface();
+    if (!bus || sender.isEmpty()) {
+        return false;
+    }
+    const QDBusReply<uint> uid = bus->serviceUid(sender);
+    if (!uid.isValid()) {
+        return false;
+    }
+    const struct passwd *lp = getpwnam("lp");
+    return uid.value() == 0 || (lp && uid.value() == lp->pw_uid);
+}
+
 void SignalCups::spoolerEvent(QDBusMessage msg)
 {
-    (void)msg;
+    if (!isTrustedSpoolerSender(msg.service())) {
+        qWarning() << "ignoring spooler signal from untrusted sender" << msg.service();
+        return;
+    }
 
     startHelper(1);
 }
@@ -221,7 +244,12 @@ extern "C" int DSMRegister(const char *name, void *data)
         QDBusConnection::ExportAllProperties;
 
     auto connection = reinterpret_cast<QDBusConnection *>(data);
-    connection->registerObject("/org/deepin/ddeprinter", service, opts);
+    if (!connection->registerObject("/org/deepin/ddeprinter", service, opts)) {
+        qWarning() << "failed to register /org/deepin/ddeprinter";
+        service->deleteLater();
+        service = nullptr;
+        return -1;
+    }
 
     cupsSignal = new SignalCups();
     cupsSignal->initWatcher();
@@ -237,13 +265,19 @@ extern "C" int DSMUnRegister(const char *name, void *data)
 {
     (void)name;
     (void)data;
-    cupsSignal->deleteLater();
-    cupsSignal = nullptr;
+    if (cupsSignal) {
+        cupsSignal->deleteLater();
+        cupsSignal = nullptr;
+    }
 
-    usbThread->deleteLater();
-    usbThread = nullptr;
+    if (usbThread) {
+        usbThread->deleteLater();
+        usbThread = nullptr;
+    }
 
-    service->deleteLater();
-    service = nullptr;
+    if (service) {
+        service->deleteLater();
+        service = nullptr;
+    }
     return 0;
 }

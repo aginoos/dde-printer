@@ -26,22 +26,11 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QProcessEnvironment>
+#include <QHostAddress>
+#include "safeprocess.h"
+#include "packageutil.h"
 
 static QString g_captexec = "/opt/cndrvcups-capt/add";
-
-static QString getPackageVersion(const QString &package)
-{
-    QString strOut, strErr;
-    if (0 == shellCmd(QString("dpkg -l %1").arg(package), strOut, strErr)) {
-        QStringList list = strOut.split("\n", Qt::SkipEmptyParts);
-        strOut = list.isEmpty() ? "" : list.last();
-        qCDebug(COMMONMOUDLE) << strOut;
-        list = strOut.split(" ", Qt::SkipEmptyParts);
-        return list.count() > 2 ? list[2] : QString();
-    }
-
-    return QString();
-}
 
 static bool isCanonCAPTDrv(const QString &ppd_name)
 {
@@ -56,84 +45,44 @@ static bool isHplipDrv(const QString &ppd_name)
             ppd_name.startsWith("hplip:") || ppd_name.startsWith("hplip-data:") || ppd_name.startsWith("hpijs-ppds:") || ppd_name.startsWith("hp/hp-"));
 }
 
-static void dbusAutoStart(const QString &filePath)
+// Directory under /opt/printer-drivers whose ppds list names `ppdname`, or an
+// empty string. Only well-formed vendor directory names are considered.
+static QString findVendorConfigDir(const QString &ppdname)
 {
-    QDBusInterface interface("com.deepin.printer.manager", "/com/deepin/printer/manager", "com.deepin.printer.manager", QDBusConnection::systemBus());
-    interface.call("LaunchAutoStart", filePath);
-}
+    const QString root = "/opt/printer-drivers";
+    static const QRegularExpression vendorRe("^[A-Za-z0-9][A-Za-z0-9_.-]*$");
 
-static void checkPPDName(const QString &ppdname)
-{
-    QString folderPath = "/opt/printer-drivers";
-    QDir dir(folderPath);
-    if (!dir.exists()) {
-        qCDebug(COMMONMOUDLE) << "Folder does not exist: ";
-        return;
-    }
-
-    dir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
-    QFileInfoList folders = dir.entryInfoList();
-
-    for (int i = 0; i < folders.size(); ++i) {
-        QString folderName = folders.at(i).fileName();
-        QString filePath = folderPath + "/" + folderName + "/config/";
-        QString ppdPath = filePath +  "ppds";
-
-        QFile file(ppdPath);
-
+    const QStringList vendors = QDir(root).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (const QString &vendor : vendors) {
+        if (!vendorRe.match(vendor).hasMatch()) {
+            continue;
+        }
+        const QString configDir = root + "/" + vendor + "/config/";
+        QFile file(configDir + "ppds");
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
             continue;
         }
-
         QTextStream in(&file);
         while (!in.atEnd()) {
-            QString line = in.readLine();
-            if (line.contains(ppdname)) {
-                file.close();
-                dbusAutoStart(filePath);
-                if (folderName == "com.pantum.pantum") {
-                    QStringList args;
-                    QProcess::startDetached(filePath + "autostart.sh", QStringList() << "-r");
-                }
-                return;
+            if (in.readLine().contains(ppdname)) {
+                return configDir;
             }
         }
-
-        file.close();
     }
+    return QString();
 }
 
-static QDBusInterface *getPackageInterface()
+// Runs the vendor's autostart through the root service (polkit-authorized).
+static bool launchVendorAutostart(const QString &configDir)
 {
-    QDBusInterface newinterface
-    {
-        "org.deepin.dde.Lastore1",
-        "/org/deepin/dde/Lastore1",
-        "org.deepin.dde.Lastore1.Manager",
-        QDBusConnection::systemBus()
-    };
-
-    if (newinterface.isValid()) {
-        static QDBusInterface interface
-        {
-            "org.deepin.dde.Lastore1",
-            "/org/deepin/dde/Lastore1",
-            "org.deepin.dde.Lastore1.Manager",
-            QDBusConnection::systemBus()
-        };
-
-        return &interface;
+    if (!managerLaunchAutoStart(configDir)) {
+        qCWarning(COMMONMOUDLE) << "vendor autostart was not started for" << configDir;
+        return false;
     }
-
-    static QDBusInterface interface
-    {
-        "com.deepin.lastore",
-        "/com/deepin/lastore",
-        "com.deepin.lastore.Manager",
-        QDBusConnection::systemBus()
-    };
-
-    return &interface;
+    if (configDir.contains("com.pantum.pantum")) {
+        QProcess::startDetached(configDir + "autostart.sh", QStringList() << "-r");
+    }
+    return true;
 }
 
 static QString getDriverFrom(int type)
@@ -186,42 +135,6 @@ static bool containsIpAddress(const QString &str) {
     QRegularExpression ipRegex("\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b");
     QRegularExpressionMatch match = ipRegex.match(str);
     return match.hasMatch();
-}
-
-static int shellCmdLocal(const QString &cmd, QString &out, QString &strErr, int timeout)
-{
-    QProcess proc;
-    QStringList env = QProcess::systemEnvironment();
-    env.append("LANG=utf-8");
-    proc.setEnvironment(env);
-    proc.startCommand(cmd);
-    if (proc.waitForFinished(timeout)) {
-        out = proc.readAll();
-        if (proc.exitCode() != 0 || proc.exitStatus() != QProcess::NormalExit) {
-            strErr = QString("err %1, string: %2").arg(proc.exitCode()).arg(QString::fromUtf8(proc.readAllStandardError()));
-            qCDebug(COMMONMOUDLE) << cmd;
-            qCWarning(COMMONMOUDLE) << "shellCmd exit with err: " << strErr;
-            return -1;
-        }
-    } else {
-        qCWarning(COMMONMOUDLE) << "shellCmd timeout";
-        return -2;
-    }
-
-    return 0;
-}
-
-static bool isPackageInstallable(const QString &packagename)
-{
-    QString strRet, strErr;
-    QString srcParts = "Dir::Etc::SourceParts=/etc/apt/sources.list.d";
-    QString srcList = "Dir::Etc::SourceList=/etc/deepin/lastore-daemon/sources.list.d/local-driver.list";
-    int iRet = shellCmdLocal(QString("apt policy %1 -o %2 -o %3").arg(packagename).arg(srcParts).arg(srcList), strRet, strErr, 5000);
-    if (iRet == 0 && !strRet.isEmpty() && strRet.contains("Candidate:", Qt::CaseInsensitive)){
-        return true;
-    }
-
-    return false;
 }
 
 FixHplipBackend::FixHplipBackend(QObject *parent)
@@ -323,200 +236,6 @@ void FixHplipBackend::slotInstallStatus(int status)
     }
 }
 
-InstallInterface::InstallInterface(QObject *parent)
-    : QObject(parent)
-    , m_bQuit(false)
-{
-}
-
-void InstallInterface::setPackages(const QList<TPackageInfo> &packages)
-{
-    m_packages = packages;
-}
-
-QString InstallInterface::getErrorString()
-{
-    return m_strErr;
-}
-
-void InstallInterface::updateSourceChanged(const QDBusMessage &msg)
-{
-    QList<QVariant> arguments = msg.arguments();
-    if (m_bQuit)
-        return;
-
-    if (arguments.count() == 3) {
-        QVariantMap changedProps = qdbus_cast<QVariantMap>(arguments[1].value<QDBusArgument>());
-        for (auto prop = changedProps.begin(); prop != changedProps.end(); ++prop) {
-            QString key = prop.key();
-            qCDebug(COMMONMOUDLE) << "key : " << key << " Value: " <<  prop.value().toString();
-            if (key == "Type") {
-                m_strUpdateType = prop.value().toString();
-            } else if (key == "Status") {
-                m_strUpdateStatus = prop.value().toString();
-            }
-
-            if (m_strUpdateType == "update_source" && (m_strUpdateStatus == "end" || m_strUpdateStatus == "succeed")) {
-                m_strUpdateType.clear();
-                m_strUpdateStatus.clear();
-                goto endUpdate;
-            } else if (m_strUpdateStatus == "failed") {
-                goto endUpdate;
-            }
-        }
-    }
-    return;
-
-endUpdate:
-    qCDebug(COMMONMOUDLE) << "Disconnect com.deepin.lastore updateSourceChanged";
-    QDBusConnection::systemBus().disconnect("com.deepin.lastore",
-                                            m_updatePath,
-                                            "org.freedesktop.DBus.Properties",
-                                            "PropertiesChanged",
-                                            this, SLOT(updateSourceChanged(QDBusMessage)));
-    sleep(1); // 等待1s为了update后进行安装
-    startInstallPackages(false);
-    return;
-}
-
-void InstallInterface::startInstallPackages(bool status)
-{
-    /*检查包是否安装，并且校验版本，只有需要安装的时候才调用dbus接口安装
-     * 防止驱动已经安装的情况因为apt报错导致添加打印机失败
-     * TODO dbus安装没有执行apt update，可能存在更新不成功或者安装失败的问题
-     * 目前依赖系统自动执行的apt update
-    */
-    QDBusInterface *interface = getPackageInterface();
-    for (auto package : m_packages) {
-        qCInfo(COMMONMOUDLE) << "install package:" << package.toString();
-        if (isPackageExists(package.packageName)) {
-            QString strVer = getPackageVersion(package.packageName);
-            if (!package.packageVer.isEmpty() && strVer != package.packageVer) {
-                qCInfo(COMMONMOUDLE) << package.packageName << "need update";
-                m_installPackages.append(package.packageName);
-            } else {
-                qCInfo(COMMONMOUDLE) << package.packageName << "is exists: " << strVer;
-                continue;
-            }
-        } else {
-            m_installPackages.append(package.packageName);
-            qCInfo(COMMONMOUDLE) << package.packageName << "need install";
-        }
-
-        /*hplip-plugin包 mips架构目前不存在，所以忽略无法安装的错误，避免安装打印机流程阻塞*/
-        if (!isPackageInstallable(package.packageName) && (!package.packageName.contains("hplip-plugin"))) {
-            if (status) {
-                QDBusReply<QDBusObjectPath> updatePath = interface->call("UpdateSource");
-                m_updatePath = updatePath.value().path();
-
-                if (QDBusConnection::systemBus().connect("com.deepin.lastore",
-                                                         m_updatePath,
-                                                         "org.freedesktop.DBus.Properties",
-                                                         "PropertiesChanged",
-                                                         this, SLOT(updateSourceChanged(QDBusMessage)))) {
-                    qCInfo(COMMONMOUDLE) << "Start Update";
-                    return;
-                }
-            }
-
-            m_strErr = package.packageName + tr("is invalid");
-            emit signalStatus(TStat_Fail);
-            return;
-        }
-    }
-
-    if (m_installPackages.isEmpty()) {
-        emit signalStatus(TStat_Suc);
-        return;
-    }
-
-    QDBusReply<QDBusObjectPath> objPath = interface->call("InstallPackage", "", m_installPackages.join(" "));
-    QString extInfo;
-
-    if (objPath.isValid()) {
-        m_jobPath = objPath.value().path();
-        if (QDBusConnection::systemBus().connect(interface->service(),
-                                                 m_jobPath,
-                                                 "org.freedesktop.DBus.Properties",
-                                                 "PropertiesChanged",
-                                                 this, SLOT(propertyChanged(QDBusMessage)))) {
-            qCDebug(COMMONMOUDLE) << "Start install " << m_installPackages;
-            return;
-        } else {
-            extInfo = "Connect dbus signal failed";
-            qCWarning(COMMONMOUDLE) << "Connect dbus signal failed";
-        }
-    } else {
-        extInfo = objPath.error().message();
-        qCWarning(COMMONMOUDLE) << "DBus error: " << objPath.error().message();
-    }
-
-    m_strErr = tr("Failed to install the driver by calling dbus interface");
-    m_strErr += extInfo;
-    emit signalStatus(TStat_Fail);
-}
-
-void InstallInterface::stop()
-{
-    m_bQuit = true;
-    QDBusConnection::systemBus().disconnect(getPackageInterface()->service(),
-                                            m_jobPath,
-                                            "org.freedesktop.DBus.Properties",
-                                            "PropertiesChanged",
-                                            this, SLOT(propertyChanged(QDBusMessage)));
-
-    QDBusConnection::systemBus().disconnect("com.deepin.lastore",
-                                            m_updatePath,
-                                            "org.freedesktop.DBus.Properties",
-                                            "PropertiesChanged",
-                                            this, SLOT(updateSourceChanged(QDBusMessage)));
-}
-
-void InstallInterface::propertyChanged(const QDBusMessage &msg)
-{
-    QList<QVariant> arguments = msg.arguments();
-
-    if (m_bQuit)
-        return;
-
-    if (3 == arguments.count()) {
-        QString strType, strStatus;
-        QVariantMap changedProps = qdbus_cast<QVariantMap>(arguments[1].value<QDBusArgument>());
-        for (auto prop = changedProps.begin(); prop != changedProps.end(); ++prop) {
-            QString key = prop.key();
-            if (key == "Type")
-                m_strType = prop.value().toString();
-            else if (key == "Status")
-                m_strStatus = prop.value().toString();
-        }
-
-        qCDebug(COMMONMOUDLE) << m_strType << m_strStatus;
-        if (m_strType == "install" && m_strStatus == "succeed") {
-            emit signalStatus(TStat_Suc);
-            goto done;
-        } else if (m_strStatus == "failed") {
-            m_strErr = tr("Failed to install %1").arg(m_installPackages.join("  "));
-            stop(); // 失败时先disconnect，避免成员析构导致sigsegv
-            emit signalStatus(TStat_Fail);
-        }
-
-        return;
-    }
-
-    m_strErr = tr("Failed to install %1").arg(m_installPackages.join(" "));
-    emit signalStatus(TStat_Fail);
-
-done:
-    qCDebug(COMMONMOUDLE) << "Disconnect com.deepin.lastore PropertiesChanged";
-    QDBusConnection::systemBus().disconnect(getPackageInterface()->service(),
-                                            m_jobPath,
-                                            "org.freedesktop.DBus.Properties",
-                                            "PropertiesChanged",
-                                            this, SLOT(propertyChanged(QDBusMessage)));
-
-    return;
-}
-
 InstallDriver::InstallDriver(const QMap<QString, QVariant> &solution, QObject *parent)
     : InstallInterface(parent)
 {
@@ -597,46 +316,51 @@ void AddCanonCAPTPrinter::stop()
     m_proc.kill();
 }
 
+// Canon CAPT setup needs root rights: it only runs on an explicit user action
+// and every device-provided string is validated before it is sent.
+static bool buildCanonDeviceInfo(const QString &uri, const QString &serial, QString &info)
+{
+    if (containsIpAddress(uri)) {
+        const QRegularExpressionMatch match = QRegularExpression("([0-9]{1,3}\\.){3}[0-9]{1,3}").match(uri);
+        QHostAddress addr;
+        if (!match.hasMatch() || !addr.setAddress(match.captured(0)) || addr.protocol() != QAbstractSocket::IPv4Protocol) {
+            return false;
+        }
+        info = "net:" + addr.toString();
+        return true;
+    }
+    if (!SafeProcess::isValidDeviceToken(serial)) {
+        return false;
+    }
+    info = "usb:" + serial;
+    return true;
+}
+
 int AddCanonCAPTPrinter::addPrinter()
 {
-    QString ppd_name;
-    ppd_name = m_solution[CUPS_PPD_NAME].toString();
-
+    if (m_unattended) {
+        m_strErr = tr("The Canon driver needs administrator authorization. Please add the printer in the Print Manager.");
+        return -1;
+    }
     if (!QFile::exists(g_captexec)) {
         qCWarning(COMMONMOUDLE) << g_captexec << "not found";
         return -1;
     }
-
     if (m_bQuit)
         return -1;
 
-    QString printInfo = "usb:";
-    if (containsIpAddress(m_uri)) {
-        printInfo = "net:";
-        QRegularExpression re("([0-9]{1,3}\\.){3}[0-9]{1,3}");
-        QRegularExpressionMatch match = re.match(m_uri);
-
-        if (match.hasMatch()) {
-            printInfo += match.captured(0);
-        }
-    } else {
-        printInfo += m_printer.serial;
-    }
-
-    int index = ppd_name.lastIndexOf('/');
-    if (index != -1) {
-        ppd_name = ppd_name.mid(index + 1);
+    QString printInfo;
+    const QString ppd_name = QFileInfo(m_solution[CUPS_PPD_NAME].toString()).fileName();
+    if (!buildCanonDeviceInfo(m_uri, m_printer.serial, printInfo)) {
+        m_strErr = canonManagerErrorText(CanonInvalidArgs);
+        return -1;
     }
 
     qCDebug(COMMONMOUDLE) << "ppdname : " << ppd_name << "printInfo: " << printInfo;
-    int ret = managerCanonPrinter("add", QStringList {m_printer.strName, ppd_name, printInfo});
+    const int ret = managerCanonPrinter("add", QStringList {m_printer.strName, ppd_name, printInfo});
 
     m_proc.setProcessChannelMode(QProcess::ForwardedChannels);
-    if (ret != 0) {
-        emit m_proc.finished(ret, QProcess::CrashExit);
-    } else {
-        emit m_proc.finished(ret, QProcess::NormalExit);
-    }
+    emit m_proc.finished(ret, ret == CanonOk ? QProcess::NormalExit : QProcess::CrashExit);
 
     return 1;
 }
@@ -644,15 +368,8 @@ int AddCanonCAPTPrinter::addPrinter()
 void AddCanonCAPTPrinter::slotProcessFinished(int iCode, QProcess::ExitStatus exitStatus)
 {
     qCInfo(COMMONMOUDLE) << iCode << exitStatus;
-    if (exitStatus != QProcess::NormalExit || 0 != iCode) {
-        m_strErr = m_proc.readAllStandardError();
-        if (iCode == 2) { // 佳能capt打印机已经添加，不允许重复添加
-            m_strErr = QObject::tr("The Canon capt printer has been added and is not allowed to be added again.");
-        } else if (iCode == -11) {
-            m_strErr = "Application path does not match, and installation is not allowed.";
-        }
-
-        m_strErr += "Canon capt install fail.";
+    if (exitStatus != QProcess::NormalExit || CanonOk != iCode) {
+        m_strErr = canonManagerErrorText(iCode) + " " + QObject::tr("Canon capt install fail.");
         m_iStep = STEP_Failed;
     }
 
@@ -874,7 +591,15 @@ int AddPrinterTask::fixDriverDepends()
         return 0;
 
     QString ppd_name = m_solution[CUPS_PPD_NAME].toString();
-    checkPPDName(ppd_name);
+    const QString vendorDir = findVendorConfigDir(ppd_name);
+    if (!vendorDir.isEmpty()) {
+        // Privileged vendor setup needs an administrator decision made in the UI.
+        if (m_unattended) {
+            m_strErr = tr("This driver needs administrator authorization. Please add the printer in the Print Manager.");
+            return -1;
+        }
+        launchVendorAutostart(vendorDir);
+    }
     QStringList depends = g_driverManager->getDriverDepends(ppd_name.toUtf8().data());
     if (!depends.isEmpty()) {
         m_installDepends = new InstallInterface(this);
@@ -1053,8 +778,8 @@ void AddPrinterTask::slotWriteLog(int status)
         QString reason = getErrorMassge();
         obj.insert("reason", QJsonValue(reason));
     }
-    obj.insert("version", getPackageVersion(APPNAME));
-    obj.insert("cupsVersion", getPackageVersion("cups"));
+    obj.insert("version", PackageUtil::installedVersion(APPNAME));
+    obj.insert("cupsVersion", PackageUtil::installedVersion("cups"));
     obj.insert("tid", 1000100000); // 事件ID
 
     QString installInfo = QString(QJsonDocument(obj).toJson(QJsonDocument::Compact));
@@ -1147,7 +872,8 @@ QString AddPrinterFactory::defaultPrinterName(const TDeviceInfo &printer, const 
     strName = strDefaultName;
     // 保证和已安装的打印机名字不重复
     int i = 1;
-    while (installedPrinters.contains(strDefaultName)) {
+    // CUPS queue names are case-insensitive, so "Foo" and "foo" collide
+    while (installedPrinters.contains(strDefaultName, Qt::CaseInsensitive)) {
         strDefaultName = strName + "-" + QString::number(i++);
     }
 

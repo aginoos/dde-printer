@@ -14,6 +14,8 @@ HEADERS +=  \
     $$PWD/zjobmanager.h \
     $$PWD/cupsattrnames.h \
     $$PWD/config.h \
+    $$PWD/safeprocess.h \
+    $$PWD/packageutil.h \
     $$PWD/reviselogger.h \
     $$PWD/vendor/addprinter_p.h \
     $$PWD/vendor/addprinter.h \
@@ -27,6 +29,8 @@ HEADERS +=  \
 SOURCES +=  \
     $$PWD/common.cpp \
     $$PWD/avahi_tool.cpp \
+    $$PWD/safeprocess.cpp \
+    $$PWD/packageutil.cpp \
     $$PWD/qtconvert.cpp \
     $$PWD/zsettings.cpp \
     $$PWD/cupsconnectionfactory.cpp \
@@ -34,6 +38,7 @@ SOURCES +=  \
     $$PWD/zjobmanager.cpp \
     $$PWD/reviselogger.cpp \
     $$PWD/vendor/addprinter.cpp \
+    $$PWD/vendor/installinterface.cpp \
     $$PWD/vendor/printerservice.cpp \
     $$PWD/vendor/zdevicemanager.cpp \
     $$PWD/vendor/zdrivermanager.cpp \

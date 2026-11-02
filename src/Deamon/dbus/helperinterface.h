@@ -19,22 +19,22 @@ public:
     explicit HelperInterface(CupsMonitor *pCupsMonitor, QObject *parent = nullptr);
     ~HelperInterface();
 
-    void registerDBus();
+    bool registerDBus();
     void unRegisterDBus();
 signals:
-    void signalJobStateChanged(int id, int state, const QString &message);
-    void signalPrinterStateChanged(const QString &printer, int state, const QString &message);
-    void signalPrinterDelete(const QString &printer);
-    void signalPrinterAdd(const QString &printer);
-    void deviceStatusChanged(const QString &defaultPrinterName, int status);
+    Q_SCRIPTABLE void signalJobStateChanged(int id, int state, const QString &message);
+    Q_SCRIPTABLE void signalPrinterStateChanged(const QString &printer, int state, const QString &message);
+    Q_SCRIPTABLE void signalPrinterDelete(const QString &printer);
+    Q_SCRIPTABLE void signalPrinterAdd(const QString &printer);
+    Q_SCRIPTABLE void deviceStatusChanged(const QString &defaultPrinterName, int status);
     void usbDeviceProcess();
 
 public slots:
     //dbus接口
-    bool isJobPurged(int id);
-    QString getJobNotify(const QMap<QString, QVariant> &job);
-    QString getStateString(int iState);
-    void setTypeAndState(int status);
+    Q_SCRIPTABLE bool isJobPurged(int id);
+    Q_SCRIPTABLE QString getJobNotify(const QMap<QString, QVariant> &job);
+    Q_SCRIPTABLE QString getStateString(int iState);
+    Q_SCRIPTABLE void setTypeAndState(int status);
 
 protected:
     void slotShowTrayIcon(bool bShow);

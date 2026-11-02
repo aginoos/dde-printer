@@ -4,6 +4,7 @@
 
 #include "advancedsharewidget.h"
 #include "common.h"
+#include "safeprocess.h"
 
 #include <QTextStream>
 #include <DGuiApplicationHelper>
@@ -16,6 +17,7 @@
 #include <QPainter>
 #include <QFile>
 #include <QProcess>
+#include <QRegularExpression>
 
 DWIDGET_USE_NAMESPACE
 DGUI_USE_NAMESPACE
@@ -46,14 +48,18 @@ static QString getInfoFromDesktopFile(const QString &name, const QString &filePa
 static QStringList getDesktopFilePath(const QString &packageName)
 {
     QStringList ret;
-    QString cmd = QString("dpkg -L %1 | grep -E 'applications.*desktop'").arg(packageName);
+    if (!SafeProcess::isValidPackageName(packageName)) {
+        return ret;
+    }
 
-    QProcess p;
-    p.start("/bin/bash", QStringList() << "-c" << cmd);
-    p.waitForFinished();
-
-    QString output = p.readAllStandardOutput();
-    ret = output.split("\n", Qt::SkipEmptyParts);
+    const SafeProcess::Result listing = SafeProcess::runKeepingUiAlive("dpkg", {"-L", "--", packageName});
+    static const QRegularExpression desktopRe("applications.*desktop");
+    const QStringList lines = listing.out.split("\n", Qt::SkipEmptyParts);
+    for (const QString &line : lines) {
+        if (desktopRe.match(line).hasMatch()) {
+            ret << line;
+        }
+    }
 
     return ret;
 }
@@ -208,7 +214,15 @@ void ManagementToolWidget::listClickedSlot(const QModelIndex &index)
         return;
     }
 
-    QStringList execArgs = QProcess::splitCommand(m_packageInfo.at(index.row()).strExec);
+    // Drop desktop-entry field codes (%f, %U, ...); "%%" stands for a literal percent.
+    static const QRegularExpression fieldCodeRe("^%[a-zA-Z]$");
+    QStringList execArgs;
+    const QStringList rawArgs = QProcess::splitCommand(m_packageInfo.at(index.row()).strExec);
+    for (const QString &arg : rawArgs) {
+        if (!fieldCodeRe.match(arg).hasMatch()) {
+            execArgs << QString(arg).replace("%%", "%");
+        }
+    }
     if (execArgs.isEmpty()) {
         return;
     }

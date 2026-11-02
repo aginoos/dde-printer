@@ -36,6 +36,7 @@
 #include "../util/dprintermanager.h"
 #include "../util/dprinter.h"
 #include "common.h"
+#include "safeprocess.h"
 
 #define FLAGITEMSPACE "\b\b\b\b\b\b\b\b"
 #define ITEMWIDTH 100
@@ -1343,17 +1344,22 @@ void DPropertySetDlg::preferenceClickSlot()
     QString model = getBishengInfo("PrinterName").replace(QRegularExpression("^ "), "").replace("\"", "");
     QString prefix = getBishengInfo("PackageName").replace(QRegularExpression("^ "), "").replace(QRegularExpression("\""), "");
 
-    args << "setprinter" << prefix << model;
+    static const QRegularExpression modelRe("^[A-Za-z0-9][A-Za-z0-9 ._+-]{0,127}$");
+    if (!SafeProcess::isValidPackageName(prefix) || !modelRe.match(model).hasMatch()) {
+        qCWarning(COMMONMOUDLE) << "refusing to start setprinter with unexpected PPD values";
+        return;
+    }
+
+    args << "/usr/bin/setprinter" << prefix << model;
     qCInfo(COMMONMOUDLE) << args;
     QProcess::startDetached("/bin/bash", args, "/usr/bin");
 }
 
 QString DPropertySetDlg::getBishengInfo(QString info)
 {
-    QString strOut, strErr;
-    QString commond;
-    commond += "cat " + m_strPpdName;
-    if (shellCmd(commond, strOut, strErr) == 0) {
+    QFile ppdFile(m_strPpdName);
+    if (SafeProcess::isSafeAbsolutePath(m_strPpdName) && ppdFile.open(QIODevice::ReadOnly)) {
+        const QString strOut = QString::fromUtf8(ppdFile.readAll());
         QStringList list = strOut.split("\n", Qt::SkipEmptyParts);
         int index = 0;
         for (; index < list.size(); index++) {

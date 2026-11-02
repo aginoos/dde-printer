@@ -6,6 +6,8 @@
 #include "zjobmanager.h"
 #include "cupsattrnames.h"
 #include "common.h"
+#include "safeprocess.h"
+#include "packageutil.h"
 #include "cupsconnection.h"
 #include "cupsconnectionfactory.h"
 #include "qtconvert.h"
@@ -92,10 +94,9 @@ static QString getPrinterInfo(const QString &strName)
 
 static QString getPpdInfo(const QString &strPpdName, const QString &info)
 {
-    QString strOut, strErr;
-    QString commond;
-    commond += "cat " + strPpdName;
-    if (shellCmd(commond, strOut, strErr) == 0) {
+    QFile ppdFile(strPpdName);
+    if (SafeProcess::isSafeAbsolutePath(strPpdName) && ppdFile.open(QIODevice::ReadOnly)) {
+        const QString strOut = QString::fromUtf8(ppdFile.readAll());
         QStringList list = strOut.split("\n", Qt::SkipEmptyParts);
         int index = 0;
         for (; index < list.size(); index++) {
@@ -118,15 +119,8 @@ static QString getPpdInfo(const QString &strPpdName, const QString &info)
 
 static QString getPackageVerByName(const QString &packageName)
 {
-    QString strOut, strErr;
-    if (shellCmd(QString("dpkg -l %1").arg(packageName), strOut, strErr) == 0) {
-        QStringList list = strOut.split("\n", Qt::SkipEmptyParts);
-        strOut = list.isEmpty() ? "" : list.last();
-        list = strOut.split(" ", Qt::SkipEmptyParts);
-        return list.count() > 2 ? list[2] : QString();
-    }
-
-    return nullptr;
+    const QString version = PackageUtil::installedVersion(packageName);
+    return version.isEmpty() ? QString() : version;
 }
 
 static QString formatDateTime(const QString &time)
@@ -761,7 +755,7 @@ void CupsMonitor::spoolerEvent(QDBusMessage msg)
 void CupsMonitor::showJobsWindow()
 {
     QProcess process;
-    QString cmd = "dde-printer";
+    QString cmd = "/usr/bin/dde-printer";
     QStringList args;
     args << "-m" << "4";
     if (!process.startDetached(cmd, args)) {

@@ -5,6 +5,7 @@
 #include "ztroubleshoot.h"
 #include "cupsattrnames.h"
 #include "common.h"
+#include "safeprocess.h"
 #include "cupsconnection.h"
 #include "qtconvert.h"
 #include "ztroubleshoot_p.h"
@@ -224,7 +225,7 @@ bool CheckConnected::isPass()
     unsigned short iPort;
     QUrl url;
     QString strUri, strHost;
-    QString pingCmd, strOut, strErr, strScheme;
+    QString strScheme;
     QStringList uriDepends;
 
     emit signalStateChanged(TStat_Running, tr("Checking printer connection..."));
@@ -292,9 +293,9 @@ bool CheckConnected::isPass()
             return false;
         }
     } else if (!strHost.isEmpty()) {
-        pingCmd = QString("ping %1 -c 3").arg(strHost);
-        shellCmd(pingCmd, strOut, strErr, 5000);
-        if (!strOut.contains("ttl=")) {
+        const bool reachable = SafeProcess::isValidHost(strHost)
+            && SafeProcess::run("ping", {"-c", "3", "-W", "2", "--", strHost}, 8000).out.contains("ttl=");
+        if (!reachable) {
             m_strMessage = tr("Cannot connect to the printer");
             emit signalStateChanged(TStat_Fail, m_strMessage);
             return false;

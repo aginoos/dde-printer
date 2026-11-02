@@ -248,6 +248,14 @@ ServerSettings::ServerSettings()
 {
 }
 
+ServerSettings &ServerSettings::enablePrinterDiscovery(bool enabled)
+{
+    // only change a setting the server reports; writing an unknown key would be rejected
+    if (settings_.find(DDE_PRINTER_ENABLE_PRINTER_DISCOVER) != settings_.end())
+        settings_[DDE_PRINTER_ENABLE_PRINTER_DISCOVER] = enabled ? "1" : "0";
+    return *this;
+}
+
 ServerSettings &ServerSettings::enableDebugLogging(bool enabled)
 {
     settings_[CUPS_SERVER_DEBUG_LOGGING] = enabled ? "1" : "0";
@@ -277,6 +285,17 @@ ServerSettings &ServerSettings::enableUserCancelAny(bool enabled)
 {
     settings_[CUPS_SERVER_USER_CANCEL_ANY] = enabled ? "1" : "0";
     return *this;
+}
+
+bool ServerSettings::hasDiscoverySupported() const
+{
+    return settings_.find(DDE_PRINTER_ENABLE_PRINTER_DISCOVER) != settings_.end();
+}
+
+bool ServerSettings::isDiscoveryEnabled() const
+{
+    const auto it = settings_.find(DDE_PRINTER_ENABLE_PRINTER_DISCOVER);
+    return it != settings_.end() && atoi(it->second.c_str()) == 1;
 }
 
 bool ServerSettings::isDebugLoggingEnabled() const

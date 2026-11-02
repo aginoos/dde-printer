@@ -65,12 +65,16 @@ public:
     bool hasFinishedJob();
 
     //服务器设置接口
+    void enablePrinterDiscovery(bool enabled);
     void enableDebugLogging(bool enabled);
     void enableRemoteAdmin(bool enabled);
     void enableRemoteAny(bool enabled);
     void enableSharePrinters(bool enabled);
     void enableUserCancelAny(bool enabled);
 
+    // false when the CUPS server has no Avahi discovery setting (the UI hides the option then)
+    bool hasDiscoverySupported() const;
+    bool isDiscoveryEnabled() const;
     bool isDebugLoggingEnabled() const;
     bool isRemoteAdminEnabled() const;
     bool isRemoteAnyEnabled() const;

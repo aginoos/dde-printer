@@ -354,6 +354,11 @@ bool DPrinterManager::hasFinishedJob()
     }
 }
 
+void DPrinterManager::enablePrinterDiscovery(bool enabled)
+{
+    m_pServerSettings.enablePrinterDiscovery(enabled);
+}
+
 void DPrinterManager::enableDebugLogging(bool enabled)
 {
     m_pServerSettings.enableDebugLogging(enabled);
@@ -377,6 +382,16 @@ void DPrinterManager::enableSharePrinters(bool enabled)
 void DPrinterManager::enableUserCancelAny(bool enabled)
 {
     m_pServerSettings.enableUserCancelAny(enabled);
+}
+
+bool DPrinterManager::hasDiscoverySupported() const
+{
+    return m_pServerSettings.hasDiscoverySupported();
+}
+
+bool DPrinterManager::isDiscoveryEnabled() const
+{
+    return m_pServerSettings.isDiscoveryEnabled();
 }
 
 bool DPrinterManager::isDebugLoggingEnabled() const

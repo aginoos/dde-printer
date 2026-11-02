@@ -15,6 +15,10 @@
 #include <QProcess>
 #include <QFile>
 #include <QDir>
+#include <QFileInfo>
+#include <QLocale>
+#include <QStandardPaths>
+#include <QTemporaryFile>
 
 DPrinter::DPrinter()
 {
@@ -170,10 +174,10 @@ QVector<QMap<QString, QString>> DPrinter::getColorModelChooses()
 
         if (strVal == "Gray") {
             choose["choice"] = "Gray";
-            choose["text"] = "Grayscale";
+            choose["text"] = tr("Grayscale");
         } else {
             choose["choice"] = "RGB";
-            choose["text"] = "Color";
+            choose["text"] = tr("Color");
         }
 
         vecChoose.push_back(choose);
@@ -784,8 +788,10 @@ bool DPrinter::saveModify()
 
     try {
         auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-        if (conPtr)
+        if (conPtr) {
             conPtr->addPrinter(getName().toUtf8().data(), nullptr, nullptr, nullptr, nullptr, nullptr, &m_ppd);
+            bRet = true;
+        }
     } catch (const std::runtime_error &e) {
         qCWarning(UTIL) << "Got execpt: " << QString::fromUtf8(e.what());
         bRet = false;
@@ -1115,4 +1121,89 @@ QString DPrinter::getMarkerLevel()
     }
 
     return strMarkerLevel;
+}
+
+QString DPrinter::getPpdAttrValue(const char *name, const char *spec)
+{
+    try {
+        Attribute attr = m_ppd.findAttr(name, spec);
+        return QString::fromStdString(attr.getValue()).trimmed();
+    } catch (const std::runtime_error &e) {
+        qCWarning(UTIL) << "Got execpt: " << QString::fromUtf8(e.what());
+    }
+    return QString();
+}
+
+CustomPage::Scope DPrinter::getCustomPageSizeScope()
+{
+    return CustomPage::parseScopeValue(getPpdAttrValue("ParamCustomPageSize", "Width"),
+                                       getPpdAttrValue("ParamCustomPageSize", "Height"));
+}
+
+bool DPrinter::supportsCustomPageSize()
+{
+    return getCustomPageSizeScope().isValid();
+}
+
+QStringList DPrinter::readPpdLines()
+{
+    if (!m_ppd.file) {
+        return QStringList();
+    }
+
+    QByteArray data;
+    char buffer[8192];
+    rewind(m_ppd.file);
+    size_t count = 0;
+    while ((count = fread(buffer, 1, sizeof(buffer), m_ppd.file)) > 0) {
+        data.append(buffer, static_cast<int>(count));
+    }
+    return CustomPage::linesFromBytes(data);
+}
+
+QList<CustomPage::PageSize> DPrinter::getCustomPageSizeList()
+{
+    return CustomPage::parseSizes(readPpdLines(), QLocale().name());
+}
+
+bool DPrinter::saveCustomPageSizes(const QList<CustomPage::PageSize> &sizes)
+{
+    // Edits made in the property dialog but not yet written would be lost by the reload below.
+    if (m_bNeedSavePpd) {
+        saveModify();
+    }
+
+    const QStringList lines = readPpdLines();
+    if (lines.isEmpty()) {
+        qCWarning(UTIL) << "no PPD content available for" << m_strName;
+        return false;
+    }
+
+    // QTemporaryFile creates the file exclusively with mode 0600, so a fixed or
+    // predictable name (and symlink tricks in a shared /tmp) is not an issue.
+    QString dir = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
+    if (dir.isEmpty() || !QFileInfo(dir).isDir()) {
+        dir = QDir::tempPath();
+    }
+    QTemporaryFile tmp(QDir(dir).filePath(QStringLiteral("dde-printer-custompage-XXXXXX.ppd")));
+    const QByteArray content = CustomPage::bytesFromLines(CustomPage::replaceSizes(lines, sizes, QLocale().name()));
+    if (!tmp.open() || tmp.write(content) != content.size() || !tmp.flush()) {
+        qCWarning(UTIL) << "can't write temporary PPD:" << tmp.errorString();
+        return false;
+    }
+
+    try {
+        m_ppd.load(tmp.fileName().toLocal8Bit().constData());
+        m_ppd.localize();
+    } catch (const std::runtime_error &e) {
+        qCWarning(UTIL) << "Got execpt: " << QString::fromUtf8(e.what());
+        initPrinterPPD();
+        return false;
+    }
+
+    if (!saveModify()) {
+        initPrinterPPD();
+        return false;
+    }
+    return true;
 }

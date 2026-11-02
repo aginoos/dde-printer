@@ -9,12 +9,14 @@
 #include "cupsppd.h"
 #include "cupssnmp.h"
 #include "ddestination.h"
+#include "custompagesize.h"
 
 #include <QStringList>
 #include <QObject>
 #include <QVector>
 #include <QString>
 #include <QMap>
+#include <QCoreApplication>
 
 typedef struct conflictNode {
     QString strOption;
@@ -62,6 +64,7 @@ typedef OPTNODE GENERALOPTNODE;
 
 class DPrinter : public DDestination
 {
+    Q_DECLARE_TR_FUNCTIONS(DPrinter)
 
 public:
     DPrinter();
@@ -175,6 +178,12 @@ public:
 
     QString getPPDName();
 
+    //user defined paper sizes (PPD choices tagged "ddeprintN")
+    bool supportsCustomPageSize();
+    CustomPage::Scope getCustomPageSizeScope();
+    QList<CustomPage::PageSize> getCustomPageSizeList();
+    bool saveCustomPageSizes(const QList<CustomPage::PageSize> &sizes);
+
 private:
     QString getOptionValue(const QString &strOptName);
     void setOptionValue(const QString &strOptName, const QString &strValue);
@@ -183,6 +192,8 @@ private:
     QString getMarkerType();
     QString getMarkerName();
     QString getMarkerLevel();
+    QStringList readPpdLines();
+    QString getPpdAttrValue(const char *name, const char *spec);
 
 private:
     PPD m_ppd;

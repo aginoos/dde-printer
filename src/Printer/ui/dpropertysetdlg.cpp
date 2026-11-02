@@ -27,6 +27,8 @@
 #include <QVBoxLayout>
 #include <QLocale>
 #include <QPalette>
+#include <QComboBox>
+#include <QSignalBlocker>
 #include <QFile>
 #include <QProcess>
 
@@ -36,12 +38,14 @@
 #include "../util/dprintermanager.h"
 #include "../util/dprinter.h"
 #include "common.h"
+#include "custompagedialog.h"
 #include "safeprocess.h"
 
 #define FLAGITEMSPACE "\b\b\b\b\b\b\b\b"
 #define ITEMWIDTH 100
 #define ITEMHEIGHT 56
 #define UNSUPPORTED "-1"
+#define CUSTOMPAGECHOICE "Custom"
 
 enum COMBOITEMROLE {
     VALUEROLE = Qt::UserRole + 1,
@@ -662,24 +666,33 @@ void DPropertySetDlg::showConflictDlg(const vector<CONFLICTPAIR> &vecConflictPai
 
 void DPropertySetDlg::updateComboByConflits(const QSet<QString> &nodes)
 {
+    // Only combos that were painted for a conflict are touched again, and they
+    // go back to the theme palette rather than a hard-coded colour, so the text
+    // colour of unrelated or resolved combos is never overridden.
+    static const char kConflictFlag[] = "conflictMarked";
+
     for (auto iter = m_mapOfConflict.begin(); iter != m_mapOfConflict.end(); iter++) {
         if (nodes.contains(iter.key())) {
             continue;
         }
 
-        QString strWidgetName = iter.value();
-        QComboBox *pCombo = qobject_cast<QComboBox *>(m_mapOfListWidget.value(strWidgetName));
-        QPalette pal = pCombo->palette();
-        pal.setColor(QPalette::ButtonText, Qt::black);
-        pCombo->setPalette(pal);
+        QComboBox *pCombo = qobject_cast<QComboBox *>(m_mapOfListWidget.value(iter.value()));
+        if (pCombo && pCombo->property(kConflictFlag).toBool()) {
+            pCombo->setPalette(QPalette());
+            pCombo->setProperty(kConflictFlag, false);
+        }
     }
 
     foreach (QString strOpt, nodes) {
         QString strWidgetName = m_mapOfConflict.value(strOpt);
         QComboBox *pCombo = qobject_cast<QComboBox *>(m_mapOfListWidget.value(strWidgetName));
+        if (!pCombo) {
+            continue;
+        }
         QPalette pal = pCombo->palette();
         pal.setColor(QPalette::ButtonText, Qt::red);
         pCombo->setPalette(pal);
+        pCombo->setProperty(kConflictFlag, true);
     }
 }
 
@@ -757,6 +770,14 @@ QVector<GENERALOPTNODE> DPropertySetDlg::getGeneralNodes()
 void DPropertySetDlg::pageSizeCombo_clicked(int iIndex)
 {
     if (!m_bShow) {
+        return;
+    }
+
+    // "Custom" is the entry CUPS adds for printers that accept free sizes; it opens the editor
+    // instead of becoming the selection.
+    QComboBox *pPageCombo = qobject_cast<QComboBox *>(m_mapOfListWidget.value(QString::fromStdString("PageSize_Combo")));
+    if (pPageCombo && pPageCombo->itemData(iIndex, COMBOITEMROLE::VALUEROLE).toString() == CUSTOMPAGECHOICE) {
+        openCustomPageDialog();
         return;
     }
 
@@ -1378,4 +1399,36 @@ QString DPropertySetDlg::getBishengInfo(QString info)
     }
 
     return nullptr;
+}
+
+void DPropertySetDlg::openCustomPageDialog()
+{
+    const QString strPageCombo = QString::fromStdString("PageSize_Combo");
+    const QString strPrevious = m_mapDynamicUIValue.value(strPageCombo);
+    CustomPageDialog dialog(m_strPrinterName, this);
+    const bool bSaved = dialog.exec() == QDialog::Accepted;
+
+    QComboBox *pCombo = qobject_cast<QComboBox *>(m_mapOfListWidget.value(strPageCombo));
+    if (!pCombo) {
+        return;
+    }
+
+    // The selection must not trigger pageSizeCombo_clicked while it is rebuilt.
+    const QSignalBlocker blocker(pCombo);
+    if (bSaved) {
+        DDestination *pDest = DPrinterManager::getInstance()->getDestinationByName(m_strPrinterName);
+        if (pDest != nullptr && DESTTYPE::PRINTER == pDest->getType()) {
+            DPrinter *pPrinter = static_cast<DPrinter *>(pDest);
+            pCombo->clear();
+            updatePageSizeCombo(pPrinter->getPageSize(), pPrinter->getPageSizeChooses());
+        }
+        return;
+    }
+
+    for (int i = 0; i < pCombo->count(); ++i) {
+        if (pCombo->itemData(i, COMBOITEMROLE::VALUEROLE).toString() == strPrevious) {
+            pCombo->setCurrentIndex(i);
+            return;
+        }
+    }
 }

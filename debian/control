@@ -1,7 +1,7 @@
 Source: dde-printer
 Section: misc
 Priority: optional
-Maintainer: Deepin Sysdev <sysdev@linuxdeepin.com>
+Maintainer: agino Team <admin@aginoos.com>
 Build-Depends: 
  debhelper-compat (= 13),
  qt6-base-dev,
@@ -26,7 +26,8 @@ Homepage: http://www.linuxdeepin.com/
 Package: dde-printer
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libdeepin-service-framework, deepin-service-manager, polkitd, cups-client
-Recommends: libnss-mdns, gnome-keyring
+Recommends: ipp-usb, iputils-ping, avahi-daemon, libnss-mdns, gnome-keyring, pkexec
+Suggests: hplip
 Description: Deepin Print Manager is a eazy tool to manage printers.
  Deepin Print Manager is a printer management tool,which supports adding and removing printers,managing print jobs and so on.
  

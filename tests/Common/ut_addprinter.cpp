@@ -313,3 +313,27 @@ TEST(ut_AddPrinter, factoryChoosesTheTaskByDriver)
     ASSERT_NE(plain, nullptr);
     EXPECT_NE(dynamic_cast<DefaultAddPrinter *>(plain.get()), nullptr);
 }
+
+TEST(ut_AddPrinter, lpadminArgsKeepNewQueuesPrivate)
+{
+    TDeviceInfo printer = deviceWith({"ipp://h/printers/x"});
+    printer.strName = "Office";
+    const QStringList args = buildLpadminArgs(printer, "ipp://h/printers/x", PPDFrom_Database, "x.ppd");
+    EXPECT_EQ(args.mid(0, 7), (QStringList{"-p", "Office", "-E", "-v", "ipp://h/printers/x", "-m", "x.ppd"}));
+    ASSERT_GE(args.size(), 2);
+    EXPECT_EQ(args.mid(args.size() - 2), (QStringList{"-o", "printer-is-shared=false"}));
+}
+
+TEST(ut_AddPrinter, lpadminArgsPickTheDriverOption)
+{
+    TDeviceInfo printer = deviceWith({"ipp://h/printers/x"});
+    printer.strName = "Office";
+    printer.strInfo = "desc";
+    printer.strLocation = "room 3";
+    EXPECT_TRUE(buildLpadminArgs(printer, "u", PPDFrom_EveryWhere, "ignored").contains("everywhere"));
+    const QStringList file = buildLpadminArgs(printer, "u", PPDFrom_File, "/tmp/a.ppd");
+    EXPECT_EQ(file.at(file.indexOf("-P") + 1), QString("/tmp/a.ppd"));
+    EXPECT_EQ(file.at(file.indexOf("-D") + 1), QString("desc"));
+    EXPECT_EQ(file.at(file.indexOf("-L") + 1), QString("room 3"));
+    EXPECT_TRUE(file.contains("printer-is-shared=false"));
+}

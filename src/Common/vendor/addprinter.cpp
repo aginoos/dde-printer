@@ -392,30 +392,35 @@ void DefaultAddPrinter::stop()
     m_proc.kill();
 }
 
-int DefaultAddPrinter::addPrinter()
+// A new queue is private: the user may switch sharing on later in the UI.
+static QStringList buildLpadminArgs(const TDeviceInfo &printer, const QString &uri, int driverType, const QString &ppdName)
 {
     QStringList args;
-    QString ppd_name;
-    int driverType = m_solution[SD_KEY_from].toInt();
-    ppd_name = m_solution[CUPS_PPD_NAME].toString();
-
-    if (m_bQuit)
-        return -1;
-
-    args << "-p" << m_printer.strName << "-E"
-         << "-v" << m_uri;
+    args << "-p" << printer.strName << "-E"
+         << "-v" << uri;
     if (PPDFrom_EveryWhere == driverType)
         args << "-m"
              << "everywhere";
     else if (driverType == PPDFrom_File)
-        args << "-P" << ppd_name;
+        args << "-P" << ppdName;
     else
-        args << "-m" << ppd_name;
+        args << "-m" << ppdName;
 
-    if (!m_printer.strInfo.isEmpty())
-        args << "-D" << m_printer.strInfo;
-    if (!m_printer.strLocation.isEmpty())
-        args << "-L" << m_printer.strLocation;
+    if (!printer.strInfo.isEmpty())
+        args << "-D" << printer.strInfo;
+    if (!printer.strLocation.isEmpty())
+        args << "-L" << printer.strLocation;
+    args << "-o" << "printer-is-shared=false";
+    return args;
+}
+
+int DefaultAddPrinter::addPrinter()
+{
+    if (m_bQuit)
+        return -1;
+
+    const QStringList args = buildLpadminArgs(m_printer, m_uri, m_solution[SD_KEY_from].toInt(),
+                                              m_solution[CUPS_PPD_NAME].toString());
 
     qCDebug(COMMONMOUDLE) << args;
     m_proc.start("/usr/sbin/lpadmin", args);

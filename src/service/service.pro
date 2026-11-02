@@ -3,7 +3,7 @@ DEFINES += QT_MESSAGELOGCONTEXT
 QT += core dbus
 QT -= gui
 
-CONFIG += c++11
+CONFIG += c++17
 
 TARGET = dde-printer-manager
 CONFIG += console

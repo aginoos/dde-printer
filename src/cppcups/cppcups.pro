@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT       -= core gui
-CONFIG += staticlib
+CONFIG += staticlib c++17
 
 TARGET = cppcups
 TEMPLATE = lib

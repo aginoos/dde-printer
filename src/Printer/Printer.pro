@@ -1,14 +1,13 @@
-QT += core gui network dbus
+QT += core gui widgets network dbus
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = dde-printer
 TEMPLATE = app
 
 DEFINES += QT_DEPRECATED_WARNINGS QT_MESSAGELOGCONTEXT
 
-CONFIG += c++11 link_pkgconfig
-PKGCONFIG += dtkwidget dtkgui
+CONFIG += c++17 link_pkgconfig
+PKGCONFIG += dtk6widget dtk6gui dtk6core
 
 SOURCES += \
         main.cpp \

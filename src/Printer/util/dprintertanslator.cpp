@@ -47,7 +47,6 @@ void DPrinterTanslator::init()
     addTranslate("InputSlot_Combo", "Drawer 4", tr("Drawer 4"));
     addTranslate("InputSlot_Combo", "Drawer 5", tr("Drawer 5"));
     addTranslate("InputSlot_Combo", "Envelope Feeder", tr("Envelope Feeder"));
-    addTranslate("InputSlot_Combo", "Tray1", tr("Tray1"));
     addTranslate("InputSlot_Combo", "Unknown", tr("Unknown"));
     addTranslate("InputSlot_Combo", "None", tr("None"));
 

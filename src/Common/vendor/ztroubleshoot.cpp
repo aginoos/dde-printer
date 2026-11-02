@@ -192,6 +192,32 @@ QString CheckConnected::getJobName()
     return tr("Check printer connection");
 }
 
+namespace {
+// Turn the host QUrl extracted from a device uri into something that can be
+// resolved and connected to.
+QString connectableHost(const QString &strUri, const QString &host)
+{
+    QString result = host;
+    const bool isIpv6 = result.count(':') > 2;
+
+    // socket://[v1.fe80::fa0d:acff:fefd:cadc+enp3s0]: IPvFuture prefix of the socket backend
+    if (isIpv6 && result.startsWith("v1.", Qt::CaseInsensitive))
+        result = result.mid(3);
+
+    // QUrl lowers the host; the interface name of a scope is case sensitive
+    const int authorityStart = qMax(0, strUri.indexOf("://") + 3);
+    const int index = result.isEmpty() ? -1 : strUri.indexOf(result, authorityStart, Qt::CaseInsensitive);
+    if (index >= 0)
+        result = strUri.mid(index, result.length());
+
+    // the backend writes the zone separator '%' as '+'
+    if (isIpv6 && result.contains('+'))
+        result.replace('+', '%');
+
+    return result;
+}
+} // namespace
+
 //检查打印机能否连接
 bool CheckConnected::isPass()
 {
@@ -223,7 +249,7 @@ bool CheckConnected::isPass()
         }
     }
 
-    strHost = getHostFromUri(strUri);
+    strHost = connectableHost(strUri, getHostFromUri(strUri));
     qCDebug(COMMONMOUDLE) << strUri << "scheme:" << strScheme << "host:" << strHost << "port:" << iPort;
 
     m_strMessage = reslovedHost(strHost);
@@ -254,7 +280,10 @@ bool CheckConnected::isPass()
             return false;
         }
     } else if ("file" == strScheme) {
-        QString filePath = strUri.right(strUri.length() - 7);
+        // CUPS writes file:/path (6 chars of prefix); file:///path is accepted too
+        QString filePath = QUrl(strUri).toLocalFile();
+        if (filePath.isEmpty())
+            filePath = strUri.mid(QString("file:").length());
         QFileInfo fileInfo(filePath);
         if (!fileInfo.absoluteDir().exists()) {
             qCWarning(COMMONMOUDLE) << fileInfo.absoluteDir().path() << "not exists";

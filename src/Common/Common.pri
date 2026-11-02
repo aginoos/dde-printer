@@ -1,4 +1,4 @@
-QT += network sql
+QT += network sql dbus concurrent
 
 INCLUDEPATH +=  \
                 $$PWD/../cppcups \
@@ -6,6 +6,7 @@ INCLUDEPATH +=  \
 
 HEADERS +=  \
     $$PWD/common.h \
+    $$PWD/avahi_tool.h \
     $$PWD/qtconvert.h \
     $$PWD/zsettings.h \
     $$PWD/cupsconnectionfactory.h \
@@ -25,6 +26,7 @@ HEADERS +=  \
 
 SOURCES +=  \
     $$PWD/common.cpp \
+    $$PWD/avahi_tool.cpp \
     $$PWD/qtconvert.cpp \
     $$PWD/zsettings.cpp \
     $$PWD/cupsconnectionfactory.cpp \

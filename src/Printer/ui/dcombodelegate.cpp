@@ -6,7 +6,7 @@
 
 #include <DPalette>
 #include <DApplication>
-#include <DApplicationHelper>
+#include <DPaletteHelper>
 /*
 DComboDelegate::DComboDelegate(QObject *parent):QItemDelegate(parent)
 {

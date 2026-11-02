@@ -9,9 +9,7 @@
 #include <DFrame>
 #include <DFontSizeManager>
 
-#ifdef DTKWIDGET_CLASS_DSizeMode
 #include <DSizeMode>
-#endif
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>

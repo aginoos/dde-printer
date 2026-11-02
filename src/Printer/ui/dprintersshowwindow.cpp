@@ -23,7 +23,6 @@
 
 #include <DDialog>
 #include <DMessageBox>
-#include <DImageButton>
 #include <DSettingsDialog>
 #include <DTitlebar>
 #include <DApplication>
@@ -31,12 +30,10 @@
 #include <DFrame>
 #include <DBackgroundGroup>
 #include <DErrorMessage>
-#include <DApplicationHelper>
+#include <DPaletteHelper>
 #include <DToolButton>
 
-#ifdef DTKWIDGET_CLASS_DSizeMode
 #include <DSizeMode>
-#endif
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -169,14 +166,10 @@ void DPrintersShowWindow::initUI()
     m_pListViewMenu->setAccessibleName("listView_printerList");
 
     m_pBtnAddPrinter = new QPushButton(tr("Add printer"));
-    #ifdef DTKWIDGET_CLASS_DSizeMode
         m_pBtnAddPrinter->setFixedSize(DSizeModeHelper::element(QSize(300, 24), QSize(300, 36)));
         connect(DGuiApplicationHelper::instance(), &DGuiApplicationHelper::sizeModeChanged, [this]() {
             m_pBtnAddPrinter->setFixedSize(DSizeModeHelper::element(QSize(300, 24), QSize(300, 36)));
         });
-    #else
-        m_pBtnAddPrinter->setFixedSize(300, 36);
-    #endif
 
     // 没有打印机时的提示
     m_pLeftTipLabel = new QLabel(tr("No Printers"));
@@ -1288,7 +1281,7 @@ void BackgroundWidget::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event)
 
-    const DPalette &dp = DApplicationHelper::instance()->palette(this);
+    const DPalette &dp = DPaletteHelper::instance()->palette(this);
     QPainter p(this);
     p.setPen(Qt::NoPen);
     p.setBrush(dp.brush(DPalette::ItemBackground));

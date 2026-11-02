@@ -13,6 +13,7 @@
 #include "qtconvert.h"
 #include "cupsconnectionfactory.h"
 
+#include <QTextStream>
 #include <QRegularExpression>
 #include <QFile>
 #include <QDir>

@@ -7,7 +7,6 @@
 #include "addprinter.h"
 
 #include <DMainWindow>
-#include <DImageButton>
 
 DWIDGET_USE_NAMESPACE
 DWIDGET_BEGIN_NAMESPACE

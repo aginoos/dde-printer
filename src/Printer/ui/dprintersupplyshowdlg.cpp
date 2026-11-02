@@ -107,7 +107,7 @@ QWidget *DPrinterSupplyShowDlg::initColorSupplyItem(const SUPPLYSDATA &info, boo
     QWidget *pWidget = new QWidget;
     pWidget->setAutoFillBackground(true);
     QPalette pal;
-    pal.setColor(QPalette::Background, QColor(0, 0, 0, int(0.03 * 255)));
+    pal.setColor(QPalette::Window, QColor(0, 0, 0, int(0.03 * 255)));
     pWidget->setPalette(pal);
     QHBoxLayout *pHlayout = new QHBoxLayout;
     pHlayout->setSpacing(8);
@@ -155,7 +155,7 @@ QWidget *DPrinterSupplyShowDlg::initColorSupplyItem(const SUPPLYSDATA &info, boo
         pProcessBar->setFixedSize(230, 8);
         pProcessBar->setRange(0, 100);
         pProcessBar->setValue(abs(info.level));
-        pal.setColor(QPalette::Background, QColor(0, 0, 0, int(0.1 * 255)));
+        pal.setColor(QPalette::Window, QColor(0, 0, 0, int(0.1 * 255)));
         pProcessBar->setAutoFillBackground(true);
         pProcessBar->setPalette(pal);
         pProcessBar->setAccessibleName("processBar_colorWidget");

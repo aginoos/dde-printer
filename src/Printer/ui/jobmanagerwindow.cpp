@@ -17,7 +17,7 @@
 #include <DListView>
 #include <DDialog>
 #include <DPalette>
-#include <DApplicationHelper>
+#include <DPaletteHelper>
 #include <DApplication>
 
 #include <QStandardItemModel>

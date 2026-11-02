@@ -37,9 +37,7 @@ void handler(int signo)
 
 int main(int argc, char *argv[])
 {
-#if (DTK_VERSION >= DTK_VERSION_CHECK(5, 6, 8, 0))
     MLogger loggerConf;
-#endif
 
     DApplication a(argc, argv);
 
@@ -56,12 +54,7 @@ int main(int argc, char *argv[])
     DLogManager::registerConsoleAppender();
     DLogManager::registerFileAppender();
 
-#if (DTK_VERSION >= DTK_VERSION_CHECK(5, 6, 8, 0))
     DLogManager::registerJournalAppender();
-#else
-    QString logRules = g_Settings->getLogRules();
-    QLoggingCategory::setFilterRules(logRules);
-#endif
 
 
     if (qApp->arguments().contains("-r")) {

@@ -6,6 +6,7 @@
 
 #include "printerhelpwindow.h"
 
+#include <DAbstractDialog>
 #include <DDialog>
 #include <QFrame>
 #include <QLabel>

@@ -28,9 +28,7 @@
 #include <DFrame>
 #include <DBackgroundGroup>
 
-#ifdef DTKWIDGET_CLASS_DSizeMode
 #include <DSizeMode>
-#endif
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -91,15 +89,9 @@ void PrinterSearchWindow::initUi()
     m_pWidgetItemURI->setToolTip(tr("Enter URI"));
     m_pWidgetItemURI->setBackgroundRole(pLeftWidget->backgroundRole());
 
-#ifdef DTKWIDGET_CLASS_DSizeMode
     m_pWidgetItemAuto->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
     m_pWidgetItemManual->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
     m_pWidgetItemURI->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
-#else
-    m_pWidgetItemAuto->setSizeHint(QSize(108, 48));
-    m_pWidgetItemManual->setSizeHint(QSize(108, 48));
-    m_pWidgetItemURI->setSizeHint(QSize(108, 48));
-#endif
 
     pTabModel->appendRow(m_pWidgetItemAuto);
     pTabModel->appendRow(m_pWidgetItemManual);
@@ -514,13 +506,11 @@ void PrinterSearchWindow::initConnections()
 
     connect(m_pLineEditURI, &QLineEdit::textChanged, this, &PrinterSearchWindow::lineEditURIChanged);
 
-#ifdef DTKWIDGET_CLASS_DSizeMode
     connect(DGuiApplicationHelper::instance(), &DGuiApplicationHelper::sizeModeChanged, [&]() {
         m_pWidgetItemAuto->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
         m_pWidgetItemManual->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
         m_pWidgetItemURI->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
     });
-#endif
 
     connect(m_pLineEditLocation, &QLineEdit::editingFinished, this, [this]() {
         // 按下enter会触发两次信号，需要过滤掉失去焦点之后的信号 并且判断校验结果

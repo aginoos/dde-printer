@@ -28,7 +28,6 @@
 #include <QMouseEvent>
 DWIDGET_USE_NAMESPACE
 DWIDGET_BEGIN_NAMESPACE
-class DImageButton;
 class DSettingsDialog;
 class DDialog;
 class DFloatingButton;

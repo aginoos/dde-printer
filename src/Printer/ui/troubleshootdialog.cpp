@@ -9,7 +9,7 @@
 #include "qtconvert.h"
 
 #include <DPalette>
-#include <DApplicationHelper>
+#include <DPaletteHelper>
 #include <DFrame>
 #include <DWidget>
 #include <DListView>
@@ -61,7 +61,7 @@ void TroubleShootItem::paintEvent(QPaintEvent *event)
 
     if (0 == (m_index % 2)) {
         DListView listView;
-        DPalette pl(DApplicationHelper::instance()->palette(&listView));
+        DPalette pl(DPaletteHelper::instance()->palette(&listView));
         QPainter painter(this);
         painter.setBrush(pl.brush(QPalette::AlternateBase));
         painter.setPen(Qt::NoPen);

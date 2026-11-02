@@ -26,9 +26,7 @@
 #include <DComboBox>
 #include <DButtonBox>
 
-#ifdef DTKWIDGET_CLASS_DSizeMode
 #include <DSizeMode>
-#endif
 
 #include <QStandardItemModel>
 #include <QStandardItem>
@@ -113,15 +111,9 @@ void InstallDriverWindow::initUI()
     m_pSearchDriver->setData(VListViewItemMargin, Dtk::MarginsRole);
     m_pSearchDriver->setToolTip(tr("Search for a driver"));
 
-#ifdef DTKWIDGET_CLASS_DSizeMode
     m_pLocalDriver->setSizeHint(DSizeModeHelper::element(QSize(108, 36), QSize(108, 48)));
     m_pPpdFile->setSizeHint(DSizeModeHelper::element(QSize(108, 36), QSize(108, 48)));
     m_pSearchDriver->setSizeHint(DSizeModeHelper::element(QSize(108, 36), QSize(108, 48)));
-#else
-    m_pLocalDriver->setSizeHint(QSize(108, 48));
-    m_pPpdFile->setSizeHint(QSize(108, 48));
-    m_pSearchDriver->setSizeHint(QSize(108, 48));
-#endif
 
     m_pTabListModel->appendRow(m_pLocalDriver);
     m_pTabListModel->appendRow(m_pPpdFile);
@@ -353,13 +345,11 @@ void InstallDriverWindow::initConnections()
     connect(m_pTypeCombo, &QComboBox::currentTextChanged, this, &InstallDriverWindow::currentModelChangedSlot);
     connect(m_pSearchBtn, &QPushButton::clicked, this, &InstallDriverWindow::searchDriverSlot);
 
-#ifdef DTKWIDGET_CLASS_DSizeMode
     connect(DGuiApplicationHelper::instance(), &DGuiApplicationHelper::sizeModeChanged, [&]() {
         m_pLocalDriver->setSizeHint(DSizeModeHelper::element(QSize(108, 36), QSize(108, 48)));
         m_pPpdFile->setSizeHint(DSizeModeHelper::element(QSize(108, 36), QSize(108, 48)));
         m_pSearchDriver->setSizeHint(DSizeModeHelper::element(QSize(108, 36), QSize(108, 48)));
     });
-#endif
 
     connect(m_pManuAndTypeLineEdit, &QLineEdit::editingFinished, this, [this]() {
         // 按下enter会触发两次信号，需要过滤掉失去焦点之后的信号 并且判断校验结果

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120px" height="120px" viewBox="0 0 120 120" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>插图/浏览IP</title>
+    <defs>
+        <path d="M0,0 L1425,0 L1425,887 L0,887 L0,0 Z" id="path-1"></path>
+        <path d="M0,0 L120,0 L120,120 L0,120 L0,0 Z" id="path-2"></path>
+        <linearGradient x1="87.9523417%" y1="83.696327%" x2="0%" y2="33.1922097%" id="linearGradient-3">
+            <stop stop-color="#BEBEBE" offset="0%"></stop>
+            <stop stop-color="#F7F9F5" stop-opacity="0.194334376" offset="100%"></stop>
+        </linearGradient>
+        <filter x="-11.6%" y="-12.5%" width="129.3%" height="132.8%" filterUnits="objectBoundingBox" id="filter-4">
+            <feMorphology radius="0.5" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="4" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="3" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.14 0" type="matrix" in="shadowBlurOuter1" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+        <filter x="-29.5%" y="-19.2%" width="159.0%" height="159.0%" filterUnits="objectBoundingBox" id="filter-5">
+            <feMorphology radius="0.5" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="4" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="3" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.14 0" type="matrix" in="shadowBlurOuter1" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+        <pattern id="pattern-6" width="100%" height="100%" patternUnits="objectBoundingBox">
+            <use xlink:href="#image-7"></use>
+        </pattern>
+        <image id="image-7" width="39" height="39" xlink:href="data:image/png;base64,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"></image>
+        <filter x="-12.6%" y="-41.7%" width="125.2%" height="227.8%" filterUnits="objectBoundingBox" id="filter-8">
+            <feMorphology radius="0.5" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="4" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="3" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.14 0" type="matrix" in="shadowBlurOuter1" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+    </defs>
+    <g id="添加windows共享打印机" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="共享打印机" transform="translate(-541, -385)" xlink:href="#path-1">
+            <use fill="#FFFFFF" xlink:href="#path-1"></use>
+            <g id="插图/浏览IP" transform="translate(541, 385)" xlink:href="#path-2" stroke-width="1">
+                <g id="ip-icon" transform="translate(10.4, 10.4)">
+                    <circle id="椭圆形" fill="url(#linearGradient-3)" opacity="0.5" cx="50" cy="50" r="50"></circle>
+                    <g id="浏览器" filter="url(#filter-4)" transform="translate(10, 0.9031)">
+                        <path d="M3.6,19.896875 L75.6,19.896875 C77.5882251,19.896875 79.2,21.5086499 79.2,23.496875 L79.2,72.696875 C79.2,74.6851001 77.5882251,76.296875 75.6,76.296875 L3.6,76.296875 C1.6117749,76.296875 4.4408921e-15,74.6851001 8.8817842e-16,72.696875 L0,23.496875 C-4.4408921e-16,21.5086499 1.6117749,19.896875 3.6,19.896875 Z" id="矩形" fill="#FDFDFC"></path>
+                        <path d="M0,23.646875 C0,21.5757031 1.67892188,19.896875 3.75,19.896875 L75.45,19.896875 C77.5211719,19.896875 79.2,21.5757031 79.2,23.646875 L79.2,28.896875 L0,28.896875 L0,23.646875 Z" id="路径" fill="#E6E5E3"></path>
+                        <circle id="椭圆形" fill="#EF4444" cx="6.24375" cy="24.696875" r="1.2"></circle>
+                        <circle id="椭圆形" fill="#F59E0B" cx="9.84375" cy="24.696875" r="1.2"></circle>
+                        <circle id="椭圆形" fill="#10B981" cx="13.44375" cy="24.696875" r="1.2"></circle>
+                        <g id="输入框" transform="translate(7.3875, 41.6281)">
+                            <rect id="矩形" fill="#A0D971" x="0" y="0" width="65.625" height="11.71875" rx="1.875"></rect>
+                            <text id="192.168.1.1" fill="#444444" fill-rule="nonzero" font-family="PingFangSC-Medium, PingFang SC" font-size="5.625" font-weight="400">
+                                <tspan x="3.28125" y="7.709375">10.20.12.242</tspan>
+                            </text>
+                            <g id="编组" transform="translate(54.8438, 1.1719)">
+                                <rect id="矩形" fill="#74B440" x="0" y="0" width="9.375" height="9.375" rx="1.40625"></rect>
+                                <circle id="椭圆形" stroke="#FFFFFF" stroke-width="0.46875" cx="4.6875" cy="4.6875" r="1.875"></circle>
+                                <line x1="6.09375" y1="6.09375" x2="7.03125" y2="7.03125" id="路径" stroke="#FFFFFF" stroke-width="0.46875" stroke-linecap="round"></line>
+                            </g>
+                        </g>
+                        <g id="编组" filter="url(#filter-5)" transform="translate(60, 0)">
+                            <rect id="矩形" fill="url(#pattern-6)" opacity="0.5" x="0" y="0" width="39" height="39" rx="19.5"></rect>
+                            <rect id="矩形" fill="#74B440" x="9.47142857" y="9.47142857" width="20.0571429" height="20.0571429" rx="10.0285711"></rect>
+                            <path d="M19.0357143,22.75 C21.0870576,22.75 22.75,21.0870576 22.75,19.0357143 C22.75,16.9843709 21.0870576,15.3214286 19.0357143,15.3214286 C16.9843709,15.3214286 15.3214286,16.9843709 15.3214286,19.0357143 C15.3214286,21.0870576 16.9843709,22.75 19.0357143,22.75 Z M21.8214286,21.8214286 L23.6785714,23.6785714" id="形状结合" stroke="#FFFFFF" stroke-width="0.928571429"></path>
+                        </g>
+                    </g>
+                    <g id="进度条" filter="url(#filter-8)" transform="translate(4, 70.6)">
+                        <rect id="矩形" fill="#74AF3F" x="0" y="0" width="91.2" height="18" rx="2.8125"></rect>
+                        <rect id="矩形" fill="#FFFFFF" opacity="0.3" x="5.36470588" y="4.515625" width="10.7294118" height="8" rx="1.40625"></rect>
+                        <rect id="矩形" fill="#FFFFFF" opacity="0.3" x="18.7764706" y="4.515625" width="10.7294118" height="8" rx="1.40625"></rect>
+                        <rect id="矩形" fill="#FFFFFF" opacity="0.3" x="32.1882353" y="4.515625" width="10.7294118" height="8" rx="1.40625"></rect>
+                        <rect id="矩形" fill="#FFFFFF" opacity="0.5" x="45.6" y="4.515625" width="40.2352941" height="8" rx="1.40625"></rect>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

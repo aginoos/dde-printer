@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120px" height="120px" viewBox="0 0 120 120" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>插图/选择打印机dark</title>
+    <defs>
+        <path d="M0,0 L1425,0 L1425,887 L0,887 L0,0 Z" id="path-1"></path>
+        <path d="M0,0 L120,0 L120,120 L0,120 L0,0 Z" id="path-2"></path>
+        <linearGradient x1="87.9523417%" y1="83.696327%" x2="0%" y2="33.1922097%" id="linearGradient-3">
+            <stop stop-color="#525252" offset="0%"></stop>
+            <stop stop-color="#494949" stop-opacity="0.194334376" offset="100%"></stop>
+        </linearGradient>
+        <filter x="-11.6%" y="-12.5%" width="129.3%" height="132.8%" filterUnits="objectBoundingBox" id="filter-4">
+            <feMorphology radius="0.5" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="4" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="3" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.14 0" type="matrix" in="shadowBlurOuter1" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+        <filter x="-29.5%" y="-19.2%" width="159.0%" height="159.0%" filterUnits="objectBoundingBox" id="filter-5">
+            <feMorphology radius="0.5" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="4" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="3" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.14 0" type="matrix" in="shadowBlurOuter1" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+        <linearGradient x1="90.6035217%" y1="23.1751745%" x2="16.2345009%" y2="87.461697%" id="linearGradient-6">
+            <stop stop-color="#484848" stop-opacity="0.00576415716" offset="0%"></stop>
+            <stop stop-color="#EAEAEA" stop-opacity="0.172695094" offset="100%"></stop>
+        </linearGradient>
+        <filter x="-12.6%" y="-41.7%" width="125.2%" height="227.8%" filterUnits="objectBoundingBox" id="filter-7">
+            <feMorphology radius="0.5" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="4" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="3" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.14 0" type="matrix" in="shadowBlurOuter1" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+    </defs>
+    <g id="添加windows共享打印机" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="共享打印机深色" transform="translate(-915, -385)" xlink:href="#path-1">
+            <use fill="#FFFFFF" xlink:href="#path-1"></use>
+            <g id="插图/选择打印机dark" transform="translate(915, 385)" xlink:href="#path-2" stroke-width="1">
+                <g id="ip-icon" transform="translate(10.4, 10.4)">
+                    <circle id="椭圆形" fill="url(#linearGradient-3)" opacity="0.5" cx="50" cy="50" r="50"></circle>
+                    <g id="浏览器" filter="url(#filter-4)" transform="translate(10, 0.9031)">
+                        <path d="M3.6,19.896875 L75.6,19.896875 C77.5882251,19.896875 79.2,21.5086499 79.2,23.496875 L79.2,72.696875 C79.2,74.6851001 77.5882251,76.296875 75.6,76.296875 L3.6,76.296875 C1.6117749,76.296875 4.4408921e-15,74.6851001 8.8817842e-16,72.696875 L0,23.496875 C-4.4408921e-16,21.5086499 1.6117749,19.896875 3.6,19.896875 Z" id="矩形" fill="#686868"></path>
+                        <g id="编组" transform="translate(5, 33)">
+                            <g>
+                                <rect id="矩形" fill="#9BAE8A" x="0" y="0" width="8" height="8" rx="4"></rect>
+                                <polygon id="路径" fill="#426C1F" points="2.1587769 4 1.77363095 4.37864035 3.29377788 5.87314135 6.11501885 3.04247474 5.72987829 2.66382908 3.29377788 5.11585534"></polygon>
+                            </g>
+                            <text id="Printer-A" font-family="PingFangSC-Semibold, PingFang SC" font-size="6" font-weight="500" fill="#7AC53C">
+                                <tspan x="13" y="6">Printer  A</tspan>
+                            </text>
+                        </g>
+                        <g id="编组" transform="translate(51.6, 32.6969)">
+                            <rect id="矩形" fill="#000000" opacity="0" x="0" y="0" width="8" height="8"></rect>
+                            <path d="M2.00003125,0.500023438 L6,0.500023438 L6,1.50001563 L6.50001562,1.50001563 L6.50001562,0.500015625 C6.50001562,0.224164062 6.27640625,0 6,0 L2.00003125,0 C1.72417187,0 1.50001562,0.224148437 1.50001562,0.500023438 L1.50001562,1.50001563 L2.00003125,1.50001563 L2.00003125,0.500015625 L2.00003125,0.500023438 Z M7.5000625,2.00000781 L0.500039062,2.00000781 C0.224179687,2.00000781 1.56249998e-05,2.22410156 1.56249998e-05,2.49998437 L1.56249998e-05,4.99998437 C1.56249998e-05,5.27639062 0.224164062,5.50000781 0.500039062,5.50000781 L1.50003125,5.50000781 L1.50003125,7.49999219 C1.50003125,7.77639844 1.72417187,8.00000781 2.00004687,8.00000781 L6.00001562,8.00000781 C6.27642969,8.00000781 6.50003906,7.77639844 6.50003906,7.50000781 L6.50003906,5.50000781 L7.5000625,5.50000781 C7.776375,5.50000781 8,5.27638281 8,4.99998437 L8,2.49998437 C8,2.22409375 7.77635937,2.00000781 7.5000625,2.00000781 L7.5000625,2.00000781 Z M6,7.5 L2.00003125,7.5 L2.00003125,4 L6,4 L6,7.5 L6,7.5 Z M7.00002344,3.50002344 C6.723625,3.50002344 6.50002344,3.27638281 6.50002344,3 C6.50002344,2.72414063 6.723625,2.49997656 7.00002344,2.49997656 C7.2764375,2.49997656 7.50004687,2.72413281 7.50004687,3 C7.5000625,3.27636719 7.2764375,3.50002344 7.00002344,3.50002344 Z M2.5,4.49996875 L4.50002344,4.49996875 L4.50002344,5 L2.5,5 L2.5,4.49996875 Z M2.5,5.50001562 L5.5000625,5.50001562 L5.5000625,5.9999375 L2.5,5.9999375 L2.5,5.50001562 Z M2.5,6.50003906 L5.5000625,6.50003906 L5.5000625,6.99997656 L2.5,6.99997656 L2.5,6.50003906 Z" id="形状" fill="#74B440" fill-rule="nonzero"></path>
+                        </g>
+                        <g id="编组" transform="translate(5, 46)">
+                            <g id="矩形" stroke="#979797" stroke-width="0.6">
+                                <rect x="0.3" y="0.3" width="7.4" height="7.4" rx="3.7"></rect>
+                            </g>
+                            <text id="Printer-B" font-family="PingFangSC-Medium, PingFang SC" font-size="6" font-weight="400" fill="#C7C7C7">
+                                <tspan x="13" y="6">Printer  B</tspan>
+                            </text>
+                        </g>
+                        <g id="编组" transform="translate(5, 59)">
+                            <g id="矩形" stroke="#979797" stroke-width="0.6">
+                                <rect x="0.3" y="0.3" width="7.4" height="7.4" rx="3.7"></rect>
+                            </g>
+                            <text id="Printer-C" font-family="PingFangSC-Medium, PingFang SC" font-size="6" font-weight="400" fill="#C7C7C7">
+                                <tspan x="13" y="6">Printer  C</tspan>
+                            </text>
+                        </g>
+                        <path d="M0,23.646875 C0,21.5757031 1.67892187,19.896875 3.75,19.896875 L75.45,19.896875 C77.5211719,19.896875 79.2,21.5757031 79.2,23.646875 L79.2,28.896875 L0,28.896875 L0,23.646875 Z" id="路径" fill="#5B5B5B"></path>
+                        <circle id="椭圆形" fill="#EF4444" cx="6.24375" cy="24.696875" r="1.2"></circle>
+                        <circle id="椭圆形" fill="#F59E0B" cx="9.84375" cy="24.696875" r="1.2"></circle>
+                        <circle id="椭圆形" fill="#10B981" cx="13.44375" cy="24.696875" r="1.2"></circle>
+                        <g id="编组" filter="url(#filter-5)" transform="translate(60, 0)">
+                            <rect id="矩形" fill="url(#linearGradient-6)" opacity="0.5" x="0" y="0" width="39" height="39" rx="19.5"></rect>
+                            <g transform="translate(9.4714, 9.4714)">
+                                <rect id="矩形" fill="#5A7A3E" x="0" y="0" width="20.0571429" height="20.0571429" rx="10.0285711"></rect>
+                                <polygon id="路径" fill="#FFFFFF" points="5.41236208 10.0285714 4.44674616 10.9778769 8.25797168 14.7248044 15.3312258 7.62791881 14.3656234 6.67860006 8.25797168 12.8261802"></polygon>
+                            </g>
+                        </g>
+                    </g>
+                    <g id="进度条" filter="url(#filter-7)" transform="translate(4, 70.6)">
+                        <rect id="矩形" fill="#5A7A3E" x="0" y="0" width="91.2" height="18" rx="2.8125"></rect>
+                        <rect id="矩形" fill="#FFFFFF" opacity="0.3" x="5.36470588" y="4.515625" width="10.7294118" height="8" rx="1.40625"></rect>
+                        <rect id="矩形" fill="#FFFFFF" opacity="0.3" x="18.7764706" y="4.515625" width="10.7294118" height="8" rx="1.40625"></rect>
+                        <rect id="矩形" fill="#FFFFFF" opacity="0.3" x="32.1882353" y="4.515625" width="10.7294118" height="8" rx="1.40625"></rect>
+                        <rect id="矩形" fill="#FFFFFF" opacity="0.5" x="45.6" y="4.515625" width="40.2352941" height="8" rx="1.40625"></rect>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

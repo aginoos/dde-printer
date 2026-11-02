@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="136px" height="136px" viewBox="0 0 136 136" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>插图/无打印机深色</title>
+    <defs>
+        <path d="M0,0 L1425,0 L1425,887 L0,887 L0,0 Z" id="path-1"></path>
+        <path d="M0,0 L136,0 L136,136 L0,136 L0,0 Z" id="path-2"></path>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="76.667936%" id="linearGradient-3">
+            <stop stop-color="#454545" stop-opacity="0.616742676" offset="0%"></stop>
+            <stop stop-color="#272727" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-4">
+            <stop stop-color="#414141" offset="0%"></stop>
+            <stop stop-color="#363636" offset="100%"></stop>
+        </linearGradient>
+        <path d="M6.80247659,0 L70.7106813,0 C74.4675854,-8.8817842e-16 77.5131579,3.04557251 77.5131579,6.80247659 L77.5131579,44.872962 C77.5131579,48.6298661 74.4675854,51.6754386 70.7106813,51.6754386 L45.2160088,51.6754386 L6.80247659,51.6754386 C3.04557251,51.6754386 0,48.6298661 0,44.872962 L0,6.80247659 C-8.8817842e-16,3.04557251 3.04557251,-8.8817842e-16 6.80247659,-1.77635684e-15 Z" id="path-5"></path>
+        <linearGradient x1="50%" y1="2.60240709%" x2="50%" y2="100%" id="linearGradient-7">
+            <stop stop-color="#222222" stop-opacity="0.784287771" offset="0%"></stop>
+            <stop stop-color="#2B2B2B" stop-opacity="0.430085762" offset="100%"></stop>
+        </linearGradient>
+        <rect id="path-8" x="37.3559942" y="90.4320175" width="60.2880117" height="17.2251462" rx="2.26749229"></rect>
+        <filter x="-1.7%" y="-5.8%" width="103.3%" height="111.6%" filterUnits="objectBoundingBox" id="filter-9">
+            <feOffset dx="0" dy="2" in="SourceAlpha" result="shadowOffsetInner1"></feOffset>
+            <feComposite in="shadowOffsetInner1" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowInnerInner1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.0278568477 0" type="matrix" in="shadowInnerInner1"></feColorMatrix>
+        </filter>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-10">
+            <stop stop-color="#303030" offset="0%"></stop>
+            <stop stop-color="#3A3A3A" stop-opacity="0.407215605" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="13.1826617%" y1="12.2185363%" x2="50%" y2="50%" id="linearGradient-11">
+            <stop stop-color="#656565" offset="0%"></stop>
+            <stop stop-color="#333333" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="添加windows共享打印机" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="共享打印机-选择空深色" transform="translate(-720, -369)" xlink:href="#path-1">
+            <use fill="#FFFFFF" xlink:href="#path-1"></use>
+            <g id="编组-2" stroke-width="1" transform="translate(521, 316)">
+                <g id="插图/无打印机深色" transform="translate(199, 53)" xlink:href="#path-2">
+                    <rect id="矩形-2" x="0" y="0" width="136" height="136"></rect>
+                    <rect id="矩形备份-5" fill="url(#linearGradient-3)" fill-rule="evenodd" x="43.815424" y="38.7565789" width="47.369152" height="34.4502924" rx="2.26749229"></rect>
+                    <g id="矩形备份" stroke-width="1" fill-rule="evenodd" transform="translate(28.7434, 55.9817)">
+                        <mask id="mask-6" fill="white">
+                            <use xlink:href="#path-5"></use>
+                        </mask>
+                        <use id="蒙版" fill="url(#linearGradient-4)" xlink:href="#path-5"></use>
+                    </g>
+                    <g id="矩形">
+                        <use fill="url(#linearGradient-7)" fill-rule="evenodd" xlink:href="#path-8"></use>
+                        <use fill="black" fill-opacity="1" filter="url(#filter-9)" xlink:href="#path-8"></use>
+                    </g>
+                    <g id="编组" stroke-width="1" fill-rule="evenodd" transform="translate(43.8154, 90.432)">
+                        <path d="M2.2674922,0 L45.1016598,4.4408921e-16 C46.3539612,0 47.369152,1.01519084 47.369152,2.2674922 L47.369152,16.2859202 C47.369152,16.8872965 47.1302562,17.464042 46.705019,17.8892793 L39.420712,25.1735862 C38.9954748,25.5988235 38.4187292,25.8377193 37.8173529,25.8377193 L2.2674922,25.8377193 C1.01519084,25.8377193 -4.4408921e-16,24.8225285 -4.4408921e-16,23.5702271 L0,2.2674922 C0,1.01519084 1.01519084,-4.4408921e-16 2.2674922,-4.4408921e-16 Z" id="矩形备份-4" fill="url(#linearGradient-10)"></path>
+                        <path d="M38.7565789,19.4926384 L38.7565789,25.8377193 L38.7565789,25.8377193 L47.369152,17.2251462 L41.0240711,17.2251462 C39.7717698,17.2251462 38.7565789,18.240337 38.7565789,19.4926384 Z" id="路径-7" fill="url(#linearGradient-11)"></path>
+                    </g>
+                    <ellipse id="椭圆形" fill="#FFFFFF" fill-rule="evenodd" opacity="0.200000003" cx="92.8284193" cy="70.526481" rx="2.04074298" ry="2.11285404"></ellipse>
+                    <ellipse id="椭圆形备份" fill="#FFFFFF" fill-rule="evenodd" opacity="0.300000012" cx="98.723899" cy="70.526481" rx="2.04074298" ry="2.11285404"></ellipse>
+                    <ellipse id="椭圆形备份-2" fill="#FFFFFF" fill-rule="evenodd" opacity="0.100000001" cx="86.9329396" cy="70.526481" rx="2.04074298" ry="2.11285404"></ellipse>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

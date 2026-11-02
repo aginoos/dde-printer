@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120px" height="120px" viewBox="0 0 120 120" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>插图/浏览IP dark</title>
+    <defs>
+        <path d="M0,0 L1425,0 L1425,887 L0,887 L0,0 Z" id="path-1"></path>
+        <path d="M0,0 L120,0 L120,120 L0,120 L0,0 Z" id="path-2"></path>
+        <linearGradient x1="87.9523417%" y1="83.696327%" x2="0%" y2="33.1922097%" id="linearGradient-3">
+            <stop stop-color="#525252" offset="0%"></stop>
+            <stop stop-color="#494949" stop-opacity="0.194334376" offset="100%"></stop>
+        </linearGradient>
+        <filter x="-11.6%" y="-12.5%" width="129.3%" height="132.8%" filterUnits="objectBoundingBox" id="filter-4">
+            <feMorphology radius="0.5" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="4" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="3" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.14 0" type="matrix" in="shadowBlurOuter1" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+        <filter x="-29.5%" y="-19.2%" width="159.0%" height="159.0%" filterUnits="objectBoundingBox" id="filter-5">
+            <feMorphology radius="0.5" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="4" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="3" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.14 0" type="matrix" in="shadowBlurOuter1" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+        <linearGradient x1="90.6035217%" y1="23.1751745%" x2="16.2345009%" y2="87.461697%" id="linearGradient-6">
+            <stop stop-color="#484848" stop-opacity="0.00576415716" offset="0%"></stop>
+            <stop stop-color="#EAEAEA" stop-opacity="0.172695094" offset="100%"></stop>
+        </linearGradient>
+        <filter x="-12.6%" y="-41.7%" width="125.2%" height="227.8%" filterUnits="objectBoundingBox" id="filter-7">
+            <feMorphology radius="0.5" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="4" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="3" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.14 0" type="matrix" in="shadowBlurOuter1" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+    </defs>
+    <g id="添加windows共享打印机" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="共享打印机深色" transform="translate(-541, -385)" xlink:href="#path-1">
+            <use fill="#FFFFFF" xlink:href="#path-1"></use>
+            <g id="插图/浏览IP-dark" transform="translate(541, 385)" xlink:href="#path-2" stroke-width="1">
+                <g id="ip-icon" transform="translate(10.4, 10.4)">
+                    <circle id="椭圆形" fill="url(#linearGradient-3)" opacity="0.5" cx="50" cy="50" r="50"></circle>
+                    <g id="浏览器" filter="url(#filter-4)" transform="translate(10, 0.9031)">
+                        <path d="M3.6,19.896875 L75.6,19.896875 C77.5882251,19.896875 79.2,21.5086499 79.2,23.496875 L79.2,72.696875 C79.2,74.6851001 77.5882251,76.296875 75.6,76.296875 L3.6,76.296875 C1.6117749,76.296875 4.4408921e-15,74.6851001 8.8817842e-16,72.696875 L0,23.496875 C-4.4408921e-16,21.5086499 1.6117749,19.896875 3.6,19.896875 Z" id="矩形" fill="#686868"></path>
+                        <path d="M0,23.646875 C0,21.5757031 1.67892188,19.896875 3.75,19.896875 L75.45,19.896875 C77.5211719,19.896875 79.2,21.5757031 79.2,23.646875 L79.2,28.896875 L0,28.896875 L0,23.646875 Z" id="路径" fill="#5B5B5B"></path>
+                        <circle id="椭圆形" fill="#EF4444" cx="6.24375" cy="24.696875" r="1.2"></circle>
+                        <circle id="椭圆形" fill="#F59E0B" cx="9.84375" cy="24.696875" r="1.2"></circle>
+                        <circle id="椭圆形" fill="#10B981" cx="13.44375" cy="24.696875" r="1.2"></circle>
+                        <g id="输入框" transform="translate(7.3875, 41.6281)">
+                            <rect id="矩形" fill="#5A7A3E" x="0" y="0" width="65.625" height="11.71875" rx="1.875"></rect>
+                            <text id="192.168.1.1" fill="#C7C7C7" fill-rule="nonzero" font-family="PingFangSC-Medium, PingFang SC" font-size="5.625" font-weight="400">
+                                <tspan x="3.28125" y="7.709375">10.20.12.242</tspan>
+                            </text>
+                            <g id="编组" transform="translate(54.8438, 1.1719)">
+                                <rect id="矩形" fill="#74B440" x="0" y="0" width="9.375" height="9.375" rx="1.40625"></rect>
+                                <circle id="椭圆形" stroke="#FFFFFF" stroke-width="0.46875" cx="4.6875" cy="4.6875" r="1.875"></circle>
+                                <line x1="6.09375" y1="6.09375" x2="7.03125" y2="7.03125" id="路径" stroke="#FFFFFF" stroke-width="0.46875" stroke-linecap="round"></line>
+                            </g>
+                        </g>
+                        <g id="编组" filter="url(#filter-5)" transform="translate(60, 0)">
+                            <rect id="矩形" fill="url(#linearGradient-6)" opacity="0.5" x="0" y="0" width="39" height="39" rx="19.5"></rect>
+                            <rect id="矩形" fill="#5A7A3E" x="9.47142857" y="9.47142857" width="20.0571429" height="20.0571429" rx="10.0285711"></rect>
+                            <path d="M19.0357143,22.75 C21.0870576,22.75 22.75,21.0870576 22.75,19.0357143 C22.75,16.9843709 21.0870576,15.3214286 19.0357143,15.3214286 C16.9843709,15.3214286 15.3214286,16.9843709 15.3214286,19.0357143 C15.3214286,21.0870576 16.9843709,22.75 19.0357143,22.75 Z M21.8214286,21.8214286 L23.6785714,23.6785714" id="形状结合" stroke="#FFFFFF" stroke-width="0.928571429"></path>
+                        </g>
+                    </g>
+                    <g id="进度条" filter="url(#filter-7)" transform="translate(4, 70.6)">
+                        <rect id="矩形" fill="#5A7A3E" x="0" y="0" width="91.2" height="18" rx="2.8125"></rect>
+                        <rect id="矩形" fill="#FFFFFF" opacity="0.3" x="5.36470588" y="4.515625" width="10.7294118" height="8" rx="1.40625"></rect>
+                        <rect id="矩形" fill="#FFFFFF" opacity="0.3" x="18.7764706" y="4.515625" width="10.7294118" height="8" rx="1.40625"></rect>
+                        <rect id="矩形" fill="#FFFFFF" opacity="0.3" x="32.1882353" y="4.515625" width="10.7294118" height="8" rx="1.40625"></rect>
+                        <rect id="矩形" fill="#FFFFFF" opacity="0.5" x="45.6" y="4.515625" width="40.2352941" height="8" rx="1.40625"></rect>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

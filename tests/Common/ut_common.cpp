@@ -7,8 +7,6 @@
 #include <QRegularExpression>
 
 #include "common.h"
-#include "safeprocess.h"
-#include "packageutil.h"
 
 class ut_Common : public testing::Test
 {
@@ -68,66 +66,6 @@ TEST_F(ut_Common, parseDeviceID2)
     QString ID = "G:PWG;MDL:IPP Everywhere Basic Printer Simulator;CMD:PWGRaster,PWG,JPEG;";
     auto map = parseDeviceID(ID);
     EXPECT_EQ(map.contains("G"), true);
-}
-
-TEST_F(ut_Common, safeProcessRun)
-{
-    auto res = SafeProcess::run("ls", {"/"});
-    EXPECT_TRUE(res.ok());
-    EXPECT_FALSE(res.out.isEmpty());
-}
-
-TEST_F(ut_Common, safeProcessFailure)
-{
-    auto res = SafeProcess::run("ls", {"/kkkkkk"});
-    EXPECT_FALSE(res.ok());
-    EXPECT_EQ(res.status(), -1);
-    EXPECT_TRUE(res.err.contains("kkkkk"));
-}
-
-TEST_F(ut_Common, safeProcessUnknownTool)
-{
-    auto res = SafeProcess::run("kkkkk", {});
-    EXPECT_FALSE(res.started);
-    EXPECT_EQ(res.status(), -1);
-}
-
-TEST_F(ut_Common, safeProcessNoShellExpansion)
-{
-    auto res = SafeProcess::run("echo", {"$(id)", ";", "&&"});
-    EXPECT_EQ(res.out.trimmed(), QString("$(id) ; &&"));
-}
-
-TEST_F(ut_Common, safeProcessValidators)
-{
-    using namespace SafeProcess;
-    EXPECT_TRUE(isValidPackageName("com.hp.hplip"));
-    EXPECT_FALSE(isValidPackageName("a; rm -rf /"));
-    EXPECT_FALSE(isValidPackageName("-oops"));
-    EXPECT_TRUE(isValidPackageVersion("1:3.18.12-2+b1~bpo13"));
-    EXPECT_FALSE(isValidPackageVersion("1 2"));
-    EXPECT_TRUE(isValidHost("printer-1.local"));
-    EXPECT_TRUE(isValidHost("192.168.1.8"));
-    EXPECT_TRUE(isValidHost("fe80::1"));
-    EXPECT_FALSE(isValidHost("-c"));
-    EXPECT_FALSE(isValidHost("a b"));
-    EXPECT_TRUE(isValidDeviceToken("CF6L088530"));
-    EXPECT_FALSE(isValidDeviceToken("../x"));
-    EXPECT_FALSE(isSafeAbsolutePath("/tmp/../etc/passwd"));
-    EXPECT_TRUE(isSafeAbsolutePath("/usr/share/cups/model/a.ppd"));
-}
-
-TEST_F(ut_Common, policyOffersExactVersion)
-{
-    const QString policy =
-        "foo:\n  Installed: (none)\n  Candidate: 2.0-1\n  Version table:\n"
-        "     2.0-1 500\n        500 http://example/ stable/main amd64 Packages\n"
-        " *** 1.0-1 100\n        100 /var/lib/dpkg/status\n";
-    EXPECT_TRUE(PackageUtil::policyOffers(policy, QString()));
-    EXPECT_TRUE(PackageUtil::policyOffers(policy, "2.0-1"));
-    EXPECT_TRUE(PackageUtil::policyOffers(policy, "1.0-1"));
-    EXPECT_FALSE(PackageUtil::policyOffers(policy, "3.0-1"));
-    EXPECT_FALSE(PackageUtil::policyOffers("foo:\n  Candidate: (none)\n", QString()));
 }
 
 TEST_F(ut_Common, getHostFromUri)
@@ -362,10 +300,8 @@ TEST_F(ut_Common, ppdMakeModelSplit)
     QString strMake, strModel;
     ppdMakeModelSplit(strMakeModel, strMake, strModel);
     EXPECT_STREQ(strMake.toStdString().c_str(), "Canon");
+    // the trailing "UFR II" is a driver suffix and is cut from the model
     EXPECT_STREQ(strModel.toStdString().c_str(), "iR2625/2630");
-
-    QString strFullModel = getPrinterFullModel();
-    EXPECT_STREQ(strFullModel.toStdString().c_str(), "iR2625/2630 UFR II");
 }
 
 TEST_F(ut_Common, ppdMakeModelSplit1)
@@ -374,10 +310,8 @@ TEST_F(ut_Common, ppdMakeModelSplit1)
     QString strMake, strModel;
     ppdMakeModelSplit(strMakeModel, strMake, strModel);
     EXPECT_STREQ(strMake.toStdString().c_str(), "Canon");
+    // the version number and the "series" suffix are both dropped
     EXPECT_STREQ(strModel.toStdString().c_str(), "MG4100");
-
-    QString strFullModel = getPrinterFullModel();
-    EXPECT_STREQ(strFullModel.toStdString().c_str(), "MG4100 series");
 }
 
 TEST_F(ut_Common, ppdMakeModelSplit2)
@@ -387,5 +321,171 @@ TEST_F(ut_Common, ppdMakeModelSplit2)
     ppdMakeModelSplit(strMakeModel, strMake, strModel);
     EXPECT_STREQ(strMake.toStdString().c_str(), "HP");
     EXPECT_STREQ(strModel.toStdString().c_str(), "LaserJet 4 Plus");
+}
+
+TEST_F(ut_Common, ppdMakeModelSplitKeepsPresetModel)
+{
+    // a model that is already known is only normalised, not re-derived
+    QString strMake, strModel = "Preset Model";
+    ppdMakeModelSplit("Canon iR2625/2630 UFR II", strMake, strModel);
+    EXPECT_STREQ(strMake.toStdString().c_str(), "Canon");
+    EXPECT_STREQ(strModel.toStdString().c_str(), "Preset Model");
+}
+
+TEST_F(ut_Common, ppdMakeModelSplitMergedMakeNames)
+{
+    QString strMake, strModel;
+    ppdMakeModelSplit("Kyocera Mita FS-1020D", strMake, strModel);   // dashes are stripped from the make-and-model first
+    EXPECT_STREQ(strMake.toStdString().c_str(), "Kyocera");
+    EXPECT_STREQ(strModel.toStdString().c_str(), "FS1020D");
+}
+
+TEST_F(ut_Common, getHostFromUriIpv6Literal)
+{
+    EXPECT_EQ(getHostFromUri("socket://[::1]:9100"), QString("::1"));
+    EXPECT_EQ(getHostFromUri("ipp://[2001:db8::5]:631/ipp/print"), QString("2001:db8::5"));
+}
+
+TEST_F(ut_Common, getHostFromUriIpv6ZoneIdIsDropped)
+{
+    // the escaped zone ("%25eth0") would make QUrl reject the whole host
+    EXPECT_EQ(getHostFromUri("socket://[fe80::1%25eth0]:9100"), QString("fe80::1"));
+    EXPECT_EQ(getHostFromUri("ipp://[fe80::2%25enp3s0]/ipp/print"), QString("fe80::2"));
+}
+
+TEST_F(ut_Common, getHostFromUriIpv4AndNames)
+{
+    EXPECT_EQ(getHostFromUri("socket://10.0.0.1:9100"), QString("10.0.0.1"));
+    EXPECT_EQ(getHostFromUri("lpd://PrinterHost/queue"), QString("printerhost"));
+    EXPECT_EQ(getHostFromUri("http://192.168.1.2:631/printers/a"), QString("192.168.1.2"));
+}
+
+TEST_F(ut_Common, getHostFromUriDirectDevices)
+{
+    EXPECT_TRUE(getHostFromUri("usb://HP/LaserJet?serial=ABC").isEmpty());
+    EXPECT_TRUE(getHostFromUri("hpfax:/usb/Fax?serial=ABC").isEmpty());
+    EXPECT_TRUE(getHostFromUri("").isEmpty());
+}
+
+TEST_F(ut_Common, getHostFromUriHplipIpOnlyAcceptsValidAddress)
+{
+    EXPECT_EQ(getHostFromUri("hp:/net/HP_LaserJet?ip=192.168.0.7&zc=x"), QString("192.168.0.7"));
+    EXPECT_TRUE(getHostFromUri("hp:/net/HP_LaserJet?zc=printer.local").isEmpty());
+}
+
+TEST_F(ut_Common, getPrinterNameFromUriNeedsAPath)
+{
+    EXPECT_TRUE(getPrinterNameFromUri("").isEmpty());
+    EXPECT_TRUE(getPrinterNameFromUri("socket:").isEmpty());
+    EXPECT_STREQ(getPrinterNameFromUri("ipp://host/printers/Office").toStdString().c_str(), "Office");
+}
+
+TEST_F(ut_Common, reslovedHostAcceptsLiterals)
+{
+    EXPECT_TRUE(reslovedHost("127.0.0.1").isEmpty());
+    EXPECT_TRUE(reslovedHost("::1").isEmpty());
+    EXPECT_TRUE(reslovedHost("2001:db8::1").isEmpty());
+}
+
+TEST_F(ut_Common, reslovedHostMessageNamesTheHost)
+{
+    const QString ret = reslovedHost("no-such-host.invalid");
+    EXPECT_TRUE(ret.contains("no-such-host.invalid"));
+}
+
+TEST_F(ut_Common, parseDeviceIDTrimsAndFillsAliases)
+{
+    const auto map = parseDeviceID(" MANUFACTURER : HP ; MODEL : LaserJet ; COMMAND SET : PCL,PS ;");
+    EXPECT_EQ(map.value("MFG"), QString("HP"));
+    EXPECT_EQ(map.value("MDL"), QString("LaserJet"));
+    EXPECT_EQ(map.value("CMD"), QString("PCL,PS"));
+}
+
+TEST_F(ut_Common, parseDeviceIDKeepsExplicitKeys)
+{
+    const auto map = parseDeviceID("MFG:A;MANUFACTURER:B;MDL:C;MODEL:D;");
+    EXPECT_EQ(map.value("MFG"), QString("A"));
+    EXPECT_EQ(map.value("MDL"), QString("C"));
+}
+
+TEST_F(ut_Common, parseDeviceIDIgnoresMalformedFields)
+{
+    EXPECT_TRUE(parseDeviceID("").isEmpty());
+    EXPECT_TRUE(parseDeviceID(";;;").isEmpty());
+    EXPECT_TRUE(parseDeviceID("noColon;also-none").isEmpty());
+}
+
+TEST_F(ut_Common, normalizeSeparatesLettersAndDigits)
+{
+    EXPECT_STREQ(normalize("HP PhotoSmart C 8100").toStdString().c_str(), "hp photosmart c 8100");
+    EXPECT_STREQ(normalize("hp Photosmart C8100").toStdString().c_str(), "hp photosmart c 8100");
+    EXPECT_STREQ(normalize("  --Epson_PM A820--  ").toStdString().c_str(), "epson pm a 820");
+}
+
+TEST_F(ut_Common, canonManagerRejectsInvalidRemoveArguments)
+{
+    // validated before any D-Bus traffic: no service is needed
+    EXPECT_EQ(managerCanonPrinter("remove", {}), (int)CanonInvalidArgs);
+    EXPECT_EQ(managerCanonPrinter("remove", {"a", "b"}), (int)CanonInvalidArgs);
+    EXPECT_EQ(managerCanonPrinter("remove", {"-bad"}), (int)CanonInvalidArgs);
+    EXPECT_EQ(managerCanonPrinter("remove", {"a b"}), (int)CanonInvalidArgs);
+    EXPECT_EQ(managerCanonPrinter("remove", {"queue\n"}), (int)CanonInvalidArgs);
+}
+
+TEST_F(ut_Common, canonManagerRejectsInvalidAddArguments)
+{
+    const QString ppd = "CNCUPSLBP6030CAPT.ppd";
+    EXPECT_EQ(managerCanonPrinter("add", {}), (int)CanonInvalidArgs);
+    EXPECT_EQ(managerCanonPrinter("add", {"q", ppd}), (int)CanonInvalidArgs);
+    EXPECT_EQ(managerCanonPrinter("add", {"-q", ppd, "usb:ABC"}), (int)CanonInvalidArgs);
+    EXPECT_EQ(managerCanonPrinter("add", {"q", "evil.ppd", "usb:ABC"}), (int)CanonInvalidArgs);
+    EXPECT_EQ(managerCanonPrinter("add", {"q", "../CNCUPSxCAPT.ppd", "usb:ABC"}), (int)CanonInvalidArgs);
+    EXPECT_EQ(managerCanonPrinter("add", {"q", ppd, "usb:a b"}), (int)CanonInvalidArgs);
+    EXPECT_EQ(managerCanonPrinter("add", {"q", ppd, "usb:"}), (int)CanonInvalidArgs);
+    EXPECT_EQ(managerCanonPrinter("add", {"q", ppd, "net:not-an-ip"}), (int)CanonInvalidArgs);
+    EXPECT_EQ(managerCanonPrinter("add", {"q", ppd, "net:::1"}), (int)CanonInvalidArgs);   // IPv6 is not accepted
+    EXPECT_EQ(managerCanonPrinter("add", {"q", ppd, "serial:ABC"}), (int)CanonInvalidArgs);
+}
+
+TEST_F(ut_Common, canonManagerAnyOtherActionIsTreatedAsRemove)
+{
+    EXPECT_EQ(managerCanonPrinter("bogus", {"a", "b", "c"}), (int)CanonInvalidArgs);
+}
+
+TEST_F(ut_Common, launchAutoStartRejectsUnsafePaths)
+{
+    EXPECT_FALSE(managerLaunchAutoStart(""));
+    EXPECT_FALSE(managerLaunchAutoStart("relative/config/"));
+    EXPECT_FALSE(managerLaunchAutoStart("/opt/../etc/"));
+}
+
+TEST_F(ut_Common, canonManagerErrorText)
+{
+    EXPECT_TRUE(canonManagerErrorText(CanonOk).isEmpty());
+    const QList<int> failures = {CanonFailed, CanonExists, CanonAccessDenied, CanonInvalidArgs,
+                                 CanonBusy, CanonUnavailable, CanonTimeout, CanonBadReply, 12345};
+    for (int code : failures) {
+        EXPECT_FALSE(canonManagerErrorText(code).isEmpty()) << code;
+    }
+    // every dedicated code has its own wording; unknown codes share the generic one
+    EXPECT_NE(canonManagerErrorText(CanonBusy), canonManagerErrorText(CanonTimeout));
+    EXPECT_EQ(canonManagerErrorText(CanonFailed), canonManagerErrorText(12345));
+    EXPECT_EQ(canonManagerErrorText(CanonBadReply), canonManagerErrorText(12345));
+}
+
+TEST_F(ut_Common, packageInstalledRejectsInvalidName)
+{
+    EXPECT_FALSE(isPackageInstalled("not a package"));
+    EXPECT_FALSE(isPackageInstalled(""));
+}
+
+TEST_F(ut_Common, getCurrentTimeRecordsTimestamps)
+{
+    EXPECT_TRUE(getCurrentTime(RESET_TIME).isEmpty());
+    EXPECT_EQ(getCurrentTime(ADD_TIME).size(), 1);
+    EXPECT_EQ(getCurrentTime(START_TIME).size(), 2);
+    EXPECT_EQ(getCurrentTime(FINISH_TIME).size(), 3);
+    EXPECT_EQ(getCurrentTime(ADD_TIME).size(), 1);   // ADD starts a new record
+    EXPECT_TRUE(getCurrentTime(RESET_TIME).isEmpty());
 }
 

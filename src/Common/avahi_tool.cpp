@@ -12,6 +12,7 @@
 #include <QElapsedTimer>
 #include <QEventLoop>
 #include <QHash>
+#include <QHostAddress>
 #include <QMutex>
 #include <QMutexLocker>
 #include <QNetworkInterface>
@@ -128,9 +129,11 @@ void freeBrowser(QDBusConnection &bus, const QString &path)
 
 bool isLoopbackAddress(const QString &host)
 {
-    return host.compare(QLatin1String("localhost"), Qt::CaseInsensitive) == 0
-            || host.startsWith(QLatin1String("127."))
-            || host == QLatin1String("::1");
+    if (host.compare(QLatin1String("localhost"), Qt::CaseInsensitive) == 0)
+        return true;
+    // a literal only: a host name such as "127.example.com" is not loopback
+    QHostAddress address;
+    return address.setAddress(host) && address.isLoopback();
 }
 
 // Trailing token of 6+ hex digits mixed with letters is the device serial that
@@ -412,26 +415,13 @@ QString localIppUsbModelByPort(quint16 port)
     return QString();
 }
 
-QList<IppUsbDevice> ippUsbDevices()
+QList<IppUsbDevice> parseIppUsbStatus(const QString &output)
 {
     QList<IppUsbDevice> devices;
-    const QString program = QStandardPaths::findExecutable(
-        QStringLiteral("ipp-usb"), {QStringLiteral("/usr/sbin"), QStringLiteral("/sbin"), QStringLiteral("/usr/bin")});
-    if (program.isEmpty())
-        return devices;
-
-    QProcess process;
-    process.start(program, {QStringLiteral("status")});
-    if (!process.waitForFinished(5000) || process.exitStatus() != QProcess::NormalExit || process.exitCode() != 0) {
-        qCWarning(COMMONMOUDLE) << "ipp-usb status failed:" << process.errorString();
-        process.kill();
-        return devices;
-    }
-
     // "   1. Bus 001 Device 018  232b:0ef5  "Pantum P3301DN series""
     // "      status: OK"
     static const QRegularExpression deviceLine(QStringLiteral("^\\s*\\d+\\.\\s+Bus\\s+\\d+\\s+Device\\s+\\d+\\s+([0-9a-fA-F]{4}):([0-9a-fA-F]{4})\\s+\"([^\"]*)\""));
-    const QStringList lines = QString::fromUtf8(process.readAllStandardOutput()).split(QLatin1Char('\n'));
+    const QStringList lines = output.split(QLatin1Char('\n'));
     for (int i = 0; i < lines.size(); ++i) {
         const QRegularExpressionMatch match = deviceLine.match(lines.at(i));
         if (!match.hasMatch())
@@ -448,6 +438,25 @@ QList<IppUsbDevice> ippUsbDevices()
         devices.append(device);
     }
     return devices;
+}
+
+QList<IppUsbDevice> ippUsbDevices()
+{
+    QList<IppUsbDevice> devices;
+    const QString program = QStandardPaths::findExecutable(
+        QStringLiteral("ipp-usb"), {QStringLiteral("/usr/sbin"), QStringLiteral("/sbin"), QStringLiteral("/usr/bin")});
+    if (program.isEmpty())
+        return devices;
+
+    QProcess process;
+    process.start(program, {QStringLiteral("status")});
+    if (!process.waitForFinished(5000) || process.exitStatus() != QProcess::NormalExit || process.exitCode() != 0) {
+        qCWarning(COMMONMOUDLE) << "ipp-usb status failed:" << process.errorString();
+        process.kill();
+        return devices;
+    }
+
+    return parseIppUsbStatus(QString::fromUtf8(process.readAllStandardOutput()));
 }
 
 // ----------------------------------------------------------------------- URIs

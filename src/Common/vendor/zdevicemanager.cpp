@@ -285,7 +285,8 @@ QString modelFromHplipUri(const QString &uri)
 
 bool isValidProbeHost(const QString &host)
 {
-    static const QRegularExpression re("^[A-Za-z0-9._:%\\-\\[\\]]{1,253}$");
+    // anchored: a bare "$" would also accept a trailing newline
+    static const QRegularExpression re(QRegularExpression::anchoredPattern("[A-Za-z0-9._:%\\-\\[\\]]{1,253}"));
     return re.match(host).hasMatch();
 }
 

@@ -3,6 +3,12 @@ DEFINES += TROUBLESHOOT_SOURCE_DIR=\\\"$$PWD/../../src/Common/vendor/troubleshoo
 
 include($$PWD/../../src/Common/Common.pri)
 
+# A few tests #include the implementation file to reach helpers in unnamed
+# namespaces, so those files must not also be compiled on their own.
+for(src, SOURCES) {
+    contains(src, ".*/(avahi_tool|zdevicemanager|zdrivermanager|ztroubleshoot)\\.cpp"): SOURCES -= $$src
+}
+
 SOURCES += $$PWD/ut_common.cpp \
     $$PWD/ut_qtconvert.cpp \
     $$PWD/ut_zsettings.cpp \
@@ -14,6 +20,8 @@ SOURCES += $$PWD/ut_common.cpp \
     $$PWD/ut_joblogreader.cpp \
     $$PWD/../../src/service/joblogreader.cpp \
     $$PWD/../../src/service/repairjobs.cpp \
-    $$PWD/../../src/service/commandrunner.cpp \
     $$PWD/ut_smburi.cpp \
-    $$PWD/ut_secretstore.cpp
+    $$PWD/ut_secretstore.cpp \
+    $$PWD/ut_safeprocess.cpp \
+    $$PWD/ut_packageutil.cpp \
+    $$PWD/ut_zdevicemanager.cpp

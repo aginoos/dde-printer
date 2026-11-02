@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <QCoreApplication>
+#include <QDir>
+#include <QTemporaryDir>
 
 #include <gtest/gtest.h>
 
@@ -14,6 +16,14 @@ int main(int argc, char *argv[])
 {
     // gerrit编译时没有显示器，需要指定环境变量
     qputenv("QT_QPA_PLATFORM", "offscreen");
+
+    // zSettings and other config readers must not touch the real user profile
+    QTemporaryDir home;
+    if (home.isValid()) {
+        qputenv("HOME", home.path().toLocal8Bit());
+        qputenv("XDG_CONFIG_HOME", QDir(home.path()).filePath(".config").toLocal8Bit());
+        QDir(home.path()).mkpath(".config");
+    }
 
     QCoreApplication app(argc, argv);
     ::testing::InitGoogleTest(&argc, argv);

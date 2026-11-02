@@ -102,3 +102,52 @@ TEST(ut_CanonJob, isCcpQueueIgnoresTextInTheMiddleOfALine)
     const QByteArray out = "note: device for Canon_LBP: ccp://localhost\n";
     EXPECT_FALSE(isCcpQueue(out, "Canon_LBP"));
 }
+
+// ------------------------------------------------- listingMentionsDevice
+
+TEST(ut_CanonJobDevice, exactAddressMatches)
+{
+    EXPECT_TRUE(listingMentionsDevice("CNB LBP 192.168.1.20 ready\n", "192.168.1.20"));
+    EXPECT_TRUE(listingMentionsDevice("192.168.1.20\n", "192.168.1.20"));
+    EXPECT_TRUE(listingMentionsDevice("addr=192.168.1.20.", "192.168.1.20"));
+}
+
+TEST(ut_CanonJobDevice, addressInsideLongerAddressDoesNotMatch)
+{
+    EXPECT_FALSE(listingMentionsDevice("printer 11.1.1.10 ready\n", "1.1.1.1"));
+    EXPECT_FALSE(listingMentionsDevice("printer 1.1.1.10 ready\n", "1.1.1.1"));
+    EXPECT_FALSE(listingMentionsDevice("printer 21.1.1.1 ready\n", "1.1.1.1"));
+    EXPECT_FALSE(listingMentionsDevice("printer 1.1.1.1.5 ready\n", "1.1.1.1"));
+}
+
+TEST(ut_CanonJobDevice, serialIsMatchedAsWholeWord)
+{
+    EXPECT_TRUE(listingMentionsDevice("dev: ABC123 online", "ABC123"));
+    EXPECT_FALSE(listingMentionsDevice("dev: XABC123 online", "ABC123"));
+    EXPECT_FALSE(listingMentionsDevice("dev: ABC1234 online", "ABC123"));
+    EXPECT_FALSE(listingMentionsDevice("dev: ABC-123 online", "ABC"));
+}
+
+TEST(ut_CanonJobDevice, emptyTokenOrListingNeverMatches)
+{
+    EXPECT_FALSE(listingMentionsDevice("anything", ""));
+    EXPECT_FALSE(listingMentionsDevice("", "1.2.3.4"));
+}
+
+TEST(ut_CanonJobDevice, tokenIsNotInterpretedAsPattern)
+{
+    EXPECT_FALSE(listingMentionsDevice("1x2x3x4", "1.2.3.4"));
+}
+
+// ------------------------------------------------------- queueExists
+
+TEST(ut_CanonJobDevice, queueExistsDetectsAnyBackend)
+{
+    const QByteArray listing = "device for Office: ipp://host/ipp\ndevice for Canon1: ccp://localhost:59687\n";
+    EXPECT_TRUE(queueExists(listing, "Office"));
+    EXPECT_TRUE(queueExists(listing, "Canon1"));
+    EXPECT_FALSE(queueExists(listing, "Canon"));
+    EXPECT_FALSE(queueExists("", "Office"));
+    EXPECT_TRUE(isCcpQueue(listing, "Canon1"));
+    EXPECT_FALSE(isCcpQueue(listing, "Office"));
+}

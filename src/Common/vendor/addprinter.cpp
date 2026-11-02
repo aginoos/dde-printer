@@ -26,6 +26,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QProcessEnvironment>
+#include <QHostAddress>
+#include "safeprocess.h"
 
 static QString g_captexec = "/opt/cndrvcups-capt/add";
 
@@ -56,51 +58,44 @@ static bool isHplipDrv(const QString &ppd_name)
             ppd_name.startsWith("hplip:") || ppd_name.startsWith("hplip-data:") || ppd_name.startsWith("hpijs-ppds:") || ppd_name.startsWith("hp/hp-"));
 }
 
-static void dbusAutoStart(const QString &filePath)
+// Directory under /opt/printer-drivers whose ppds list names `ppdname`, or an
+// empty string. Only well-formed vendor directory names are considered.
+static QString findVendorConfigDir(const QString &ppdname)
 {
-    QDBusInterface interface("com.deepin.printer.manager", "/com/deepin/printer/manager", "com.deepin.printer.manager", QDBusConnection::systemBus());
-    interface.call("LaunchAutoStart", filePath);
-}
+    const QString root = "/opt/printer-drivers";
+    static const QRegularExpression vendorRe("^[A-Za-z0-9][A-Za-z0-9_.-]*$");
 
-static void checkPPDName(const QString &ppdname)
-{
-    QString folderPath = "/opt/printer-drivers";
-    QDir dir(folderPath);
-    if (!dir.exists()) {
-        qCDebug(COMMONMOUDLE) << "Folder does not exist: ";
-        return;
-    }
-
-    dir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
-    QFileInfoList folders = dir.entryInfoList();
-
-    for (int i = 0; i < folders.size(); ++i) {
-        QString folderName = folders.at(i).fileName();
-        QString filePath = folderPath + "/" + folderName + "/config/";
-        QString ppdPath = filePath +  "ppds";
-
-        QFile file(ppdPath);
-
+    const QStringList vendors = QDir(root).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (const QString &vendor : vendors) {
+        if (!vendorRe.match(vendor).hasMatch()) {
+            continue;
+        }
+        const QString configDir = root + "/" + vendor + "/config/";
+        QFile file(configDir + "ppds");
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
             continue;
         }
-
         QTextStream in(&file);
         while (!in.atEnd()) {
-            QString line = in.readLine();
-            if (line.contains(ppdname)) {
-                file.close();
-                dbusAutoStart(filePath);
-                if (folderName == "com.pantum.pantum") {
-                    QStringList args;
-                    QProcess::startDetached(filePath + "autostart.sh", QStringList() << "-r");
-                }
-                return;
+            if (in.readLine().contains(ppdname)) {
+                return configDir;
             }
         }
-
-        file.close();
     }
+    return QString();
+}
+
+// Runs the vendor's autostart through the root service (polkit-authorized).
+static bool launchVendorAutostart(const QString &configDir)
+{
+    if (!managerLaunchAutoStart(configDir)) {
+        qCWarning(COMMONMOUDLE) << "vendor autostart was not started for" << configDir;
+        return false;
+    }
+    if (configDir.contains("com.pantum.pantum")) {
+        QProcess::startDetached(configDir + "autostart.sh", QStringList() << "-r");
+    }
+    return true;
 }
 
 static QDBusInterface *getPackageInterface()
@@ -597,46 +592,51 @@ void AddCanonCAPTPrinter::stop()
     m_proc.kill();
 }
 
+// Canon CAPT setup needs root rights: it only runs on an explicit user action
+// and every device-provided string is validated before it is sent.
+static bool buildCanonDeviceInfo(const QString &uri, const QString &serial, QString &info)
+{
+    if (containsIpAddress(uri)) {
+        const QRegularExpressionMatch match = QRegularExpression("([0-9]{1,3}\\.){3}[0-9]{1,3}").match(uri);
+        QHostAddress addr;
+        if (!match.hasMatch() || !addr.setAddress(match.captured(0)) || addr.protocol() != QAbstractSocket::IPv4Protocol) {
+            return false;
+        }
+        info = "net:" + addr.toString();
+        return true;
+    }
+    if (!SafeProcess::isValidDeviceToken(serial)) {
+        return false;
+    }
+    info = "usb:" + serial;
+    return true;
+}
+
 int AddCanonCAPTPrinter::addPrinter()
 {
-    QString ppd_name;
-    ppd_name = m_solution[CUPS_PPD_NAME].toString();
-
+    if (m_unattended) {
+        m_strErr = tr("The Canon driver needs administrator authorization. Please add the printer in the Print Manager.");
+        return -1;
+    }
     if (!QFile::exists(g_captexec)) {
         qCWarning(COMMONMOUDLE) << g_captexec << "not found";
         return -1;
     }
-
     if (m_bQuit)
         return -1;
 
-    QString printInfo = "usb:";
-    if (containsIpAddress(m_uri)) {
-        printInfo = "net:";
-        QRegularExpression re("([0-9]{1,3}\\.){3}[0-9]{1,3}");
-        QRegularExpressionMatch match = re.match(m_uri);
-
-        if (match.hasMatch()) {
-            printInfo += match.captured(0);
-        }
-    } else {
-        printInfo += m_printer.serial;
-    }
-
-    int index = ppd_name.lastIndexOf('/');
-    if (index != -1) {
-        ppd_name = ppd_name.mid(index + 1);
+    QString printInfo;
+    const QString ppd_name = QFileInfo(m_solution[CUPS_PPD_NAME].toString()).fileName();
+    if (!buildCanonDeviceInfo(m_uri, m_printer.serial, printInfo)) {
+        m_strErr = canonManagerErrorText(CanonInvalidArgs);
+        return -1;
     }
 
     qCDebug(COMMONMOUDLE) << "ppdname : " << ppd_name << "printInfo: " << printInfo;
-    int ret = managerCanonPrinter("add", QStringList {m_printer.strName, ppd_name, printInfo});
+    const int ret = managerCanonPrinter("add", QStringList {m_printer.strName, ppd_name, printInfo});
 
     m_proc.setProcessChannelMode(QProcess::ForwardedChannels);
-    if (ret != 0) {
-        emit m_proc.finished(ret, QProcess::CrashExit);
-    } else {
-        emit m_proc.finished(ret, QProcess::NormalExit);
-    }
+    emit m_proc.finished(ret, ret == CanonOk ? QProcess::NormalExit : QProcess::CrashExit);
 
     return 1;
 }
@@ -644,15 +644,8 @@ int AddCanonCAPTPrinter::addPrinter()
 void AddCanonCAPTPrinter::slotProcessFinished(int iCode, QProcess::ExitStatus exitStatus)
 {
     qCInfo(COMMONMOUDLE) << iCode << exitStatus;
-    if (exitStatus != QProcess::NormalExit || 0 != iCode) {
-        m_strErr = m_proc.readAllStandardError();
-        if (iCode == 2) { // 佳能capt打印机已经添加，不允许重复添加
-            m_strErr = QObject::tr("The Canon capt printer has been added and is not allowed to be added again.");
-        } else if (iCode == -11) {
-            m_strErr = "Application path does not match, and installation is not allowed.";
-        }
-
-        m_strErr += "Canon capt install fail.";
+    if (exitStatus != QProcess::NormalExit || CanonOk != iCode) {
+        m_strErr = canonManagerErrorText(iCode) + " " + QObject::tr("Canon capt install fail.");
         m_iStep = STEP_Failed;
     }
 
@@ -874,7 +867,15 @@ int AddPrinterTask::fixDriverDepends()
         return 0;
 
     QString ppd_name = m_solution[CUPS_PPD_NAME].toString();
-    checkPPDName(ppd_name);
+    const QString vendorDir = findVendorConfigDir(ppd_name);
+    if (!vendorDir.isEmpty()) {
+        // Privileged vendor setup needs an administrator decision made in the UI.
+        if (m_unattended) {
+            m_strErr = tr("This driver needs administrator authorization. Please add the printer in the Print Manager.");
+            return -1;
+        }
+        launchVendorAutostart(vendorDir);
+    }
     QStringList depends = g_driverManager->getDriverDepends(ppd_name.toUtf8().data());
     if (!depends.isEmpty()) {
         m_installDepends = new InstallInterface(this);

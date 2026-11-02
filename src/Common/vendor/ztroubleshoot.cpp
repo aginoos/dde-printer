@@ -15,6 +15,7 @@
 #include "cupsconnectionfactory.h"
 #include "cupsppd.h"
 #include "cupserrormap.h"
+#include "ippusbdiag.h"
 #include "modelcheck.h"
 #include "modelfixmap.h"
 #include "troubleshootservice.h"
@@ -302,6 +303,15 @@ bool CheckConnected::isPass()
     } else if (strHost.isEmpty() && ("hp" == strScheme || "usb" == strScheme)) {
         QStringList uris = getDirectDevices();
         if (!uris.contains(strUri)) {
+            const IppUsbDiag::Result ippUsb = IppUsbDiag::diagnoseLocal(strUri);
+            if (IppUsbDiag::Verdict::NotInvolved != ippUsb.verdict) {
+                qCWarning(COMMONMOUDLE) << "USB device is handled by ipp-usb, status:" << ippUsb.status;
+                m_strMessage = IppUsbDiag::Verdict::TakenOver == ippUsb.verdict
+                    ? tr("The USB port is used by ipp-usb. Add the printer again with the driverless (network) option.")
+                    : tr("ipp-usb reports a problem with this printer: %1").arg(ippUsb.status);
+                emit signalStateChanged(TStat_Fail, m_strMessage);
+                return false;
+            }
             qCWarning(COMMONMOUDLE) << "Not found direct devices";
             m_strMessage = m_printerName + tr(" is not connected, URI: ") + strUri;
             emit signalStateChanged(TStat_Fail, m_strMessage);

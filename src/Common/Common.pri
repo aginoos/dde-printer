@@ -28,6 +28,7 @@ HEADERS +=  \
     $$PWD/vendor/cupserrormap.h \
     $$PWD/vendor/modelfixmap.h \
     $$PWD/vendor/modelcheck.h \
+    $$PWD/vendor/ippusbdiag.h \
     $$PWD/vendor/troubleshootservice.h \
     $$PWD/vendor/ztroubleshoot.h
 
@@ -51,5 +52,6 @@ SOURCES +=  \
     $$PWD/vendor/cupserrormap.cpp \
     $$PWD/vendor/modelfixmap.cpp \
     $$PWD/vendor/modelcheck.cpp \
+    $$PWD/vendor/ippusbdiag.cpp \
     $$PWD/vendor/troubleshootservice.cpp \
     $$PWD/vendor/ztroubleshoot.cpp

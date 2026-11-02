@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include "vendor/cupserrormap.h"
+#include "vendor/ippusbdiag.h"
 #include "vendor/modelcheck.h"
 #include "vendor/modelfixmap.h"
 #include "vendor/troubleshootdata.h"
@@ -214,6 +215,45 @@ TEST(ut_ModelCheck, UnknownServiceDoesNotPass)
     check.target = "dde-printer-test-no-such-unit";
     EXPECT_FALSE(ModelCheckRunner::passes(check));
     EXPECT_EQ(ModelCheckRunner::failedChecks({check}).size(), 1);
+}
+
+TEST(ut_IppUsbDiag, ModelFromUri)
+{
+    EXPECT_EQ(IppUsbDiag::modelFromDeviceUri("usb://Pantum/P3301DN%20series?serial=CF6L088530"),
+              QString("Pantum P3301DN series"));
+    EXPECT_EQ(IppUsbDiag::modelFromDeviceUri("hp:/usb/HP_LaserJet_1018?serial=1"), QString("HP LaserJet 1018"));
+    EXPECT_TRUE(IppUsbDiag::modelFromDeviceUri("ipp://host/printers/x").isEmpty());
+    EXPECT_TRUE(IppUsbDiag::modelFromDeviceUri("").isEmpty());
+}
+
+TEST(ut_IppUsbDiag, SameModel)
+{
+    EXPECT_TRUE(IppUsbDiag::sameModel("Pantum P3301DN series", "Pantum P3301DN series"));
+    EXPECT_TRUE(IppUsbDiag::sameModel("Pantum P3301DN", "Pantum P3301DN series"));
+    EXPECT_TRUE(IppUsbDiag::sameModel("HP LaserJet 1018", "hp_laserjet_1018"));
+    EXPECT_FALSE(IppUsbDiag::sameModel("Pantum P3301DN", "Canon LBP2900"));
+    EXPECT_FALSE(IppUsbDiag::sameModel("", "Canon LBP2900"));
+}
+
+TEST(ut_IppUsbDiag, Diagnose)
+{
+    AvahiTool::IppUsbDevice ok;
+    ok.model = "Pantum P3301DN series";
+    ok.status = "OK";
+    AvahiTool::IppUsbDevice bad;
+    bad.model = "Canon LBP2900";
+    bad.status = "failed to start";
+
+    const QString pantum = "usb://Pantum/P3301DN%20series?serial=1";
+    EXPECT_EQ(IppUsbDiag::diagnose(pantum, {ok, bad}).verdict, IppUsbDiag::Verdict::TakenOver);
+
+    const auto unhealthy = IppUsbDiag::diagnose("usb://Canon/LBP2900?serial=1", {ok, bad});
+    EXPECT_EQ(unhealthy.verdict, IppUsbDiag::Verdict::Unhealthy);
+    EXPECT_EQ(unhealthy.status, QString("failed to start"));
+
+    EXPECT_EQ(IppUsbDiag::diagnose("usb://Epson/L360?serial=1", {ok, bad}).verdict, IppUsbDiag::Verdict::NotInvolved);
+    EXPECT_EQ(IppUsbDiag::diagnose(pantum, {}).verdict, IppUsbDiag::Verdict::NotInvolved);
+    EXPECT_EQ(IppUsbDiag::diagnose("socket://10.0.0.2", {ok}).verdict, IppUsbDiag::Verdict::NotInvolved);
 }
 
 TEST(ut_TroubleshootData, TrustedFileChecks)

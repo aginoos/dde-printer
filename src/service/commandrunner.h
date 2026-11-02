@@ -28,9 +28,17 @@ namespace CommandRunner {
 using Callback = std::function<void(const CommandResult &)>;
 
 constexpr int kDefaultTimeoutMs = 60000;
+// Time between SIGTERM and SIGKILL for the process group of a timed out command.
+constexpr int kTerminateGraceMs = 2000;
+// Output beyond this size is dropped.
+constexpr int kMaxOutputBytes = 1024 * 1024;
+
+// Appends as much of `data` as fits below `maxBytes` in total.
+void appendCapped(QByteArray *buffer, const QByteArray &data, int maxBytes);
 
 // Run program with an argument list. `done` is invoked exactly once, on the
-// thread of `owner`. The process is killed when the timeout expires.
+// thread of `owner`. When the timeout expires the whole process group is terminated
+// (SIGTERM, then SIGKILL) without blocking, and `timedOut` is set.
 void run(QObject *owner, const QString &program, const QStringList &args,
          Callback done, int timeoutMs = kDefaultTimeoutMs);
 

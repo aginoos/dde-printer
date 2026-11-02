@@ -14,6 +14,7 @@ SOURCES += \
     ui/dprintersshowwindow.cpp \
     util/dprintermanager.cpp \
     util/dprinter.cpp \
+    util/custompagesize.cpp \
     ui/printersearchwindow.cpp \
     util/dprintclass.cpp \
     util/ddestination.cpp \ 
@@ -43,6 +44,7 @@ HEADERS += \
     ui/dprintersshowwindow.h \
     util/dprintermanager.h \
     util/dprinter.h \
+    util/custompagesize.h \
     ui/printersearchwindow.h \
     util/ddestination.h \
     util/dprintclass.h \   

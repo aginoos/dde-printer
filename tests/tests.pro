@@ -22,6 +22,7 @@ unix:LIBS += -L$$PWD/../src/cppcups -lcppcups
 
 include($$PWD/cppcups/cppcups.pri)
 include($$PWD/Common/Common.pri)
+include($$PWD/Printer/Printer.pri)
 
 SOURCES += \
     $$PWD/main.cpp

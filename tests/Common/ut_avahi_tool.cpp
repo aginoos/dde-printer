@@ -31,6 +31,16 @@ TEST(ut_AvahiTool, buildDnssdUriWithoutUuid)
     EXPECT_EQ(buildDnssdUri("P", QString(), "_ipps._tcp"), QString("dnssd://P._ipps._tcp.local/"));
 }
 
+TEST(ut_AvahiTool, buildDnssdUriEncodesUuidAndChecksType)
+{
+    EXPECT_EQ(buildDnssdUri("P", "a&b=c d"), QString("dnssd://P._ipp._tcp.local/?uuid=a%26b%3Dc%20d"));
+    EXPECT_EQ(buildDnssdUri("P", "u", "_ipp._tcp/../x"), QString("dnssd://P._ipp._tcp.local/?uuid=u"));
+    EXPECT_EQ(buildDnssdUri("P", "u", QString()), QString("dnssd://P._ipp._tcp.local/?uuid=u"));
+    EXPECT_EQ(buildDnssdUri("P", "u", "_pdl-datastream._tcp"), QString("dnssd://P._pdl-datastream._tcp.local/?uuid=u"));
+    EXPECT_EQ(buildDnssdUri("P", "123e4567-e89b-12d3-a456-426614174000"),
+              QString("dnssd://P._ipp._tcp.local/?uuid=123e4567-e89b-12d3-a456-426614174000"));
+}
+
 TEST(ut_AvahiTool, parseDnssdNameRoundTrip)
 {
     const DnssdName name = parseDnssdName(buildDnssdUri("Model A/B @ host.x", "abc"));

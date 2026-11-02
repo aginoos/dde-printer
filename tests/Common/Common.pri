@@ -8,4 +8,6 @@ SOURCES += $$PWD/ut_common.cpp \
     $$PWD/ut_zjobmanager.cpp \
     $$PWD/ut_ztroubleshoot.cpp \
     $$PWD/ut_zdrivermanager.cpp \
-    $$PWD/ut_avahi_tool.cpp
+    $$PWD/ut_avahi_tool.cpp \
+    $$PWD/ut_safeprocess.cpp \
+    $$PWD/ut_packageutil.cpp

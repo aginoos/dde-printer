@@ -7,8 +7,6 @@
 #include <QRegularExpression>
 
 #include "common.h"
-#include "safeprocess.h"
-#include "packageutil.h"
 
 class ut_Common : public testing::Test
 {
@@ -68,66 +66,6 @@ TEST_F(ut_Common, parseDeviceID2)
     QString ID = "G:PWG;MDL:IPP Everywhere Basic Printer Simulator;CMD:PWGRaster,PWG,JPEG;";
     auto map = parseDeviceID(ID);
     EXPECT_EQ(map.contains("G"), true);
-}
-
-TEST_F(ut_Common, safeProcessRun)
-{
-    auto res = SafeProcess::run("ls", {"/"});
-    EXPECT_TRUE(res.ok());
-    EXPECT_FALSE(res.out.isEmpty());
-}
-
-TEST_F(ut_Common, safeProcessFailure)
-{
-    auto res = SafeProcess::run("ls", {"/kkkkkk"});
-    EXPECT_FALSE(res.ok());
-    EXPECT_EQ(res.status(), -1);
-    EXPECT_TRUE(res.err.contains("kkkkk"));
-}
-
-TEST_F(ut_Common, safeProcessUnknownTool)
-{
-    auto res = SafeProcess::run("kkkkk", {});
-    EXPECT_FALSE(res.started);
-    EXPECT_EQ(res.status(), -1);
-}
-
-TEST_F(ut_Common, safeProcessNoShellExpansion)
-{
-    auto res = SafeProcess::run("echo", {"$(id)", ";", "&&"});
-    EXPECT_EQ(res.out.trimmed(), QString("$(id) ; &&"));
-}
-
-TEST_F(ut_Common, safeProcessValidators)
-{
-    using namespace SafeProcess;
-    EXPECT_TRUE(isValidPackageName("com.hp.hplip"));
-    EXPECT_FALSE(isValidPackageName("a; rm -rf /"));
-    EXPECT_FALSE(isValidPackageName("-oops"));
-    EXPECT_TRUE(isValidPackageVersion("1:3.18.12-2+b1~bpo13"));
-    EXPECT_FALSE(isValidPackageVersion("1 2"));
-    EXPECT_TRUE(isValidHost("printer-1.local"));
-    EXPECT_TRUE(isValidHost("192.168.1.8"));
-    EXPECT_TRUE(isValidHost("fe80::1"));
-    EXPECT_FALSE(isValidHost("-c"));
-    EXPECT_FALSE(isValidHost("a b"));
-    EXPECT_TRUE(isValidDeviceToken("CF6L088530"));
-    EXPECT_FALSE(isValidDeviceToken("../x"));
-    EXPECT_FALSE(isSafeAbsolutePath("/tmp/../etc/passwd"));
-    EXPECT_TRUE(isSafeAbsolutePath("/usr/share/cups/model/a.ppd"));
-}
-
-TEST_F(ut_Common, policyOffersExactVersion)
-{
-    const QString policy =
-        "foo:\n  Installed: (none)\n  Candidate: 2.0-1\n  Version table:\n"
-        "     2.0-1 500\n        500 http://example/ stable/main amd64 Packages\n"
-        " *** 1.0-1 100\n        100 /var/lib/dpkg/status\n";
-    EXPECT_TRUE(PackageUtil::policyOffers(policy, QString()));
-    EXPECT_TRUE(PackageUtil::policyOffers(policy, "2.0-1"));
-    EXPECT_TRUE(PackageUtil::policyOffers(policy, "1.0-1"));
-    EXPECT_FALSE(PackageUtil::policyOffers(policy, "3.0-1"));
-    EXPECT_FALSE(PackageUtil::policyOffers("foo:\n  Candidate: (none)\n", QString()));
 }
 
 TEST_F(ut_Common, getHostFromUri)
@@ -384,4 +322,3 @@ TEST_F(ut_Common, ppdMakeModelSplit2)
     EXPECT_STREQ(strMake.toStdString().c_str(), "HP");
     EXPECT_STREQ(strModel.toStdString().c_str(), "LaserJet 4 Plus");
 }
-

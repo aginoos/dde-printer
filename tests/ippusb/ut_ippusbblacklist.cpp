@@ -146,3 +146,23 @@ TEST(ut_IppUsbBlacklist, writeFailsInUnwritableLocation)
 {
     EXPECT_FALSE(writeQuirks("/proc/dde-printer-test/quirks.conf", "x"));
 }
+
+TEST(ut_IppUsbBlacklist, statusFromStatusOutput)
+{
+    EXPECT_EQ(statusFromStatusOutput(kStatus, "232b:0ef5"), QString("OK"));
+    EXPECT_EQ(statusFromStatusOutput(kStatus, "04b8:0e1a"), QString("Failed"));
+    EXPECT_TRUE(statusFromStatusOutput(kStatus, "ffff:0000").isEmpty());
+}
+
+TEST(ut_IppUsbBlacklist, statusMissingOrMalformedIsEmpty)
+{
+    EXPECT_TRUE(statusFromStatusOutput("   1. Bus 001 Device 018  232b:0ef5  \"P\"", "232b:0ef5").isEmpty());
+    EXPECT_TRUE(statusFromStatusOutput("   1. Bus 001 Device 018  232b:0ef5  \"P\"\n      note: x\n", "232b:0ef5").isEmpty());
+    EXPECT_TRUE(statusFromStatusOutput("", "232b:0ef5").isEmpty());
+}
+
+TEST(ut_IppUsbBlacklist, statusParsingToleratesCaseAndCrlf)
+{
+    EXPECT_EQ(statusFromStatusOutput("   1. Bus 001 Device 018  232B:0EF5  \"P\"\r\n      Status: ok\r\n", "232b:0ef5"),
+              QString("ok"));
+}

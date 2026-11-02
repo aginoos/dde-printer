@@ -98,3 +98,17 @@ TEST(ut_CupsConfig, applyRefusesEmptyRequest)
     EXPECT_FALSE(CupsConfig::apply({}, &error));
     EXPECT_FALSE(error.isEmpty());
 }
+
+TEST(ut_CupsConfig, acceptsTheDiscoverySwitchAlongWithTheOthers)
+{
+    EXPECT_STREQ(CupsConfig::kDiscovery, "printer-discovery-enabled");
+    QVariantMap all;
+    for (const char *key : {CupsConfig::kShare, CupsConfig::kRemoteAdmin, CupsConfig::kRemoteAny,
+                            CupsConfig::kUserCancelAny, CupsConfig::kDebugLogging, CupsConfig::kDiscovery}) {
+        all.insert(QString::fromLatin1(key), true);
+    }
+    const auto parsed = CupsConfig::parse(all);
+    ASSERT_TRUE(parsed.has_value());
+    EXPECT_EQ(parsed->size(), 6);
+    EXPECT_FALSE(CupsConfig::parse(one("printer-discovery-enabled", QStringLiteral("1"))).has_value());
+}

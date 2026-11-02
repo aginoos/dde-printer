@@ -50,3 +50,15 @@ TEST(ut_ServerSettingsRequest, refusesNonBinaryValue)
             << value;
     }
 }
+
+TEST(ut_ServerSettingsRequest, acceptsTheDiscoverySwitch)
+{
+    const Options options = {{"printer-discovery-enabled", "0"}};
+    const auto map = ServerSettingsRequest::toVariantMap(options);
+    ASSERT_TRUE(map.has_value());
+    EXPECT_EQ(map->value("printer-discovery-enabled").metaType().id(), QMetaType::Bool);
+    EXPECT_FALSE(map->value("printer-discovery-enabled").toBool());
+
+    const Options bad = {{"printer-discovery-enabled", "yes"}};
+    EXPECT_FALSE(ServerSettingsRequest::toVariantMap(bad).has_value());
+}

@@ -31,8 +31,10 @@ extern const char kRemoteAdmin[];
 extern const char kRemoteAny[];
 extern const char kUserCancelAny[];
 extern const char kDebugLogging[];
+// Vendor setting of CUPS builds that can switch DNS-SD (Avahi) discovery on and off.
+extern const char kDiscovery[];
 
-constexpr int kMaxSettings = 5;
+constexpr int kMaxSettings = 6;
 
 // Checks a caller supplied map: non-empty, only whitelisted keys, every
 // value a real boolean, and no contradictory combination. Returns the

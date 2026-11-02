@@ -21,6 +21,7 @@ const char kRemoteAdmin[] = "_remote_admin";
 const char kRemoteAny[] = "_remote_any";
 const char kUserCancelAny[] = "_user_cancel_any";
 const char kDebugLogging[] = "_debug_logging";
+const char kDiscovery[] = "printer-discovery-enabled";
 
 namespace {
 
@@ -36,7 +37,7 @@ void setError(QString *error, const QString &text)
 bool isWhitelisted(const QByteArray &key)
 {
     static const QByteArray allowed[] = {
-        kShare, kRemoteAdmin, kRemoteAny, kUserCancelAny, kDebugLogging,
+        kShare, kRemoteAdmin, kRemoteAny, kUserCancelAny, kDebugLogging, kDiscovery,
     };
     return std::find(std::begin(allowed), std::end(allowed), key) != std::end(allowed);
 }

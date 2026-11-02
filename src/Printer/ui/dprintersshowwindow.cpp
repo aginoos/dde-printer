@@ -837,6 +837,9 @@ void DPrintersShowWindow::serverSettingsSlot()
     }
     m_pSettingsDialog->m_pCheckRemote->setChecked(m_pPrinterManager->isRemoteAdminEnabled());
     m_pSettingsDialog->m_pCheckSaveDebugInfo->setChecked(m_pPrinterManager->isDebugLoggingEnabled());
+    const bool discoverySupported = m_pPrinterManager->hasDiscoverySupported();
+    m_pSettingsDialog->m_pFrameDiscovery->setVisible(discoverySupported);
+    m_pSettingsDialog->m_pCheckEnableDiscovery->setChecked(discoverySupported && m_pPrinterManager->isDiscoveryEnabled());
     m_pSettingsDialog->exec();
     /*找出变化的选项进行设置*/
     map<string, string> options;
@@ -851,6 +854,9 @@ void DPrintersShowWindow::serverSettingsSlot()
     }
     if (m_pPrinterManager->isDebugLoggingEnabled() != m_pSettingsDialog->m_pCheckSaveDebugInfo->isChecked()) {
         options.insert({CUPS_SERVER_DEBUG_LOGGING, m_pSettingsDialog->m_pCheckSaveDebugInfo->isChecked() ? "1" : "0"});
+    }
+    if (discoverySupported && m_pPrinterManager->isDiscoveryEnabled() != m_pSettingsDialog->m_pCheckEnableDiscovery->isChecked()) {
+        options.insert({DDE_PRINTER_ENABLE_PRINTER_DISCOVER, m_pSettingsDialog->m_pCheckEnableDiscovery->isChecked() ? "1" : "0"});
     }
 
     if (options.size() > 0)

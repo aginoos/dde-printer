@@ -96,7 +96,7 @@ private:
 
         setWindowModality(Qt::ApplicationModal);
         this->setMinimumSize(480, 336);
-        this->setMaximumSize(480, 450);
+        this->setMaximumSize(480, 500);
 
         QLabel *pBaseSettings = new QLabel(tr("Basic Server Settings"));
         pBaseSettings->setAccessibleName("baseSetting_mainSetting");
@@ -130,6 +130,13 @@ private:
         geteElidedText(m_pCheckShared->font(), showCheckShared, m_pCheckShared->width() - 240);
         m_pCheckShared->setText(showCheckShared);
         m_pCheckShared->setToolTip(checkShared);
+
+        QString checkEnableDiscovery = tr("Use Avahi to discover network printers");
+        m_pCheckEnableDiscovery = new QCheckBox();
+        m_pCheckEnableDiscovery->setToolTip(checkEnableDiscovery);
+        geteElidedText(m_pCheckEnableDiscovery->font(), checkEnableDiscovery, m_pCheckEnableDiscovery->width() - 240);
+        m_pCheckEnableDiscovery->setText(checkEnableDiscovery);
+        m_pCheckEnableDiscovery->setAccessibleName("checkDiscovery_frame4");
 
         m_pCheckShared->setAccessibleName("checkShare_frame1");
         m_pCheckIPP->setAccessibleName("checkIpp_frame1");
@@ -180,6 +187,15 @@ private:
         pFrame3->setAccessibleName("frame3_SettingWidget");
         pSettingsVLayout->addWidget(pFrame3);
 
+        QVBoxLayout *pSettingsVLayout4 = new QVBoxLayout();
+        pSettingsVLayout4->addWidget(m_pCheckEnableDiscovery);
+        m_pFrameDiscovery = new QWidget();
+        m_pFrameDiscovery->setMaximumHeight(50);
+        m_pFrameDiscovery->setLayout(pSettingsVLayout4);
+        m_pFrameDiscovery->setContentsMargins(0, 0, 0, 0);
+        m_pFrameDiscovery->setAccessibleName("frame4_SettingWidget");
+        pSettingsVLayout->addWidget(m_pFrameDiscovery);
+
         DBackgroundGroup *pSettingWidget = new DBackgroundGroup();
         pSettingWidget->setLayout(pSettingsVLayout);
         pSettingWidget->setItemSpacing(1);
@@ -228,6 +244,9 @@ protected:
 
 public:
     QCheckBox *m_pCheckShared;
+    QCheckBox *m_pCheckEnableDiscovery;
+    // The row of the Avahi switch: hidden when the CUPS server has no such setting.
+    QWidget *m_pFrameDiscovery;
     QCheckBox *m_pCheckIPP;
     QCheckBox *m_pCheckRemote;
     //    QCheckBox *m_pCheckCancelJobs;

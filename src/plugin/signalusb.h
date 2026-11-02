@@ -6,6 +6,8 @@
 #define SIGNALUSB_H
 
 #include <QThread>
+
+#include <atomic>
 #include <libusb-1.0/libusb.h>
 
 class SignalUSB : public QThread
@@ -26,7 +28,11 @@ protected:
     bool isUsbPrinter(libusb_device *dev);
 
 private:
-    bool needExit;
+    // Wakes the helper once at start so printers that were already plugged in (cold boot) are added
+    void launchHelperAtStart();
+
+    std::atomic<bool> needExit;
+    QThread *m_coldStart = nullptr;
 };
 
 #endif // SIGNALUSB_H

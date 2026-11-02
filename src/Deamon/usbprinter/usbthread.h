@@ -7,8 +7,10 @@
 
 #include <QThread>
 #include <QMutex>
+#include <QSemaphore>
 
 #include "zdevicemanager.h"
+#include "ippusbplanner.h"
 
 #include <libusb-1.0/libusb.h>
 
@@ -21,20 +23,28 @@ public:
     ~USBThread() override;
     void getUsbDevice();
     void processArrivedUSBDevice();
+    // Start a scan of the plugged-in printers; a request that arrives while a scan runs queues one more.
+    void scan();
 
 private:
     libusb_device *m_currentUSBDevice;
     QList<libusb_device *> m_usbDeviceList;
     QMutex m_mutex;
+    QSemaphore m_workDone;
+    bool m_scanRunning = false;
+    bool m_rescanRequested = false;
     TDeviceInfo m_deviceInfo;
 
     QMap<uint, QString> m_pendingNotificationsMap;
     QString m_configingPrinterName;
+    IppUsbPlanner::Plan::Kind m_planKind = IppUsbPlanner::Plan::Traditional;
 
 private:
     void getDriver();
 
     void nextConfiguration();
+    void planInBackground(const IppUsbPlanner::UsbPrinter &printer);
+    void applyPlan(const IppUsbPlanner::Plan &plan);
 
 private slots:
     bool addArrivedUSBPrinter();

@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
 
     QObject::connect(&usbThread, &USBThread::deviceStatusChanged, &helper, &HelperInterface::deviceStatusChanged);
     QObject::connect(&helper, &HelperInterface::usbDeviceProcess, [&](){
-        usbThread.start();
+        usbThread.scan();
     });
 
     cupsMonitor.initSubscription();

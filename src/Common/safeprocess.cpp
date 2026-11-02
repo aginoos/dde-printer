@@ -36,6 +36,13 @@ bool matches(const QString &text, const char *pattern)
     return re.match(text).hasMatch();
 }
 
+// Whole-string match. "$" alone would also accept a trailing newline.
+bool fullMatches(const QString &text, const char *pattern)
+{
+    const QRegularExpression re(QRegularExpression::anchoredPattern(QString::fromLatin1(pattern)));
+    return re.match(text).hasMatch();
+}
+
 bool prepare(QProcess &proc, const QString &program, const QStringList &args, Result &result)
 {
     const QString path = findTool(program);
@@ -121,12 +128,12 @@ Result runKeepingUiAlive(const QString &program, const QStringList &args, int ti
 
 bool isValidPackageName(const QString &name)
 {
-    return name.size() >= 2 && name.size() <= 128 && matches(name, "^[a-z0-9][a-z0-9+.-]+$");
+    return name.size() >= 2 && name.size() <= 128 && fullMatches(name, "^[a-z0-9][a-z0-9+.-]+$");
 }
 
 bool isValidPackageVersion(const QString &version)
 {
-    return !version.isEmpty() && version.size() <= 128 && matches(version, "^[A-Za-z0-9][A-Za-z0-9.+~:_-]*$");
+    return !version.isEmpty() && version.size() <= 128 && fullMatches(version, "^[A-Za-z0-9][A-Za-z0-9.+~:_-]*$");
 }
 
 bool isValidHost(const QString &host)
@@ -138,17 +145,17 @@ bool isValidHost(const QString &host)
     if (addr.setAddress(host)) {
         return true;
     }
-    return matches(host, "^([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(\\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$");
+    return fullMatches(host, "^([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(\\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$");
 }
 
 bool isValidDeviceToken(const QString &token)
 {
-    return matches(token, "^[A-Za-z0-9_-]{1,64}$");
+    return fullMatches(token, "^[A-Za-z0-9_-]{1,64}$");
 }
 
 bool isValidQueueName(const QString &name)
 {
-    return matches(name, "^[A-Za-z0-9_][A-Za-z0-9_.+-]{0,126}$");
+    return fullMatches(name, "^[A-Za-z0-9_][A-Za-z0-9_.+-]{0,126}$");
 }
 
 bool isSafeAbsolutePath(const QString &path)

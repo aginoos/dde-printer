@@ -19,16 +19,16 @@ int main(int argc, char *argv[])
     auto bus = QDBusConnection::systemBus();
 
     Service v;
-    if (!bus.registerService(SERVICE_MANAGER_INTERFACE_NAME)) {
-        qWarning() << "Register QDBus Service Error " << bus.lastError();
-        exit(0x0003);
-    }
-
     QDBusConnection::RegisterOptions opts =
         QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals;
 
     if (!bus.registerObject(SERVICE_MANAGER_INTERFACE_PATH, &v, opts)) {
         qWarning() << "registerObject Error" << bus.lastError();
+        exit(0x0003);
+    }
+
+    if (!bus.registerService(SERVICE_MANAGER_INTERFACE_NAME)) {
+        qWarning() << "Register QDBus Service Error " << bus.lastError();
         exit(0x0003);
     }
 

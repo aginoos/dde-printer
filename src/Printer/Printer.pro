@@ -113,9 +113,6 @@ hicolor.files = $${PWD}/images/dde-printer.svg
 trans.path =  $${PREFIX}/share/dde-printer/translations
 trans.files = $${PWD}/translations/*.qm
 
-polkit.path = $${PREFIX}/share/polkit-1/actions
-polkit.files = $${PWD}/policy/com.deepin.pkexec.devPrinter.policy
-
 dconfigfile.path = $${PREFIX}/share/dsg/configs/dde-printer
 dconfigfile.files = $${PWD}/logconf/org.deepin.dde.printer.json
 
@@ -125,10 +122,7 @@ debugconf.files = $${PWD}/logconf/dde-printer_debug.json
 logconf.path = $${PREFIX}/share/deepin-log-viewer/deepin-log.conf.d
 logconf.files = $${PWD}/logconf/dde-printer.json
 
-canonscript.path = /opt/deepin/dde-printer/printer-drivers/cndrvcups-capt/
-canonscript.files = $${PWD}/policy/canon*
-
-INSTALLS += target desktop hicolor trans polkit dconfigfile debugconf logconf canonscript
+INSTALLS += target desktop hicolor trans dconfigfile debugconf logconf
 }
 
 #从debian/rules里面获取定义好的VERSION，然后转成字符串

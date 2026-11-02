@@ -5,7 +5,7 @@
 #include "smbcredentialdialog.h"
 
 #include <DButtonBox>
-#include <DCheckBox>
+#include <QCheckBox>
 #include <DLineEdit>
 #include <DPasswordEdit>
 #include <DWidgetUtil>
@@ -63,7 +63,7 @@ void SmbCredentialDialog::buildUi()
     m_passwordLabel = new QLabel(tr("Password"), this);
     m_passwordEdit = new DPasswordEdit(this);
 
-    m_rememberBox = new DCheckBox(tr("Remember Password"), this);
+    m_rememberBox = new QCheckBox(tr("Remember Password"), this);
 
     auto *grid = new QGridLayout();
     int row = 0;

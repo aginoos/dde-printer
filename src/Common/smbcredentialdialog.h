@@ -13,7 +13,7 @@ class QLabel;
 namespace Dtk {
 namespace Widget {
 class DButtonBox;
-class DCheckBox;
+class QCheckBox;
 class DLineEdit;
 class DPasswordEdit;
 }  // namespace Widget
@@ -71,7 +71,7 @@ private:
     Dtk::Widget::DLineEdit *m_userEdit = nullptr;
     Dtk::Widget::DLineEdit *m_domainEdit = nullptr;
     Dtk::Widget::DPasswordEdit *m_passwordEdit = nullptr;
-    Dtk::Widget::DCheckBox *m_rememberBox = nullptr;
+    Dtk::Widget::QCheckBox *m_rememberBox = nullptr;
 };
 
 #endif  // SMBCREDENTIALDIALOG_H

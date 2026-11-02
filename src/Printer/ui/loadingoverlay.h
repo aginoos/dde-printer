@@ -7,6 +7,9 @@
 #include <DSpinner>
 
 #include <QLabel>
+#include <QKeyEvent>
+#include <QMouseEvent>
+#include <QWheelEvent>
 #include <QWidget>
 
 DWIDGET_USE_NAMESPACE

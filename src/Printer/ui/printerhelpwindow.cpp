@@ -19,6 +19,7 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QMouseEvent>
+#include <QTimer>
 
 #define UI_PRINTER_DRIVER_NAVIGATION QObject::tr("Print Driver Download Navigation")
 #define UI_PRINTER_PROBLEM_ENTRANCE QObject::tr("Instructions for Use")
@@ -177,8 +178,14 @@ void CustomLabel::initUi()
     m_textLabel = new QLabel(this);
     m_textLabel->setText(UI_PRINTER_PROBLEM_ENTRANCE);
     m_textLabel->setContentsMargins(0, 0, 0, 0);
+    m_textLabel->installEventFilter(this);
 
-    m_main = new QMenu(this);
+    // A parented tool window instead of a QMenu: a menu is closed by its own popup grab
+    // when the label is clicked, which made it flicker, and it has no stable transient parent.
+    m_main = new QFrame(this);
+    m_main->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
+    m_main->setFrameShape(QFrame::StyledPanel);
+    m_main->setAutoFillBackground(true);
     m_main->setFixedSize(200, 122);
 
     QString tipInfo1 = UI_PRINTER_DRIVER_NAVIGATION;
@@ -243,7 +250,8 @@ void CustomLabel::initConnection()
     connect(m_popupButton2, &QPushButton::clicked, this, &CustomLabel::slotOpenHelpInfo);
     connect(m_popupButton, &QPushButton::clicked, [this](){
         if (!m_manufacturerWidget) {
-            m_manufacturerWidget = new PrinterManufacturerWidget();
+            // Parent it so Qt keeps it above the main window regardless of the window manager
+            m_manufacturerWidget = new PrinterManufacturerWidget(qobject_cast<DMainWindow *>(window()));
         }
         m_manufacturerWidget->show();
         m_main->hide();
@@ -273,6 +281,22 @@ void CustomLabel::slotOpenHelpInfo()
     m_main->hide();
 }
 
+void CustomLabel::updateWidthForText()
+{
+    const int textWidth = m_textLabel->fontMetrics().horizontalAdvance(m_textLabel->text());
+    setMinimumWidth(textWidth + m_imageLabel->sizeHint().width() + 30);
+}
+
+void CustomLabel::hideMainIfPointerAway()
+{
+    // Decide from widget hover state (not the global cursor position, which is
+    // unreliable on Wayland); re-check shortly so the pointer can cross to the other widget.
+    QTimer::singleShot(100, this, [this]() {
+        if (!underMouse() && !m_main->underMouse())
+            m_main->hide();
+    });
+}
+
 void CustomLabel::changeEvent(QEvent *event)
 {
     if (event->type() == QEvent::FontChange) {
@@ -287,28 +311,29 @@ void CustomLabel::changeEvent(QEvent *event)
         QString tipInfo2 = UI_PRINTER_PROBLEM_GUIDANCE;
         geteElidedText(m_popupButton2->font(), tipInfo2, m_popupButton2->width() - 20);
         m_popupButton2->setText(tipInfo2);
-        QWidget::changeEvent(event);
+        updateWidthForText();
     }
+    QLabel::changeEvent(event);
 }
 
 bool CustomLabel::eventFilter(QObject *watched, QEvent *event)
 {
+    if (watched == m_textLabel) {
+        // The text label receives the application font change after this widget does
+        if (event->type() == QEvent::FontChange)
+            updateWidthForText();
+        return QLabel::eventFilter(watched, event);
+    }
+
     if (watched == m_main && event->type() == QEvent::HoverLeave) {
-        m_main->hide();
-        return true;
+        hideMainIfPointerAway();
     } else if (watched == this && event->type() == QEvent::HoverEnter) {
         initSubUi();
         return true;
-    } else if (watched == m_main && event->type() == QEvent::HoverMove) {
-        QPoint curpos = QCursor::pos();
-        QPoint labelPos = this->mapToGlobal(QPoint(0, 0));
-        QRect labelRect(labelPos, this->size());
-        QPoint menuPos = m_main->mapToGlobal(QPoint(0, 0));
-        QRect menuRect(menuPos, m_main->size());
-        if (!(labelRect.contains(curpos) || menuRect.contains(curpos))) {
-            m_main->hide();
-            return true;
-        }
+    } else if (watched == this && event->type() == QEvent::HoverLeave) {
+        hideMainIfPointerAway();
+    } else if (watched == this && event->type() == QEvent::MouseButtonPress) {
+        m_main->hide();
     }
     return QLabel::eventFilter(watched, event);
 }

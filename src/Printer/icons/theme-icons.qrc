@@ -14,6 +14,9 @@
         <file>icons/dp_printer_list_36px.svg</file>
         <file>icons/dp_printer_net_36px.svg</file>
         <file>texts/dp_set_24px.svg</file>
+        <file>texts/dp_cups_log_view_16px.svg</file>
+        <file>texts/dp_cups_log_copy_16px.svg</file>
+        <file>texts/dp_cups_log_fix_14px.svg</file>
         <file>texts/dp_fault_24px.svg</file>
         <file>texts/dp_print_queue_24px.svg</file>
         <file>texts/dp_test_page_24px.svg</file>

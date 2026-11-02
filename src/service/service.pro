@@ -18,7 +18,9 @@ SOURCES += main.cpp \
     inputvalidator.cpp \
     autostartguard.cpp \
     canonjob.cpp \
-    cupsconfig.cpp
+    cupsconfig.cpp \
+    joblogreader.cpp \
+    repairjobs.cpp
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
@@ -31,7 +33,9 @@ HEADERS += \
     inputvalidator.h \
     autostartguard.h \
     canonjob.h \
-    cupsconfig.h
+    cupsconfig.h \
+    joblogreader.h \
+    repairjobs.h
 
 unix {
 isEmpty(PREFIX) {

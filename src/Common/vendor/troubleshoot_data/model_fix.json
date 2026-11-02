@@ -1,0 +1,24 @@
+{
+  "version": "1",
+  "models": [
+    {
+      "id": "canon_lbp2900",
+      "match": ["Canon LBP2900"],
+      "checks": [
+        {"type": "service-active", "unit": "ccpd"},
+        {"type": "service-enabled", "unit": "ccpd"},
+        {"type": "package-installed", "package": "libpopt0:i386"},
+        {"type": "package-installed", "package": "libxml2:i386"}
+      ],
+      "fix": "canon_lbp2900"
+    },
+    {
+      "id": "brother_dcp_mfc",
+      "match": ["Brother DCP-T730DW", "Brother MFC-7380", "Brother DCP-7090DW"],
+      "checks": [
+        {"type": "files-not-writable", "dir": "/usr/lib/cups/filter", "glob": "brother_*"}
+      ],
+      "fix": "brother_dcp_mfc"
+    }
+  ]
+}

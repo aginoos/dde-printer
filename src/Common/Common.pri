@@ -24,6 +24,12 @@ HEADERS +=  \
     $$PWD/vendor/zdrivermanager_p.h \
     $$PWD/vendor/zdrivermanager.h \
     $$PWD/vendor/ztroubleshoot_p.h \
+    $$PWD/vendor/troubleshootdata.h \
+    $$PWD/vendor/cupserrormap.h \
+    $$PWD/vendor/modelfixmap.h \
+    $$PWD/vendor/modelcheck.h \
+    $$PWD/vendor/ippusbdiag.h \
+    $$PWD/vendor/troubleshootservice.h \
     $$PWD/vendor/ztroubleshoot.h
 
 SOURCES +=  \
@@ -42,4 +48,10 @@ SOURCES +=  \
     $$PWD/vendor/printerservice.cpp \
     $$PWD/vendor/zdevicemanager.cpp \
     $$PWD/vendor/zdrivermanager.cpp \
+    $$PWD/vendor/troubleshootdata.cpp \
+    $$PWD/vendor/cupserrormap.cpp \
+    $$PWD/vendor/modelfixmap.cpp \
+    $$PWD/vendor/modelcheck.cpp \
+    $$PWD/vendor/ippusbdiag.cpp \
+    $$PWD/vendor/troubleshootservice.cpp \
     $$PWD/vendor/ztroubleshoot.cpp

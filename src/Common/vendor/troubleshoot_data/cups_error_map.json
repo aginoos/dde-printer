@@ -1,0 +1,14 @@
+{
+  "version": "1",
+  "entries": [
+    {"id": 1, "pattern": "Job stopped due to filter error", "category": "filter"},
+    {"id": 2, "pattern": "Can't create temporary file|Permission denied", "category": "permission"},
+    {"id": 3, "pattern": "Unsafe permissions", "category": "filter"},
+    {"id": 4, "pattern": "CUPS server not running|cupsd\\.conf", "category": "service", "fix": "cups_service"},
+    {"id": 5, "pattern": "Invalid device-uri|backend .*(failed|error)", "category": "uri"},
+    {"id": 6, "pattern": "scheduler could not execute a filter", "category": "filter"},
+    {"id": 7, "pattern": "(filter|backend) .*(not found|missing)", "category": "filter"},
+    {"id": 8, "pattern": "printer not responding|printer is not responding", "category": "network"},
+    {"id": 9, "pattern": "cups-browsed|browsed not running", "category": "service"}
+  ]
+}

@@ -33,6 +33,8 @@ public slots:
     int CanonPrinterRemove(const QStringList &args);
     // Boolean cupsd.conf switches only; see cupsconfig.h. Returns 0.
     int SetServerSettings(const QVariantMap &settings);
+    QString ReadJobErrorLog(const QString &printerName);
+    int RunRepair(const QString &fixId);
 
 private:
     using GrantedHandler = std::function<void(const QDBusMessage &request)>;

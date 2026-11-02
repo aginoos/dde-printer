@@ -18,6 +18,8 @@ ReadWritePaths=-/opt/printer-drivers
 ReadWritePaths=-/var/ccpd
 ReadWritePaths=-/var/cache
 ReadWritePaths=-/var/lib
+# Brother filter permission repair.
+ReadWritePaths=-/usr/lib/cups/filter
 InaccessiblePaths=/etc/shadow
 InaccessiblePaths=-/etc/NetworkManager/system-connections
 InaccessiblePaths=-/etc/pam.d

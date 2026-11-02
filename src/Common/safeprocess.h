@@ -22,6 +22,8 @@ struct Result
     QString err;            // stderr
 
     bool ok() const { return started && !timedOut && exitCode == 0; }
+    // 0 on success, -2 on timeout, -1 on any other failure.
+    int status() const { return ok() ? 0 : (timedOut ? -2 : -1); }
 };
 
 // Run `program` (bare name is looked up in fixed system directories, never in

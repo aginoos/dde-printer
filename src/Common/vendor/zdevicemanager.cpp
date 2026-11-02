@@ -7,6 +7,7 @@
 #include "cupsconnection.h"
 #include "qtconvert.h"
 #include "common.h"
+#include "safeprocess.h"
 #include "config.h"
 #include "cupsconnectionfactory.h"
 
@@ -385,10 +386,14 @@ QString ippString(ipp_attribute_t *attr)
 int RefreshDevicesByHostTask::probe_snmp(const QString &strHost)
 {
     qCDebug(COMMONMOUDLE) << strHost;
-    QString strRet, strErr;
-    int iRet = shellCmd(QString("/usr/lib/cups/backend/snmp ") + strHost, strRet, strErr);
+    if (!SafeProcess::isValidHost(strHost)) {
+        qCWarning(COMMONMOUDLE) << "snmp probe skipped, invalid host";
+        return -1;
+    }
+    const SafeProcess::Result snmp = SafeProcess::run("/usr/lib/cups/backend/snmp", {strHost});
+    const int iRet = snmp.status();
     if (0 == iRet) {
-        QStringList retList = strRet.split("\n");
+        QStringList retList = snmp.out.split("\n");
         foreach (QString str, retList) {
             if (str.isEmpty())
                 continue;
@@ -418,10 +423,13 @@ int RefreshDevicesByHostTask::probe_snmp(const QString &strHost)
 
 int RefreshDevicesByHostTask::probe_hplip(const QString &strHost)
 {
-    QString strRet;
-    QString strErr;
-    int iRet = shellCmd(QString("hp-makeuri -c ") + strHost, strRet, strErr);
-    strRet = strRet.trimmed();
+    if (!SafeProcess::isValidHost(strHost)) {
+        qCWarning(COMMONMOUDLE) << "hplip probe skipped, invalid host";
+        return -1;
+    }
+    const SafeProcess::Result makeuri = SafeProcess::run("hp-makeuri", {"-c", strHost});
+    const int iRet = makeuri.status();
+    const QString strRet = makeuri.out.trimmed();
     if (0 == iRet && strRet.contains(":")) {
         //TODO get uri and info
         TDeviceInfo info;

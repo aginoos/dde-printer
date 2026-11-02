@@ -14,6 +14,7 @@
 #include "cupsppd.h"
 #include "cupsconnectionfactory.h"
 #include "zsettings.h"
+#include "safeprocess.h"
 
 #include <QProcess>
 #include <QUrl>
@@ -933,6 +934,21 @@ void DriverSearcher::askForFinish()
     emit signalDone();
 }
 
+// Package name and version come from the driver server or its database and end
+// up in package-manager requests, so they must look like Debian identifiers.
+static bool isTrustedPackageInfo(const QString &package, const QString &version)
+{
+    if (package.isEmpty()) {
+        return true;  // handled later as "no driver package"
+    }
+    const bool nameOk = SafeProcess::isValidPackageName(package);
+    const bool versionOk = version.isEmpty() || SafeProcess::isValidPackageVersion(version);
+    if (!nameOk || !versionOk) {
+        qCWarning(COMMONMOUDLE) << "dropping driver with invalid package info:" << package << version;
+    }
+    return nameOk && versionOk;
+}
+
 void DriverSearcher::parseJsonInfo(QJsonArray value)
 {
     QList<QMap<QString, QVariant>> ppds;
@@ -952,6 +968,10 @@ void DriverSearcher::parseJsonInfo(QJsonArray value)
         if (ppd[CUPS_PPD_MAKE_MODEL].toString().isEmpty() || ppd[SD_KEY_driver].toString().isEmpty() ||
             ppd[CUPS_PPD_NAME].toString().isEmpty() || ppd[SD_KEY_recommended].toString().isEmpty()) {
             qCDebug(COMMONMOUDLE) << "empty item";
+            continue;
+        }
+
+        if (!isTrustedPackageInfo(ppd[SD_KEY_driver].toString(), ppd[SD_KEY_debver].toString())) {
             continue;
         }
 
@@ -1195,6 +1215,10 @@ int DriverSearcher::getLocalDbDrivers()
         QString deb_file = decryptString(query.value("deb_file").toByteArray());
         QString deb_ver = decryptString(query.value("deb_ver").toByteArray());
 
+        if (!isTrustedPackageInfo(deb_file, deb_ver)) {
+            continue;
+        }
+
         QMap<QString, QVariant> ppd;
         ppd.insert(SD_KEY_from, PPDFrom_Server);
         ppd.insert(CUPS_PPD_MAKE_MODEL, make_model);
@@ -1249,6 +1273,10 @@ int DriverSearcher::getLocalDbDrivers()
             QString ppd_name = decryptString(query.value("ppd_name").toByteArray());
             QString deb_file = decryptString(query.value("deb_file").toByteArray());
             QString deb_ver = decryptString(query.value("deb_ver").toByteArray());
+
+            if (!isTrustedPackageInfo(deb_file, deb_ver)) {
+                continue;
+            }
 
             QMap<QString, QVariant> ppd;
             ppd.insert(SD_KEY_from, PPDFrom_Server);

@@ -28,22 +28,9 @@
 #include <QProcessEnvironment>
 #include <QHostAddress>
 #include "safeprocess.h"
+#include "packageutil.h"
 
 static QString g_captexec = "/opt/cndrvcups-capt/add";
-
-static QString getPackageVersion(const QString &package)
-{
-    QString strOut, strErr;
-    if (0 == shellCmd(QString("dpkg -l %1").arg(package), strOut, strErr)) {
-        QStringList list = strOut.split("\n", Qt::SkipEmptyParts);
-        strOut = list.isEmpty() ? "" : list.last();
-        qCDebug(COMMONMOUDLE) << strOut;
-        list = strOut.split(" ", Qt::SkipEmptyParts);
-        return list.count() > 2 ? list[2] : QString();
-    }
-
-    return QString();
-}
 
 static bool isCanonCAPTDrv(const QString &ppd_name)
 {
@@ -181,42 +168,6 @@ static bool containsIpAddress(const QString &str) {
     QRegularExpression ipRegex("\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b");
     QRegularExpressionMatch match = ipRegex.match(str);
     return match.hasMatch();
-}
-
-static int shellCmdLocal(const QString &cmd, QString &out, QString &strErr, int timeout)
-{
-    QProcess proc;
-    QStringList env = QProcess::systemEnvironment();
-    env.append("LANG=utf-8");
-    proc.setEnvironment(env);
-    proc.startCommand(cmd);
-    if (proc.waitForFinished(timeout)) {
-        out = proc.readAll();
-        if (proc.exitCode() != 0 || proc.exitStatus() != QProcess::NormalExit) {
-            strErr = QString("err %1, string: %2").arg(proc.exitCode()).arg(QString::fromUtf8(proc.readAllStandardError()));
-            qCDebug(COMMONMOUDLE) << cmd;
-            qCWarning(COMMONMOUDLE) << "shellCmd exit with err: " << strErr;
-            return -1;
-        }
-    } else {
-        qCWarning(COMMONMOUDLE) << "shellCmd timeout";
-        return -2;
-    }
-
-    return 0;
-}
-
-static bool isPackageInstallable(const QString &packagename)
-{
-    QString strRet, strErr;
-    QString srcParts = "Dir::Etc::SourceParts=/etc/apt/sources.list.d";
-    QString srcList = "Dir::Etc::SourceList=/etc/deepin/lastore-daemon/sources.list.d/local-driver.list";
-    int iRet = shellCmdLocal(QString("apt policy %1 -o %2 -o %3").arg(packagename).arg(srcParts).arg(srcList), strRet, strErr, 5000);
-    if (iRet == 0 && !strRet.isEmpty() && strRet.contains("Candidate:", Qt::CaseInsensitive)){
-        return true;
-    }
-
-    return false;
 }
 
 FixHplipBackend::FixHplipBackend(QObject *parent)
@@ -385,7 +336,7 @@ void InstallInterface::startInstallPackages(bool status)
     for (auto package : m_packages) {
         qCInfo(COMMONMOUDLE) << "install package:" << package.toString();
         if (isPackageExists(package.packageName)) {
-            QString strVer = getPackageVersion(package.packageName);
+            QString strVer = PackageUtil::installedVersion(package.packageName);
             if (!package.packageVer.isEmpty() && strVer != package.packageVer) {
                 qCInfo(COMMONMOUDLE) << package.packageName << "need update";
                 m_installPackages.append(package.packageName);
@@ -399,7 +350,7 @@ void InstallInterface::startInstallPackages(bool status)
         }
 
         /*hplip-plugin包 mips架构目前不存在，所以忽略无法安装的错误，避免安装打印机流程阻塞*/
-        if (!isPackageInstallable(package.packageName) && (!package.packageName.contains("hplip-plugin"))) {
+        if (!PackageUtil::isInstallable(package.packageName, QString()) && (!package.packageName.contains("hplip-plugin"))) {
             if (status) {
                 QDBusReply<QDBusObjectPath> updatePath = interface->call("UpdateSource");
                 m_updatePath = updatePath.value().path();
@@ -1054,8 +1005,8 @@ void AddPrinterTask::slotWriteLog(int status)
         QString reason = getErrorMassge();
         obj.insert("reason", QJsonValue(reason));
     }
-    obj.insert("version", getPackageVersion(APPNAME));
-    obj.insert("cupsVersion", getPackageVersion("cups"));
+    obj.insert("version", PackageUtil::installedVersion(APPNAME));
+    obj.insert("cupsVersion", PackageUtil::installedVersion("cups"));
     obj.insert("tid", 1000100000); // 事件ID
 
     QString installInfo = QString(QJsonDocument(obj).toJson(QJsonDocument::Compact));

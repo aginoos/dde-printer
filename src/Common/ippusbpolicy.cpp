@@ -99,8 +99,10 @@ Listing lookupDevice(const QList<AvahiTool::IppUsbDevice> &devices, const QStrin
 
 bool isDnssdServiceUri(const QString &uri)
 {
-    if (uri.startsWith(QLatin1String("dnssd://"), Qt::CaseInsensitive))
-        return true;
+    if (uri.startsWith(QLatin1String("dnssd://"), Qt::CaseInsensitive)) {
+        const QString type = AvahiTool::parseDnssdName(uri).type.toLower();
+        return type == QLatin1String("_ipp._tcp") || type == QLatin1String("_ipps._tcp");
+    }
     if (!uri.startsWith(QLatin1String("ipp://"), Qt::CaseInsensitive)
             && !uri.startsWith(QLatin1String("ipps://"), Qt::CaseInsensitive))
         return false;

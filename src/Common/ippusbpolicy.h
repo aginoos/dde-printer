@@ -47,7 +47,8 @@ struct Listing
 };
 Listing lookupDevice(const QList<AvahiTool::IppUsbDevice> &devices, const QString &vendorProduct);
 
-// dnssd:// service URI, or an ipp(s):// URI whose host is a service name ("xxx._ipp._tcp").
+// dnssd:// URI of an IPP service (_ipp._tcp / _ipps._tcp), or an ipp(s):// URI whose host is a
+// service name ("xxx._ipp._tcp", the form some systems use for ipp-usb).
 bool isDnssdServiceUri(const QString &uri);
 
 // Both URIs name the same DNS-SD service instance (the uuid query is ignored).

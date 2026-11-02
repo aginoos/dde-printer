@@ -40,6 +40,7 @@
 
 #include <map>
 
+#include "ippusbpolicy.h"
 #include <DConfig>
 DCORE_USE_NAMESPACE
 
@@ -1497,6 +1498,14 @@ QMap<QString, QVariant> DriverManager::getEveryWhereDriver(const QString &strUri
     if ((uri.startsWith("dnssd://") && uri.contains("/cups")) ||
             ((uri.startsWith("ipp://") || uri.startsWith("ipps") || uri.startsWith("http") || uri.startsWith("https")) && uri.contains("/printers"))) {
         qCDebug(COMMONMOUDLE) << "Got everywhere driver for" << strUri;
+        return makeEveryWhereDriver();
+    }
+
+    /* DNS-SD names (ipp-usb publishes this way, and some systems hand out
+     * ipp://<name>._ipp._tcp for it) cannot be probed as a host; every IPP
+     * service found by DNS-SD is driverless capable. */
+    if (IppUsbPolicy::isDnssdServiceUri(uri)) {
+        qCDebug(COMMONMOUDLE) << "Got everywhere driver for DNS-SD service" << strUri;
         return makeEveryWhereDriver();
     }
 

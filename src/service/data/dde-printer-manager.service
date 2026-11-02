@@ -9,19 +9,24 @@ ExecStart=/usr/lib/deepin-daemon/dde-printer-manager
 MemoryMax=100M
 ProtectSystem=strict
 ProtectHome=yes
-# lpadmin talks to cupsd over its socket; ccpdadmin edits the CAPT daemon
-# configuration; vendor autostart scripts live under /opt/printer-drivers.
-# Missing paths are ignored (leading '-').
-ReadWritePaths=-/tmp
-ReadWritePaths=-/etc
-ReadWritePaths=-/opt/printer-drivers
+# Write access is limited to what the service really modifies; everything
+# else is read-only through ProtectSystem=strict. Missing paths are ignored
+# (leading '-').
+#  - /etc/ccpd.conf, /var/ccpd, /var/captmon: ccpdadmin and the CAPT daemon
+#  - /etc/cups: files lpadmin leaves behind next to cupsd's own state
+#  - /opt/printer-drivers: vendor autostart scripts and their config
+#  - /usr/lib/cups/filter: Brother filter permission repair
+#  - /usr/share/ipp-usb/quirks: the file that keeps ipp-usb away from USB printers
+# lpadmin, systemctl and the cups settings go through sockets/D-Bus and need
+# no file access. /tmp is private (PrivateTmp); /var/lib, /var/cache and the
+# rest of /etc are not written by the service.
+ReadWritePaths=-/etc/ccpd.conf
+ReadWritePaths=-/etc/cups
 ReadWritePaths=-/var/ccpd
-ReadWritePaths=-/var/cache
-ReadWritePaths=-/var/lib
-# Brother filter permission repair.
+ReadWritePaths=-/var/captmon
+ReadWritePaths=-/opt/printer-drivers
 ReadWritePaths=-/usr/lib/cups/filter
-# quirks file that keeps ipp-usb away from selected USB printers
-ReadWritePaths=-/usr/share/ipp-usb
+ReadWritePaths=-/usr/share/ipp-usb/quirks
 InaccessiblePaths=/etc/shadow
 InaccessiblePaths=-/etc/NetworkManager/system-connections
 InaccessiblePaths=-/etc/pam.d
@@ -35,19 +40,32 @@ ProtectKernelLogs=yes
 ProtectControlGroups=yes
 ProtectClock=yes
 ProtectHostname=yes
+# other users' processes and the non-process parts of /proc are not needed
+ProtectProc=invisible
+ProcSubset=pid
 PrivateMounts=yes
 PrivateTmp=yes
 PrivateDevices=yes
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
 RestrictNamespaces=yes
+RestrictSUIDSGID=yes
 LockPersonality=yes
 RestrictRealtime=yes
 SystemCallArchitectures=native
+KeyringMode=private
 RemoveIPC=yes
-# The service no longer reads /proc/<pid>/exe (authorization is polkit), so
-# CAP_SYS_PTRACE is gone. The capability bounding set is deliberately left at
-# the default until lpadmin/ccpdadmin and the vendor scripts are verified on
-# real hardware; PrivateNetwork and SystemCallFilter are left off for the same
-# reason.
-# ARM模拟器运行需要分配内存有可写和可执行权限
-# MemoryDenyWriteExecute=yes
+UMask=0022
+# Capabilities: root-owned files with restrictive modes (DAC_OVERRIDE,
+# DAC_READ_SEARCH), chmod/chown of files in the Brother filter directory and
+# vendor config (FOWNER, CHOWN), vendor scripts that switch to the lp user or
+# stop their helpers (SETUID, SETGID, KILL). No ptrace, no raw network, no
+# module/boot/admin capabilities. Minimal set, to be verified on real hardware
+# with lpadmin, ccpdadmin and the vendor scripts.
+CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_FOWNER CAP_SETUID CAP_SETGID CAP_KILL
+AmbientCapabilities=
+# Ordinary service system calls only (no mount, reboot, module loading, ...).
+# A refused call fails with EPERM instead of killing the service.
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+# MemoryDenyWriteExecute stays off: vendor scripts may run ARM emulators that
+# need writable and executable memory, and the restriction is inherited.

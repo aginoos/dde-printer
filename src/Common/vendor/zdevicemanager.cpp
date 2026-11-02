@@ -45,6 +45,7 @@ static QString g_smbpassword;
 
 #define ERR_SocketBase 1000
 #define SOCKET_Timeout 3000
+#define IPP_PROBE_TIMEOUT_SECONDS 5.0
 
 static TBackendSchemes g_backendSchemes[] = {{"usb", CUPS_EXCLUDE_NONE},
     {"hp", CUPS_EXCLUDE_NONE},
@@ -372,12 +373,16 @@ int RefreshDevicesByHostTask::probe_ipp(const QString &strHost)
     /*连接指定ip的cups服务器，不是全局的默认ip*/
     auto conPtr = CupsConnectionFactory::createConnection(strHost, 0, 0);
     if (conPtr) {
+        // an unreachable host must not keep the UI spinning for the 30 s default
+        conPtr->setTimeout(IPP_PROBE_TIMEOUT_SECONDS);
         try {
             printersMap = conPtr->getPrinters();
         } catch (const std::runtime_error &e) {
             qCWarning(COMMONMOUDLE) << "runtime error:" << e.what();
+            conPtr->setTimeout(DEFAULT_HTTP_TIMEOUT_SECONDS);
             return -1;
         }
+        conPtr->setTimeout(DEFAULT_HTTP_TIMEOUT_SECONDS);
     } else {
         return -1;
     }

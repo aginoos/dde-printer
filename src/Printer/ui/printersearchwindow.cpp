@@ -40,6 +40,7 @@
 #include <QStackedWidget>
 #include <QRegularExpression>
 #include <QScrollArea>
+#include <QTimer>
 
 static const QString strHplipName = "com.hp.hplip";
 static int netCount = 0;
@@ -567,9 +568,13 @@ bool PrinterSearchWindow::autoInstallPrinter(int type, const TDeviceInfo &device
         return false;
 
     AddPrinterTask *task = g_addPrinterFactoty->createAddPrinterTask(device, solution);
-    close();
-    m_pInstallPrinterWindow = new InstallPrinterWindow(this);
-    connect(m_pInstallPrinterWindow, &InstallPrinterWindow::showParentWindows, this, [&]() {
+    // Top-level window without a parent: on treeland closing this window would otherwise
+    // close the installer with it, so it looked like it never appeared.
+    m_pInstallPrinterWindow = new InstallPrinterWindow(nullptr);
+    m_pInstallPrinterWindow->setReturnWindow(this);
+    m_pInstallPrinterWindow->setAttribute(Qt::WA_DeleteOnClose);
+    m_pInstallPrinterWindow->setWindowModality(Qt::ApplicationModal);
+    connect(m_pInstallPrinterWindow, &InstallPrinterWindow::showParentWindows, this, [this]() {
         this->show();
     });
     m_pInstallPrinterWindow->show();
@@ -586,6 +591,9 @@ bool PrinterSearchWindow::autoInstallPrinter(int type, const TDeviceInfo &device
     connect(task, &AddPrinterTask::signalStatus, m_pInstallPrinterWindow, &InstallPrinterWindow::receiveInstallationStatusSlot);
     connect(m_pInstallPrinterWindow, &InstallPrinterWindow::updatePrinterList, this, &PrinterSearchWindow::updatePrinterList);
     task->doWork();
+
+    // Close only after the installer is mapped
+    QTimer::singleShot(100, this, [this]() { close(); });
     return true;
 }
 

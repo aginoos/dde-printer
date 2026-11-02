@@ -12,7 +12,7 @@
 
 // Included to reach the helpers in the unnamed namespace (and, through
 // -fno-access-control, the private members of InstallInterface).
-#include "installinterface.cpp"
+#include "vendor/installinterface.cpp"
 
 namespace {
 

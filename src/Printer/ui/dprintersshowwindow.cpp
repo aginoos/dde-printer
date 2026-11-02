@@ -536,6 +536,11 @@ void DPrintersShowWindow::initConnections()
     connect(m_pSettings, &QAction::triggered, this, &DPrintersShowWindow::serverSettingsSlot);
     connect(m_pSwitchShareButton, &SwitchWidget::checkedChanged, this, [&](bool check) {
         QString printerName = m_pPrinterListView->currentIndex().data().toString();
+        if (check) {
+            // A shared queue that is disabled or rejecting jobs is useless to remote clients
+            m_pPrinterManager->setPrinterEnabled(printerName, true);
+            m_pPrinterManager->setPrinterAcceptJob(printerName, true);
+        }
         m_pPrinterManager->setPrinterShared(printerName, check);
         if (check && !(m_pPrinterManager->isSharePrintersEnabled() && m_pPrinterManager->isRemoteAnyEnabled())) {
             // 需要开启共享状态，先检查服务器配置是否开启，如果开启，直接退出。没有开启打开共享配置
@@ -623,6 +628,12 @@ void DPrintersShowWindow::showEvent(QShowEvent *event)
                                                    "deviceStatusChanged", this, SLOT(deviceStatusChanged(QDBusMessage)))) {
             qCWarning(COMMONMOUDLE) << "connect to dbus signal(deviceStatusChanged) failed";
         }
+        for (const char *signalName : {"signalPrinterAdd", "signalPrinterDelete"}) {
+            if (!QDBusConnection::sessionBus().connect(SERVICE_INTERFACE_NAME, SERVICE_INTERFACE_PATH, SERVICE_INTERFACE_NAME,
+                                                       signalName, this, SLOT(printerListChanged(QDBusMessage)))) {
+                qCWarning(COMMONMOUDLE) << "connect to dbus signal failed:" << signalName;
+            }
+        }
     });
 
 }
@@ -636,6 +647,12 @@ void DPrintersShowWindow::selectPrinterByName(const QString &printerName)
             m_CurPrinterName = printerName;
             return;
         }
+    }
+
+    // The requested printer is gone (e.g. removed externally): fall back to the first entry
+    if (m_pPrinterModel->rowCount() > 0) {
+        m_pPrinterListView->setCurrentIndex(m_pPrinterModel->index(0, 0));
+        m_CurPrinterName = m_pPrinterModel->item(0)->text();
     }
 }
 
@@ -897,6 +914,30 @@ void DPrintersShowWindow::deviceStatusChanged(const QDBusMessage &msg)
     }
 }
 
+void DPrintersShowWindow::printerListChanged(const QDBusMessage &msg)
+{
+    if (msg.arguments().count() != 1 || !msg.arguments().at(0).canConvert<QString>()) {
+        qCWarning(COMMONMOUDLE) << "printerListChanged dbus arguments error";
+        return;
+    }
+    const QString printer = msg.arguments().at(0).toString();
+
+    m_pPrinterManager->updateDestinationList();
+    const QStringList cupsPrinters = m_pPrinterManager->getPrintersList();
+    QStringList shownPrinters;
+    for (int i = 0; i < m_pPrinterModel->rowCount(); ++i) {
+        if (m_pPrinterModel->item(i)->flags() & Qt::ItemIsEnabled)
+            shownPrinters << m_pPrinterModel->item(i)->text();
+    }
+    // Changes made by this window already refresh the list themselves
+    if (cupsPrinters == shownPrinters)
+        return;
+
+    if (msg.member() == QLatin1String("signalPrinterAdd") && cupsPrinters.contains(printer))
+        m_CurPrinterName = printer;
+    refreshPrinterListView(m_CurPrinterName);
+}
+
 void DPrintersShowWindow::addPrinterClickSlot()
 {
     if (!m_pSearchWindow) {
@@ -1026,6 +1067,8 @@ void DPrintersShowWindow::renamePrinterSlot(QStandardItem *pItem)
             return;
         bool isDefault = m_pPrinterManager->isDefaultPrinter(m_CurPrinterName);
         bool isAccept = m_pPrinterManager->isPrinterAcceptJob(m_CurPrinterName);
+        // A renamed queue is created from scratch, and CUPS shares new queues by default
+        const bool wasShared = m_pPrinterManager->isPrinterShared(m_CurPrinterName);
         m_pPrinterManager->setPrinterEnabled(m_CurPrinterName, false);
 
         pDest->getPrinterInfo(info, location, deviceURI, ppdFile);
@@ -1044,11 +1087,16 @@ void DPrintersShowWindow::renamePrinterSlot(QStandardItem *pItem)
             m_pPrinterManager->setPrinterDefault(newPrinterName);
         if (isAccept)
             m_pPrinterManager->setPrinterAcceptJob(newPrinterName, true);
+        m_pPrinterManager->setPrinterShared(newPrinterName, wasShared);
         m_pPrinterManager->deletePrinterByName(m_CurPrinterName);
 
         m_CurPrinterName = newPrinterName;
-        // 刷新完成选中重命名的打印机
-        refreshPrinterListView(m_CurPrinterName);
+        // Rebuild the list only after the inline editor has finished closing, and give the
+        // focus back to the list; otherwise Enter leaves the focus on the menu bar.
+        QTimer::singleShot(0, this, [this]() {
+            refreshPrinterListView(m_CurPrinterName);
+            m_pPrinterListView->setFocus();
+        });
     } catch (const std::runtime_error &e) {
         qCWarning(COMMONMOUDLE) << e.what();
     }

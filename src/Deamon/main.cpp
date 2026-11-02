@@ -100,6 +100,8 @@ int main(int argc, char *argv[])
 
     cupsMonitor.initSubscription();
     cupsMonitor.initWatcher();
+    // Without a running worker thread printer add/remove events are never relayed over D-Bus
+    cupsMonitor.start();
 
     int ret = a.exec();
     helper.unRegisterDBus();

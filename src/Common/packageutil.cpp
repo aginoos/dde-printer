@@ -69,6 +69,43 @@ VersionOrder compareVersions(const QString &lhs, const QString &rhs)
     return dpkgSays(lhs, "lt", rhs) ? VersionOrder::Older : VersionOrder::Newer;
 }
 
+static QStringList &extraAllowed()
+{
+    static QStringList names;
+    return names;
+}
+
+void setExtraAllowedDriverPackages(const QStringList &names)
+{
+    extraAllowed() = names;
+}
+
+bool isAllowedDriverPackage(const QString &package)
+{
+    if (!SafeProcess::isValidPackageName(package)) {
+        return false;
+    }
+    if (extraAllowed().contains(package)) {
+        return true;
+    }
+    static const QList<QRegularExpression> allowed = {
+        QRegularExpression("\\Aprinter-driver-[a-z0-9][a-z0-9+.-]*\\z"),
+        QRegularExpression("\\Ahp(lip|ijs)(-[a-z0-9][a-z0-9+.-]*)?\\z"),
+        QRegularExpression("\\A(cnijfilter|cnrdrvcups|cnrdrv|captdriver|cndrvcups)[a-z0-9+.-]*\\z"),
+        QRegularExpression("\\Aepson-(inkjet-printer|escpr)[a-z0-9+.-]*\\z"),
+        QRegularExpression("\\A(brother|samsung|ricoh|kyocera|lexmark|xerox|pantum|lanxum)-[a-z0-9][a-z0-9+.-]*\\z"),
+        QRegularExpression("\\A(foomatic-db|openprinting-ppds)[a-z0-9+.-]*\\z"),
+        QRegularExpression("\\A(foomatic-filters|cups-filters|splix|brlaser|ptouch-driver|pxljr|c2esp|min12xxw|pnm2ppa)\\z"),
+        QRegularExpression("\\Acom\\.[a-z0-9][a-z0-9+.-]*\\z"),
+    };
+    for (const QRegularExpression &re : allowed) {
+        if (re.match(package).hasMatch()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool policyOffers(const QString &policyOutput, const QString &version)
 {
     static const QRegularExpression candidateRe("^\\s*Candidate:\\s*(\\S+)", QRegularExpression::MultilineOption);

@@ -143,3 +143,33 @@ TEST(ut_PackageUtil, unknownPackageIsNotInstallable)
     EXPECT_FALSE(isInstallable("ut-no-such-package-zz", QString()));
     EXPECT_FALSE(isInstallable("ut-no-such-package-zz", "1.0"));
 }
+
+// -------------------------------------------------- isAllowedDriverPackage
+
+TEST(ut_PackageUtil, driverWhitelistAcceptsKnownDriverFamilies)
+{
+    for (const char *name : {"printer-driver-gutenprint", "printer-driver-brlaser", "hplip", "hplip-data",
+                             "hplip-plugin", "hpijs-ppds", "cnijfilter2", "cnrdrvcups-lb",
+                             "epson-inkjet-printer-escpr", "brother-lpr-drivers", "foomatic-db-compressed-ppds",
+                             "openprinting-ppds", "com.pantum.pantum", "com.lanxum-ga-series", "cups-filters"}) {
+        EXPECT_TRUE(PackageUtil::isAllowedDriverPackage(QString::fromLatin1(name))) << name;
+    }
+}
+
+TEST(ut_PackageUtil, driverWhitelistRefusesEverythingElse)
+{
+    for (const char *name : {"openssh-server", "systemd", "libc6", "sudo", "printer-driver", "hplipx-evil",
+                             "com.", "comx.vendor", "xprinter-driver-foo", "Printer-driver-foo", "printer-driver-foo bar",
+                             "printer-driver-foo;id", "-printer-driver-foo", ""}) {
+        EXPECT_FALSE(PackageUtil::isAllowedDriverPackage(QString::fromLatin1(name))) << name;
+    }
+}
+
+TEST(ut_PackageUtil, extraAllowedPackagesAreOnlyAddedForTheTestAndResettable)
+{
+    EXPECT_FALSE(PackageUtil::isAllowedDriverPackage("dpkg"));
+    PackageUtil::setExtraAllowedDriverPackages({"dpkg"});
+    EXPECT_TRUE(PackageUtil::isAllowedDriverPackage("dpkg"));
+    PackageUtil::setExtraAllowedDriverPackages({});
+    EXPECT_FALSE(PackageUtil::isAllowedDriverPackage("dpkg"));
+}

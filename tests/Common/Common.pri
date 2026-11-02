@@ -24,6 +24,7 @@ SOURCES += $$PWD/ut_common.cpp \
     $$PWD/ut_secretstore.cpp \
     $$PWD/ut_safeprocess.cpp \
     $$PWD/ut_packageutil.cpp \
+    $$PWD/ut_driverinstallconfirm.cpp \
     $$PWD/ut_zdevicemanager.cpp \
     $$PWD/ut_installinterface.cpp \
     $$PWD/ut_addprinter.cpp \

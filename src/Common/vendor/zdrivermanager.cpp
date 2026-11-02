@@ -15,6 +15,7 @@
 #include "cupsconnectionfactory.h"
 #include "zsettings.h"
 #include "safeprocess.h"
+#include "packageutil.h"
 
 #include <QProcess>
 #include <QUrl>
@@ -955,7 +956,7 @@ static bool isTrustedPackageInfo(const QString &package, const QString &version)
     if (package.isEmpty()) {
         return true;  // handled later as "no driver package"
     }
-    const bool nameOk = SafeProcess::isValidPackageName(package);
+    const bool nameOk = SafeProcess::isValidPackageName(package) && PackageUtil::isAllowedDriverPackage(package);
     const bool versionOk = version.isEmpty() || SafeProcess::isValidPackageVersion(version);
     if (!nameOk || !versionOk) {
         qCWarning(COMMONMOUDLE) << "dropping driver with invalid package info:" << package << version;

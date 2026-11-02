@@ -6,6 +6,7 @@
 #include "common.h"
 #include "safeprocess.h"
 #include "packageutil.h"
+#include "driverinstallconfirm.h"
 
 #include <QDBusConnection>
 #include <QDBusMessage>
@@ -113,6 +114,14 @@ bool InstallInterface::collectPackagesToInstall()
         if (!SafeProcess::isValidPackageName(package.packageName)
             || (!package.packageVer.isEmpty() && !SafeProcess::isValidPackageVersion(package.packageVer))) {
             failWith(tr("The driver package information is invalid."));
+            return false;
+        }
+
+        // Names from the driver server or PPD files only reach apt as root when
+        // they look like printer driver packages.
+        if (!PackageUtil::isAllowedDriverPackage(package.packageName)) {
+            qCWarning(COMMONMOUDLE) << "refusing package outside the driver whitelist:" << package.packageName;
+            failWith(tr("The package %1 is not an accepted printer driver package.").arg(package.packageName));
             return false;
         }
 
@@ -362,6 +371,17 @@ void InstallInterface::startAptInstall()
     const QString pkexec = SafeProcess::findTool("pkexec");
     if (pkexec.isEmpty()) {
         failWith(tr("No package installer is available on this system."));
+        return;
+    }
+
+    // pkexec's dialog only shows "/usr/bin/env ..."; let the user see and
+    // approve the actual packages first.
+    QStringList descriptions;
+    for (const QString &name : m_installPackages) {
+        descriptions << DriverInstallConfirm::describe(name, versionOf(name));
+    }
+    if (!DriverInstallConfirm::confirm(descriptions)) {
+        failWith(tr("The driver installation was cancelled."));
         return;
     }
 

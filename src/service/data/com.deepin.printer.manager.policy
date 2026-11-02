@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>agino</vendor>
+  <icon_name>dde-printer</icon_name>
+
+  <action id="com.deepin.printer.manager.canon-add">
+    <description>Install a Canon CAPT printer</description>
+    <description xml:lang="zh_CN">安装佳能 CAPT 打印机</description>
+    <message>Authentication is required to install a Canon CAPT printer</message>
+    <message xml:lang="zh_CN">安装佳能 CAPT 打印机需要认证</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <action id="com.deepin.printer.manager.canon-remove">
+    <description>Remove a Canon CAPT printer</description>
+    <description xml:lang="zh_CN">卸载佳能 CAPT 打印机</description>
+    <message>Authentication is required to remove a Canon CAPT printer</message>
+    <message xml:lang="zh_CN">卸载佳能 CAPT 打印机需要认证</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <action id="com.deepin.printer.manager.launch-autostart">
+    <description>Run a printer driver start-up script</description>
+    <description xml:lang="zh_CN">运行打印机驱动启动脚本</description>
+    <message>Authentication is required to start a printer driver service</message>
+    <message xml:lang="zh_CN">启动打印机驱动服务需要认证</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+</policyconfig>

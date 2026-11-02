@@ -6,31 +6,44 @@ Type=dbus
 BusName=com.deepin.printer.manager
 User=root
 ExecStart=/usr/lib/deepin-daemon/dde-printer-manager
-CapabilityBoundingSet=CAP_SYS_PTRACE
-MemoryLimit=100M
+MemoryMax=100M
 ProtectSystem=strict
 ProtectHome=yes
+# lpadmin talks to cupsd over its socket; ccpdadmin edits the CAPT daemon
+# configuration; vendor autostart scripts live under /opt/printer-drivers.
+# Missing paths are ignored (leading '-').
 ReadWritePaths=-/tmp
 ReadWritePaths=-/etc
+ReadWritePaths=-/opt/printer-drivers
+ReadWritePaths=-/var/ccpd
+ReadWritePaths=-/var/cache
+ReadWritePaths=-/var/lib
 InaccessiblePaths=/etc/shadow
 InaccessiblePaths=-/etc/NetworkManager/system-connections
 InaccessiblePaths=-/etc/pam.d
 InaccessiblePaths=-/usr/share/uadp
 InaccessiblePaths=-/etc/sudoers
-InaccessiblePaths=-/etc/passwd
-InaccessiblePaths=-/etc/group
 InaccessiblePaths=-/etc/ssh
 NoNewPrivileges=yes
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
+ProtectKernelLogs=yes
 ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
 PrivateMounts=yes
 PrivateTmp=yes
 PrivateDevices=yes
-PrivateNetwork=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
 RestrictNamespaces=yes
 LockPersonality=yes
 RestrictRealtime=yes
+SystemCallArchitectures=native
 RemoveIPC=yes
+# The service no longer reads /proc/<pid>/exe (authorization is polkit), so
+# CAP_SYS_PTRACE is gone. The capability bounding set is deliberately left at
+# the default until lpadmin/ccpdadmin and the vendor scripts are verified on
+# real hardware; PrivateNetwork and SystemCallFilter are left off for the same
+# reason.
 # ARM模拟器运行需要分配内存有可写和可执行权限
 # MemoryDenyWriteExecute=yes

@@ -1,127 +1,155 @@
 // SPDX-FileCopyrightText: 2019 - 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2026 agino
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "service.h"
 
+#include "autostartguard.h"
+#include "canonjob.h"
+#include "commandrunner.h"
+#include "inputvalidator.h"
+#include "polkitauthority.h"
+
 #include <QCoreApplication>
-#include <QTimer>
-#include <QDebug>
-#include <QStringList>
-
 #include <QDBusConnection>
-#include <QDBusConnectionInterface>
-#include <QFileInfo>
+#include <QDBusError>
+#include <QDebug>
 
-static QString getMountNamespaceID(quint32 pid)
-{
-    QString path = QString("/proc/%1/ns/mnt").arg(pid);
-    QFile file(path);
+namespace {
 
-    if (!file.exists()) {
-        qDebug() << "Mnt does not exist:" << path;
-        return QString();
-    }
+const char kActionCanonAdd[] = "com.deepin.printer.manager.canon-add";
+const char kActionCanonRemove[] = "com.deepin.printer.manager.canon-remove";
+const char kActionAutostart[] = "com.deepin.printer.manager.launch-autostart";
 
-    QString linkTarget = file.symLinkTarget(path);
-    if (linkTarget.isEmpty()) {
-        qDebug() << "Unable to get the symlink target for:" << path;
-    }
+constexpr int kMaxActiveTasks = 8;
+constexpr int kIdleExitMs = 30000;
+constexpr int kAutostartTimeoutMs = 120000;
 
-    return linkTarget;
 }
-
-bool isMountNamespacesEqual(quint32 pid1, quint32 pid2) {
-    QString ns1 = getMountNamespaceID(pid1);
-    QString ns2 = getMountNamespaceID(pid2);
-    qDebug() << "isMountNamespacesEqual: " << ns1 << ns2;
-    if (ns1.isEmpty() || ns2.isEmpty()) {
-        return false;
-    }
-
-    return ns1.mid(ns1.lastIndexOf('/') + 1) == ns2.mid(ns2.lastIndexOf('/') + 1);
-}
-
-static const QString getProcessPath(quint32 pid) {
-    QString path;
-    if (!isMountNamespacesEqual(pid, 1)) {
-        return path;
-    }
-
-    QFileInfo file("/proc/" + QString::number(pid) + "/exe");
-    if (file.exists() && file.isSymLink()) {
-        path = file.symLinkTarget();
-    }
-    return path;
-}
-
-static QStringList g_autoStartList = QStringList() << "/opt/printer-drivers/com.pantum.pantum/config/"
-                                            << "/opt/printer-drivers/com.lanxum-ga-series/config/"
-                                            << "/opt/printer-drivers/com.hp.hplip/config/" ;
 
 Service::Service(QObject *parent) : QObject(parent), QDBusContext()
 {
-    m_proc = new QProcess;
-
-    connect(m_proc, &QProcess::stateChanged, [=](QProcess::ProcessState state) {
-        if (state == QProcess::ProcessState::NotRunning) {
-            QCoreApplication::exit();
-        }
+    m_idleTimer.setSingleShot(true);
+    m_idleTimer.setInterval(kIdleExitMs);
+    connect(&m_idleTimer, &QTimer::timeout, this, [this]() {
+        if (m_activeTasks > 0)
+            m_idleTimer.start();
+        else
+            QCoreApplication::quit();
     });
-    QTimer::singleShot(10000, QCoreApplication::instance(), &QCoreApplication::quit);
+    m_idleTimer.start();
 }
 
-Service::~Service()
+void Service::beginTask()
 {
-    delete m_proc;
-    m_proc = nullptr;
+    ++m_activeTasks;
+    m_idleTimer.start();
+}
+
+void Service::endTask()
+{
+    --m_activeTasks;
+    m_idleTimer.start();
+}
+
+void Service::completeWith(const QDBusMessage &reply)
+{
+    QDBusConnection::systemBus().send(reply);
+    endTask();
+}
+
+bool Service::authorizeThen(const QString &action, GrantedHandler onGranted)
+{
+    if (m_activeTasks >= kMaxActiveTasks) {
+        sendErrorReply(QDBusError::LimitsExceeded, QStringLiteral("Service is busy"));
+        return false;
+    }
+
+    // The unique name of the sender is fixed here, at message time.
+    const QDBusMessage request = message();
+    setDelayedReply(true);
+    beginTask();
+
+    PolkitAuthority::check(connection(), request.service(), action, this,
+                           [this, request, action, onGranted](AuthResult result) {
+        if (result != AuthResult::Authorized) {
+            qWarning() << "Not authorized:" << action << "for" << request.service();
+            completeWith(request.createErrorReply(
+                QDBusError::AccessDenied, QStringLiteral("Not authorized: %1").arg(action)));
+            return;
+        }
+        onGranted(request);
+    });
+    return true;
 }
 
 void Service::LaunchAutoStart(const QString &filePath)
 {
-    QTimer::singleShot(100, QCoreApplication::instance(), &QCoreApplication::quit);
-
-    if (filePath.isEmpty() || !g_autoStartList.contains(filePath)) return;
-
-    if (!IsAuthorizePath()) {
+    const QString script = AutostartGuard::resolveScript(filePath);
+    if (script.isEmpty()) {
+        sendErrorReply(QDBusError::InvalidArgs, QStringLiteral("Autostart directory rejected"));
         return;
     }
-    QString scriptPath = filePath + "autostart.sh";
-    QProcess::startDetached(scriptPath,  QStringList() << "-c");
-    return;
+
+    authorizeThen(kActionAutostart, [this, script](const QDBusMessage &request) {
+        // Reply as soon as the script is launched; the task stays counted
+        // so the service does not exit while the script is still running.
+        QDBusConnection::systemBus().send(request.createReply());
+        CommandRunner::run(this, script, {"-c"}, [this](const CommandResult &result) {
+            if (!result.ok())
+                qWarning() << "autostart script failed, exit code" << result.exitCode;
+            endTask();
+        }, kAutostartTimeoutMs);
+    });
 }
 
 int Service::CanonPrinterInstall(const QStringList &args)
 {
-    if (!IsAuthorizePath()) {
-        return -11;
+    QString error;
+    const auto parsed = InputValidator::parseInstallArgs(args, &error);
+    if (!parsed) {
+        sendErrorReply(QDBusError::InvalidArgs, error);
+        return 0;
     }
 
-    m_proc->start("/opt/deepin/dde-printer/printer-drivers/cndrvcups-capt/canonadd", args);
-    m_proc->waitForFinished();
-    return m_proc->exitCode();
+    const CanonInstallRequest req = *parsed;
+    authorizeThen(kActionCanonAdd, [this, req](const QDBusMessage &request) {
+        if (m_canonBusy) {
+            completeWith(request.createErrorReply(QDBusError::LimitsExceeded,
+                                                  QStringLiteral("Another Canon job is running")));
+            return;
+        }
+        m_canonBusy = true;
+        CanonJob::install(this, req, [this, request](int code) {
+            m_canonBusy = false;
+            completeWith(request.createReply(code));
+        });
+    });
+    return 0; // ignored: the reply is sent later
 }
 
 int Service::CanonPrinterRemove(const QStringList &args)
 {
-    if (!IsAuthorizePath()) {
-        return -11;
+    QString error;
+    const auto name = InputValidator::parseRemoveArgs(args, &error);
+    if (!name) {
+        sendErrorReply(QDBusError::InvalidArgs, error);
+        return 0;
     }
 
-    m_proc->start("/opt/deepin/dde-printer/printer-drivers/cndrvcups-capt/canonremove", args);
-    m_proc->waitForFinished();
-    return m_proc->exitCode();
-}
-
-bool Service::IsAuthorizePath()
-{
-    QDBusConnection conn = connection();
-    QDBusMessage msg = message();
-    QDBusReply<unsigned int> pid = conn.interface()->servicePid(msg.service());
-    QString name = getProcessPath(pid);
-    qDebug() << "path:" << pid << name;
-    if (name == "/usr/bin/dde-printer" || name == "/usr/bin/dde-printer-helper") {
-        return true;
-    }
-    return false;
+    const QString printerName = *name;
+    authorizeThen(kActionCanonRemove, [this, printerName](const QDBusMessage &request) {
+        if (m_canonBusy) {
+            completeWith(request.createErrorReply(QDBusError::LimitsExceeded,
+                                                  QStringLiteral("Another Canon job is running")));
+            return;
+        }
+        m_canonBusy = true;
+        CanonJob::remove(this, printerName, [this, request](int code) {
+            m_canonBusy = false;
+            completeWith(request.createReply(code));
+        });
+    });
+    return 0;
 }

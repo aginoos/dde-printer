@@ -12,12 +12,22 @@ CONFIG -= app_bundle
 TEMPLATE = app
 
 SOURCES += main.cpp \
-    service.cpp
+    service.cpp \
+    commandrunner.cpp \
+    polkitauthority.cpp \
+    inputvalidator.cpp \
+    autostartguard.cpp \
+    canonjob.cpp
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
 HEADERS += \
-    service.h
+    service.h \
+    commandrunner.h \
+    polkitauthority.h \
+    inputvalidator.h \
+    autostartguard.h \
+    canonjob.h
 
 unix {
 isEmpty(PREFIX) {
@@ -31,10 +41,13 @@ binary.files = $${OUT_PWD}/$${TARGET}
 service.path = $${PREFIX}/share/dbus-1/system-services
 service.files = $$PWD/data/com.deepin.printer.manager.service
 
-dbus.path = /etc/dbus-1/system.d
+dbus.path = $${PREFIX}/share/dbus-1/system.d
 dbus.files = $$PWD/data/com.deepin.printer.manager.conf
 
 serviced.path = $${PREFIX}/lib/systemd/system
 serviced.files = $$PWD/data/dde-printer-manager.service
 
-INSTALLS += service dbus binary serviced
+polkit.path = $${PREFIX}/share/polkit-1/actions
+polkit.files = $$PWD/data/com.deepin.printer.manager.policy
+
+INSTALLS += service dbus binary serviced polkit

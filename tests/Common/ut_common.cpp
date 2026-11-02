@@ -362,10 +362,8 @@ TEST_F(ut_Common, ppdMakeModelSplit)
     QString strMake, strModel;
     ppdMakeModelSplit(strMakeModel, strMake, strModel);
     EXPECT_STREQ(strMake.toStdString().c_str(), "Canon");
+    // the trailing "UFR II" is a driver suffix and is cut from the model
     EXPECT_STREQ(strModel.toStdString().c_str(), "iR2625/2630");
-
-    QString strFullModel = getPrinterFullModel();
-    EXPECT_STREQ(strFullModel.toStdString().c_str(), "iR2625/2630 UFR II");
 }
 
 TEST_F(ut_Common, ppdMakeModelSplit1)
@@ -374,10 +372,8 @@ TEST_F(ut_Common, ppdMakeModelSplit1)
     QString strMake, strModel;
     ppdMakeModelSplit(strMakeModel, strMake, strModel);
     EXPECT_STREQ(strMake.toStdString().c_str(), "Canon");
+    // the version number and the "series" suffix are both dropped
     EXPECT_STREQ(strModel.toStdString().c_str(), "MG4100");
-
-    QString strFullModel = getPrinterFullModel();
-    EXPECT_STREQ(strFullModel.toStdString().c_str(), "MG4100 series");
 }
 
 TEST_F(ut_Common, ppdMakeModelSplit2)

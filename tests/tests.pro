@@ -6,7 +6,7 @@ CONFIG += testcase no_testcase_installs c++17 link_pkgconfig
 PKGCONFIG += dtk6widget dtk6gui dtk6core
 
 unix:QMAKE_RPATHDIR += $$OUT_PWD/../src
-unix:LIBS += -lgtest -lcups
+unix:LIBS += -lgtest -lpthread -lcups
 
 QMAKE_CXXFLAGS += -fno-access-control
 QMAKE_LFLAGS += -fno-access-control

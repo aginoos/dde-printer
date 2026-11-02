@@ -3,16 +3,18 @@ Section: misc
 Priority: optional
 Maintainer: Deepin Sysdev <sysdev@linuxdeepin.com>
 Build-Depends: 
- debhelper-compat (= 11),
- qtbase5-dev,
- qttools5-dev-tools,
- libdtkcore-dev,
- libdtkwidget-dev,
- libdtkgui-dev,
+ debhelper-compat (= 13),
+ qt6-base-dev,
+ qt6-base-dev-tools,
+ qt6-tools-dev,
+ qt6-tools-dev-tools,
+ qt6-l10n-tools,
+ libdtk6core-dev,
+ libdtk6widget-dev,
+ libdtk6gui-dev,
  pkg-config,
  g++ (>= 8.3.0),
  libcups2-dev,
- qt5-qmake,
  libsmbclient-dev,
  libgnutls28-dev,
  libusb-1.0-0-dev,
@@ -22,7 +24,8 @@ Homepage: http://www.linuxdeepin.com/
 
 Package: dde-printer
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libnss-winbind, libdeepin-service-framework, deepin-service-manager, libnss-mdns
+Depends: ${shlibs:Depends}, ${misc:Depends}, libdeepin-service-framework, deepin-service-manager
+Recommends: libnss-mdns
 Description: Deepin Print Manager is a eazy tool to manage printers.
  Deepin Print Manager is a printer management tool,which supports adding and removing printers,managing print jobs and so on.
  

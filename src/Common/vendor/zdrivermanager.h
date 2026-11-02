@@ -90,12 +90,12 @@ public:
     int refreshPpds();
 
     QStringList getAllMakes();
-    const QMap<QString, QString> *getModelsByMake(const QString &strMake);
+    const QMultiMap<QString, QString> *getModelsByMake(const QString &strMake);
 
     /*!
     * @brief 获取所有ppd文件的信息
     */
-    const QMap<QString, QMap<QString, QString>> *getPPDs();
+    const QMultiMap<QString, QMap<QString, QString>> *getPPDs();
 
     /*!
     * @brief 获取Generic Text-Only Printer，作为默认驱动

@@ -30,7 +30,7 @@ TEST_F(ut_Common, normalize)
     /*Epson PM-A820 -> epson pm a 820*/
     QString testMakeModel = "Epson PM-A820";
     QString ret = normalize(testMakeModel);
-    QStringList list = ret.split(" ", QString::SkipEmptyParts);
+    QStringList list = ret.split(" ", Qt::SkipEmptyParts);
     ASSERT_EQ(list.count(), 4);
     bool flag = ret.contains(QRegularExpression("[A-Z]"));
     ASSERT_EQ(flag, false);

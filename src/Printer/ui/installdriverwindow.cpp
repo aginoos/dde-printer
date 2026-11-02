@@ -202,7 +202,7 @@ void InstallDriverWindow::initUI()
     QVBoxLayout *pVLayoutLocal = new QVBoxLayout();
     pVLayoutLocal->addWidget(pLocalWidget, 0);
     pVLayoutLocal->addStretch();
-    pVLayoutLocal->setMargin(0);
+    pVLayoutLocal->setContentsMargins(0, 0, 0, 0);
     QWidget *pLocalWidget4 = new QWidget(this);
     pLocalWidget4->setLayout(pVLayoutLocal);
     pLocalWidget4->setAccessibleName("localWidget4_installDriver");
@@ -281,7 +281,7 @@ void InstallDriverWindow::initUI()
     QVBoxLayout *pVLayoutMaker = new QVBoxLayout();
     pVLayoutMaker->addWidget(pSettingWidget, 0);
     pVLayoutMaker->addStretch();
-    pVLayoutMaker->setMargin(0);
+    pVLayoutMaker->setContentsMargins(0, 0, 0, 0);
     QWidget *pSettingWidget1 = new QWidget(this);
     pSettingWidget1->setLayout(pVLayoutMaker);
     pSettingWidget1->setAccessibleName("settingWidget1_installDriver");
@@ -492,11 +492,11 @@ void InstallDriverWindow::tabCurrentIndexChanged()
 
 void InstallDriverWindow::currentMakerChangedSlot(const QString &maker)
 {
-    const QMap<QString, QString> *modelset = g_driverManager->getModelsByMake(maker);
+    const QMultiMap<QString, QString> *modelset = g_driverManager->getModelsByMake(maker);
     if (modelset) {
         m_pTypeCombo->clear();
         // 去掉重复项
-        QStringList modelList = modelset->keys().toSet().toList();
+        QStringList modelList = modelset->uniqueKeys();
         modelList.sort(Qt::CaseInsensitive);
         m_pTypeCombo->addItems(modelList);
         initCompleter(TYPE, modelList);
@@ -518,12 +518,12 @@ void InstallDriverWindow::currentMakerChangedSlot(const QString &maker)
 
 void InstallDriverWindow::currentModelChangedSlot(const QString &model)
 {
-    const QMap<QString, QString> *modelset = g_driverManager->getModelsByMake(m_pManufacturerCombo->currentText());
+    const QMultiMap<QString, QString> *modelset = g_driverManager->getModelsByMake(m_pManufacturerCombo->currentText());
     if (modelset) {
         m_pDriverCombo->clear();
 
         QStringList ppdKeys = modelset->values(model);
-        const QMap<QString, QMap<QString, QString>> *ppds = g_driverManager->getPPDs();
+        const QMultiMap<QString, QMap<QString, QString>> *ppds = g_driverManager->getPPDs();
         QStringList strValues;
 
         foreach (QString key, ppdKeys) {

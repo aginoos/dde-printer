@@ -11,7 +11,6 @@
 
 #include <QDebug>
 #include <QFile>
-#include <QTextCodec>
 #include <QRegularExpression>
 
 #include <assert.h>

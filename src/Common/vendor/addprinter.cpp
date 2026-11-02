@@ -32,10 +32,10 @@ static QString getPackageVersion(const QString &package)
 {
     QString strOut, strErr;
     if (0 == shellCmd(QString("dpkg -l %1").arg(package), strOut, strErr)) {
-        QStringList list = strOut.split("\n", QString::SkipEmptyParts);
+        QStringList list = strOut.split("\n", Qt::SkipEmptyParts);
         strOut = list.isEmpty() ? "" : list.last();
         qCDebug(COMMONMOUDLE) << strOut;
-        list = strOut.split(" ", QString::SkipEmptyParts);
+        list = strOut.split(" ", Qt::SkipEmptyParts);
         return list.count() > 2 ? list[2] : QString();
     }
 
@@ -1096,7 +1096,7 @@ QString AddPrinterFactory::defaultPrinterName(const TDeviceInfo &printer, const 
 
     //提前替换一次，防止替换之后变为空字符串
     strName.replace(QRegularExpression("[^\\w-]"), " ");
-    QStringList list = strName.split(" ", QString::SkipEmptyParts);
+    QStringList list = strName.split(" ", Qt::SkipEmptyParts);
     strName = list.join(" ");
     if (strName.isEmpty()) {
         QString strMM = printer.strMakeAndModel.isEmpty() ? solution.value(CUPS_PPD_MAKE_MODEL).toString() : printer.strMakeAndModel;
@@ -1119,7 +1119,7 @@ QString AddPrinterFactory::defaultPrinterName(const TDeviceInfo &printer, const 
 
     strName.replace(QRegularExpression("[^\\w-]"), " ");
     //去掉多个连续空格的情况
-    list = strName.split(" ", QString::SkipEmptyParts);
+    list = strName.split(" ", Qt::SkipEmptyParts);
     strName = list.join(" ");
     if (strName.isEmpty()) {
         strDefaultName = "printer";
@@ -1136,7 +1136,7 @@ QString AddPrinterFactory::defaultPrinterName(const TDeviceInfo &printer, const 
         QString protocol = printer.uriList.at(0).left(printer.uriList.at(0).indexOf(":/"));
         if (protocol == "socket" && !printer.strLocation.isEmpty() && !isIpv4Address(printer.strLocation)) {
             QString tmpLocation = printer.strLocation;
-            QStringList tmpList = tmpLocation.split(" ", QString::SkipEmptyParts);
+            QStringList tmpList = tmpLocation.split(" ", Qt::SkipEmptyParts);
             tmpLocation = tmpList.join(" ");
             tmpLocation.replace(QRegularExpression("[/ ?'#\"\\\\]"), "-");
             strDefaultName += "-" + tmpLocation;

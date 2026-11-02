@@ -118,13 +118,13 @@ QString getPrinterPPD(const char *name)
 
 QString getPrinterNameFromUri(const QString &uri)
 {
-    if (uri.split("/", QString::SkipEmptyParts).count() < 2)
+    if (uri.split("/", Qt::SkipEmptyParts).count() < 2)
         return QString();
 
     QByteArray bytes = QByteArray::fromPercentEncoding(uri.toUtf8());
     QString strurl = QString::fromUtf8(bytes);
     if (strurl.startsWith("dnssd://")) {
-        QString strInfo = strurl.split("/", QString::SkipEmptyParts).at(1);
+        QString strInfo = strurl.split("/", Qt::SkipEmptyParts).at(1);
         return strInfo.split("@").first().trimmed();
     }
 
@@ -169,7 +169,7 @@ QString getHostFromUri(const QString &strUri)
 
     //smb格式uri：smb://[username:password@][workgroup/]server/printer
     if (strUri.startsWith("smb://")) {
-        QStringList strlist = strUri.split("/", QString::SkipEmptyParts);
+        QStringList strlist = strUri.split("/", Qt::SkipEmptyParts);
         QString str = strlist.count() > 3 ? strlist[strlist.count() - 2] : "";
 
         if (str.isEmpty())
@@ -181,15 +181,15 @@ QString getHostFromUri(const QString &strUri)
 
     //dnssd格式uri: dnssd://printername @ host.*.*.local/*
     if (strUri.startsWith("dnssd://")) {
-        QStringList strlist = QUrl::fromPercentEncoding(strUri.toUtf8()).split("/", QString::SkipEmptyParts);
+        QStringList strlist = QUrl::fromPercentEncoding(strUri.toUtf8()).split("/", Qt::SkipEmptyParts);
         if (strlist.count() < 2)
             return QString();
 
-        strlist = strlist[1].split(" ", QString::SkipEmptyParts);
+        strlist = strlist[1].split(" ", Qt::SkipEmptyParts);
         if (strlist.isEmpty())
             return QString();
 
-        strlist = strlist.last().split(".", QString::SkipEmptyParts);
+        strlist = strlist.last().split(".", Qt::SkipEmptyParts);
         if (strlist.count() < 2)
             return QString();
 
@@ -441,9 +441,9 @@ QString normalize(const QString &strin)
 QMap<QString, QString> parseDeviceID(const QString &strId)
 {
     QMap<QString, QString> map;
-    QStringList list = strId.split(";", QString::SkipEmptyParts);
+    QStringList list = strId.split(";", Qt::SkipEmptyParts);
     foreach (QString str, list) {
-        QStringList val = str.split(":", QString::SkipEmptyParts);
+        QStringList val = str.split(":", Qt::SkipEmptyParts);
         if (val.count() > 1)
             map.insert(val[0].trimmed(), val[1].trimmed());
     }

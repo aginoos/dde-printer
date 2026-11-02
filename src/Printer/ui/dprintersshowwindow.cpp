@@ -216,7 +216,7 @@ void DPrintersShowWindow::initUI()
     QLabel *pLabelLocation = new QLabel(tr("Location:"));
     DFontSizeManager::instance()->bind(pLabelLocation, DFontSizeManager::T8, QFont::Medium);
     QFontMetrics fm(pLabelLocation->font());
-    pLabelLocation->setFixedWidth(fm.width(pLabelLocation->text()) + 10);
+    pLabelLocation->setFixedWidth(fm.horizontalAdvance(pLabelLocation->text()) + 10);
     m_pLabelLocationShow = new QLabel(tr(""));
     DFontSizeManager::instance()->bind(m_pLabelLocationShow, DFontSizeManager::T8, QFont::Medium);
     m_pLabelLocationShow->setFixedWidth(255);

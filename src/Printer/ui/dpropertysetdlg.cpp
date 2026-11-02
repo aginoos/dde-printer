@@ -1351,7 +1351,7 @@ QString DPropertySetDlg::getBishengInfo(QString info)
     QString commond;
     commond += "cat " + m_strPpdName;
     if (shellCmd(commond, strOut, strErr) == 0) {
-        QStringList list = strOut.split("\n", QString::SkipEmptyParts);
+        QStringList list = strOut.split("\n", Qt::SkipEmptyParts);
         int index = 0;
         for (; index < list.size(); index++) {
             if (list[index].contains(info))
@@ -1361,7 +1361,7 @@ QString DPropertySetDlg::getBishengInfo(QString info)
             return nullptr;
         }
 
-        QStringList val = list[index].split(":", QString::SkipEmptyParts);
+        QStringList val = list[index].split(":", Qt::SkipEmptyParts);
         if (val.count() <= 1) {
             return nullptr;
         }

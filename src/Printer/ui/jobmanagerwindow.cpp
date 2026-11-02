@@ -717,7 +717,7 @@ void JobsDataModel::sortJobs()
 {
     QList<QMap<QString, QVariant>> donelist, processinglist, holdlist;
     QMap<QString, QVariant> priorityJob;
-    QMap<int, QMap<QString, QVariant>> jobHash;
+    QMultiMap<int, QMap<QString, QVariant>> jobHash;
 
     foreach (auto job, m_jobs) {
         int iState = job[JOB_ATTR_STATE].toString().toInt();
@@ -725,7 +725,7 @@ void JobsDataModel::sortJobs()
 
         if (IPP_JSTATE_PENDING == iState) {
             //等待中的任务根据优先级排序
-            jobHash.insertMulti(jobPriority, job);
+            jobHash.insert(jobPriority, job);
         } else if (iState == IPP_JSTATE_PROCESSING) {
             processinglist.append(job);
         } else if (iState == IPP_JSTATE_HELD) {
@@ -933,7 +933,7 @@ QVariant JobsDataModel::data(const QModelIndex &index, int role) const
     } else if (index.column() == 1) {
         return job[JOB_ATTR_USER].toString();
     } else if (index.column() == 2) {
-        QStringList list = job[JOB_ATTR_NAME].toString().split("/", QString::SkipEmptyParts);
+        QStringList list = job[JOB_ATTR_NAME].toString().split("/", Qt::SkipEmptyParts);
         return list.isEmpty() ? "" : list.last();
     } else if (index.column() == 3) {
         QString uri = job[JOB_ATTR_URI].toString();

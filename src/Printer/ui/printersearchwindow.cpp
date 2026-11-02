@@ -134,7 +134,7 @@ void PrinterSearchWindow::initUi()
     pHLayout1->addSpacing(8);
     pHLayout1->addWidget(m_pLabelPrinter);
     pHLayout1->addWidget(m_pBtnRefresh, 0, Qt::AlignRight);
-    pHLayout1->setMargin(0);
+    pHLayout1->setContentsMargins(0, 0, 0, 0);
 
     m_pPrinterListViewAuto = new DListView(this);
     m_pPrinterListViewAuto->setEditTriggers(DListView::NoEditTriggers);
@@ -165,7 +165,7 @@ void PrinterSearchWindow::initUi()
     QFontMetrics fm(m_pAutoDriverWebLink->font());
     m_pAutoDriverWebLink->setContentsMargins(10, 0, 0, 0);
     m_pAutoDriverWebLink->setOpenExternalLinks(true);
-    geteElidedText(m_pAutoDriverWebLink->font(), webLinkinfo, 480 - fm.width(tipInfo));
+    geteElidedText(m_pAutoDriverWebLink->font(), webLinkinfo, 480 - fm.horizontalAdvance(tipInfo));
     QString webLink = QObject::tr(UI_PRINTER_DRIVER_WEB_LINK).arg(webLinkinfo);
     m_pAutoDriverWebLink->setToolTip(UI_PRINTER_DRIVER_MESSAGE + UI_PRINTER_DRIVER_WEBSITE);
     m_pAutoDriverWebLink->setText(tipInfo + webLink);
@@ -231,7 +231,7 @@ void PrinterSearchWindow::initUi()
     pVLayout1->setSpacing(2);
     pVLayout1->addWidget(pAutoFrame1);
     pVLayout1->addWidget(pAutoFrame2);
-    pVLayout1->setMargin(0);
+    pVLayout1->setContentsMargins(0, 0, 0, 0);
     DBackgroundGroup *pWidget1 = new DBackgroundGroup();
     pWidget1->setLayout(pVLayout1);
     pWidget1->setItemSpacing(2);
@@ -348,7 +348,7 @@ void PrinterSearchWindow::initUi()
     pVLayout2->addWidget(pManFrame1);
     pVLayout2->addWidget(pManFrame2);
     pVLayout2->addWidget(pManFrame3);
-    pVLayout2->setMargin(0);
+    pVLayout2->setContentsMargins(0, 0, 0, 0);
     DBackgroundGroup *pWidget2 = new DBackgroundGroup();
     pWidget2->setLayout(pVLayout2);
     pWidget2->setItemSpacing(2);
@@ -455,7 +455,7 @@ void PrinterSearchWindow::initUi()
     pURIVLayout->addWidget(pURIFrame1);
     pURIVLayout->addWidget(pURIFrame2);
     pURIVLayout->addWidget(pURIFrame3);
-    pURIVLayout->setMargin(0);
+    pURIVLayout->setContentsMargins(0, 0, 0, 0);
 
     DBackgroundGroup *pWidget3 = new DBackgroundGroup();
     pWidget3->setLayout(pURIVLayout);
@@ -1146,7 +1146,7 @@ void PrinterSearchWindow::changeEvent(QEvent *event)
         QString tipInfo = UI_PRINTER_DRIVER_MESSAGE;
         QString webLinkinfo = UI_PRINTER_DRIVER_WEBSITE;
         QFontMetrics fm(m_pAutoDriverWebLink->font());
-        geteElidedText(m_pAutoDriverWebLink->font(), webLinkinfo, 480 - fm.width(tipInfo));
+        geteElidedText(m_pAutoDriverWebLink->font(), webLinkinfo, 480 - fm.horizontalAdvance(tipInfo));
         QString webLink = QObject::tr(UI_PRINTER_DRIVER_WEB_LINK).arg(webLinkinfo);
         m_pAutoDriverWebLink->setText(tipInfo + webLink);
 

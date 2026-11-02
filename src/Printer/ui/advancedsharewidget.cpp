@@ -52,7 +52,7 @@ static QStringList getDesktopFilePath(const QString &packageName)
     p.waitForFinished();
 
     QString output = p.readAllStandardOutput();
-    ret = output.split("\n", QString::SkipEmptyParts);
+    ret = output.split("\n", Qt::SkipEmptyParts);
 
     return ret;
 }

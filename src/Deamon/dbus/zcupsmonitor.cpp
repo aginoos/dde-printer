@@ -94,7 +94,7 @@ static QString getPpdInfo(const QString &strPpdName, const QString &info)
     QString commond;
     commond += "cat " + strPpdName;
     if (shellCmd(commond, strOut, strErr) == 0) {
-        QStringList list = strOut.split("\n", QString::SkipEmptyParts);
+        QStringList list = strOut.split("\n", Qt::SkipEmptyParts);
         int index = 0;
         for (; index < list.size(); index++) {
             if (list[index].contains(info))
@@ -104,7 +104,7 @@ static QString getPpdInfo(const QString &strPpdName, const QString &info)
             return nullptr;
         }
 
-        QStringList val = list[index].split(":", QString::SkipEmptyParts);
+        QStringList val = list[index].split(":", Qt::SkipEmptyParts);
         if (val.count() <= 1) {
             return nullptr;
         }
@@ -118,9 +118,9 @@ static QString getPackageVerByName(const QString &packageName)
 {
     QString strOut, strErr;
     if (shellCmd(QString("dpkg -l %1").arg(packageName), strOut, strErr) == 0) {
-        QStringList list = strOut.split("\n", QString::SkipEmptyParts);
+        QStringList list = strOut.split("\n", Qt::SkipEmptyParts);
         strOut = list.isEmpty() ? "" : list.last();
-        list = strOut.split(" ", QString::SkipEmptyParts);
+        list = strOut.split(" ", Qt::SkipEmptyParts);
         return list.count() > 2 ? list[2] : QString();
     }
 
@@ -406,7 +406,7 @@ int CupsMonitor::getNotifications(int &notifysSize)
                 int iState = attrValueToQString(info[JOB_ATTR_STATE]).toInt();
                 int iJob = attrValueToQString(info[CUPS_NOTIY_JOBID]).toInt();
                 QString strReason = attrValueToQString(info[CUPS_NOTIY_TEXT]);
-                QStringList list = attrValueToQString(info[JOB_ATTR_NAME]).split("/", QString::SkipEmptyParts);
+                QStringList list = attrValueToQString(info[JOB_ATTR_NAME]).split("/", Qt::SkipEmptyParts);
                 QString strJobName = list.isEmpty() ? "" : list.last();
                 QString strRecordReason;
                 qCDebug(COMMONMOUDLE) << "Got a job event: " << iJob << iState << strReason;
@@ -778,7 +778,7 @@ bool CupsMonitor::isNeedUpdateSubscription(vector<string> &events)
 
 void CupsMonitor::parseSubEvents(const string &events,  std::vector<std::string> &ret)
 {
-    QStringList eventList = QString::fromStdString(events).split("`", QString::SkipEmptyParts);
+    QStringList eventList = QString::fromStdString(events).split("`", Qt::SkipEmptyParts);
     foreach (QString var, eventList) {
         string event = var.toStdString().substr(1);
         event = event.replace(event.length() - 1, 1, "");

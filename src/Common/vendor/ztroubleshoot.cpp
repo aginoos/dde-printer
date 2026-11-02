@@ -148,7 +148,7 @@ bool CheckDriver::isPass()
         QString strName = STQ(attrs[i].getName());
         QString strValue = STQ(attrs[i].getValue());
         if (strName == "cupsFilter") {
-            QStringList list = strValue.split(" ", QString::SkipEmptyParts);
+            QStringList list = strValue.split(" ", Qt::SkipEmptyParts);
             if (list.isEmpty())
                 break;
 

@@ -81,7 +81,6 @@ int PrinterApplication::create()
 
 
     qApp->loadTranslator();
-    qApp->setAttribute(Qt::AA_UseHighDpiPixmaps);
     qApp->setOrganizationName("deepin");
     qApp->setApplicationName("dde-printer");
     qApp->setApplicationVersion(DApplication::buildVersion((QMAKE_VERSION)));

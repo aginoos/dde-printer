@@ -40,9 +40,9 @@
 DCORE_USE_NAMESPACE
 
 static QMutex g_mutex;
-static QMap<QString, QMap<QString, QString>> g_ppds; //所有ppd文件的字典，以device_id(没有device_id则以make_and_model)作为key
-static QMap<QString, QMap<QString, QString> *> g_ppdsDirct; //将厂商和型号格式化之后作为key生成的字典，键值为g_ppds的key
-static QMap<QString, QMap<QString, QString> *> g_ppdsMakeModelNames; //厂商和型号的字典，用于显示厂商和型号列表
+static QMultiMap<QString, QMap<QString, QString>> g_ppds; //所有ppd文件的字典，以device_id(没有device_id则以make_and_model)作为key
+static QMap<QString, QMultiMap<QString, QString> *> g_ppdsDirct; //将厂商和型号格式化之后作为key生成的字典，键值为g_ppds的key
+static QMap<QString, QMultiMap<QString, QString> *> g_ppdsMakeModelNames; //厂商和型号的字典，用于显示厂商和型号列表
 static QMap<QString, QString> g_textPPd; //没有找到驱动的情况，默认的驱动
 static QSet<QString> g_offlineDriver;
 
@@ -260,7 +260,7 @@ static QStringList getPPDNameFromCommandSet(QString strCMD)
     QStringList list, cmds;
     QStringList models;
     QStringList mdls;
-    QMap<QString, QString> *pmodels = g_ppdsDirct.value("generic");
+    QMultiMap<QString, QString> *pmodels = g_ppdsDirct.value("generic");
 
     if (pmodels)
         models = pmodels->keys();
@@ -307,7 +307,7 @@ static QList<QMap<QString, QVariant>> getFuzzyMatchDrivers(const QString &strMak
     }
 
     if (g_ppdsDirct.contains(strMake)) {
-        QMap<QString, QString> *modelMap = g_ppdsDirct.value(strMake);
+        QMultiMap<QString, QString> *modelMap = g_ppdsDirct.value(strMake);
         if (!modelMap)
             return list;
 
@@ -354,7 +354,7 @@ static QList<QMap<QString, QVariant>> getFuzzyMatchDrivers(const QString &strMak
             //通过commandsets查找驱动
             QStringList models = getPPDNameFromCommandSet(strCMD);
             foreach (QString mdl, models) {
-                QMap<QString, QString> *modelMap = g_ppdsDirct.value(strMake);
+                QMultiMap<QString, QString> *modelMap = g_ppdsDirct.value(strMake);
                 if (modelMap) {
                     QString key = modelMap->value(mdl);
                     QMap<QString, QVariant> driver = stringToVariant(g_ppds.value(key.toLower()));
@@ -379,7 +379,7 @@ static QList<QMap<QString, QVariant>> getExactMatchDrivers(const QString &strMFG
     if (strMFG.isEmpty() || strMDL.isEmpty())
         return list;
 
-    QMap<QString, QString> *modelMap = g_ppdsDirct.value(strMFG);
+    QMultiMap<QString, QString> *modelMap = g_ppdsDirct.value(strMFG);
     if (!modelMap)
         return list;
 
@@ -415,15 +415,15 @@ static bool addToDirct(const QString &strMake, const QString &strModel, const QS
         return false;
     }
 
-    QMap<QString, QString> *modelMap = g_ppdsDirct.value(makel);
+    QMultiMap<QString, QString> *modelMap = g_ppdsDirct.value(makel);
     if (!modelMap) {
-        modelMap = new QMap<QString, QString>();
+        modelMap = new QMultiMap<QString, QString>();
         g_ppdsDirct.insert(makel, modelMap);
     }
 
     QString strkey = modelMap->value(model);
     if (strkey.isEmpty() || !g_driverManager->isSamePPD(key, strkey)) {
-        modelMap->insertMulti(model, key);
+        modelMap->insert(model, key);
         qCDebug(COMMONMOUDLE) << QString("Insert %1#%2#%3 to dirct").arg(makel).arg(model).arg(key);
         return true;
     } else {
@@ -725,19 +725,19 @@ int RefreshLocalPPDS::doWork()
                 list.insert(CUPS_PPD_MODEL, strModel);
                 list.insert(CUPS_PPD_MAKE, strMake);
 
-                QMap<QString, QString> *modelMap = g_ppdsMakeModelNames.value(strMake);
+                QMultiMap<QString, QString> *modelMap = g_ppdsMakeModelNames.value(strMake);
                 if (!modelMap) {
-                    modelMap = new QMap<QString, QString>();
+                    modelMap = new QMultiMap<QString, QString>();
                     g_ppdsMakeModelNames.insert(strMake, modelMap);
                 }
-                modelMap->insertMulti(strModel, key);
+                modelMap->insert(strModel, key);
                 ;
 
                 if (g_textPPd.isEmpty() && (ppdname.endsWith("textonly.ppd") || ppdname.endsWith("postscript.ppd")))
                     g_textPPd = list;
             }
 
-            g_ppds.insertMulti(key, list);
+            g_ppds.insert(key, list);
         }
         qCDebug(COMMONMOUDLE) << QString("*****************************");
     }
@@ -1308,7 +1308,7 @@ int DriverManager::stop()
     g_iStatus = TStat_None;
     qCInfo(COMMONMOUDLE) << "Clear local driver dirct";
 
-    QList<QMap<QString, QString> *> models = g_ppdsDirct.values();
+    QList<QMultiMap<QString, QString> *> models = g_ppdsDirct.values();
     foreach (auto model, models) {
         if (model)
             delete model;
@@ -1356,7 +1356,7 @@ QStringList DriverManager::getAllMakes()
     return makes;
 }
 
-const QMap<QString, QString> *DriverManager::getModelsByMake(const QString &strMake)
+const QMultiMap<QString, QString> *DriverManager::getModelsByMake(const QString &strMake)
 {
     if (TStat_Suc > g_iStatus) {
         qCWarning(COMMONMOUDLE) << "PPD is not inited";
@@ -1366,7 +1366,7 @@ const QMap<QString, QString> *DriverManager::getModelsByMake(const QString &strM
     return g_ppdsMakeModelNames.value(strMake);
 }
 
-const QMap<QString, QMap<QString, QString>> *DriverManager::getPPDs()
+const QMultiMap<QString, QMap<QString, QString>> *DriverManager::getPPDs()
 {
     if (TStat_Suc > g_iStatus) {
         qCWarning(COMMONMOUDLE) << "PPD is not inited";

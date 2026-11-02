@@ -1,4 +1,4 @@
-INCLUDEPATH += $$PWD/../../src/Printer/util
+INCLUDEPATH += $$PWD/../../src/Printer/util $$PWD/../../src/Common/vendor
 
 SOURCES += \
     $$PWD/../../src/Printer/util/serversettingsrequest.cpp \

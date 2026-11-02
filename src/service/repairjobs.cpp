@@ -67,10 +67,43 @@ void repairCups(QObject *owner, BoolDone done)
     });
 }
 
+void runTool(QObject *owner, const QString &name, const QStringList &args, int timeoutMs,
+             std::function<void(const CommandResult &)> done)
+{
+    const QString tool = CommandRunner::findTool(name);
+    if (tool.isEmpty()) {
+        done(CommandResult());
+        return;
+    }
+    CommandRunner::run(owner, tool, args, done, timeoutMs);
+}
+
+// The 32-bit libraries come from fixed package names; the architecture is only
+// checked, never added, so the repair cannot change the system's multiarch setup.
+void installCanonLibraries(QObject *owner, BoolDone done)
+{
+    runTool(owner, "dpkg", RepairJobs::foreignArchitectureArgs(), RepairJobs::kStepTimeoutMs,
+            [owner, done](const CommandResult &arch) {
+        if (!arch.ok() || !RepairJobs::hasForeignArchitecture(QString::fromUtf8(arch.output), "i386")) {
+            done(false);
+            return;
+        }
+        runTool(owner, "apt-get", RepairJobs::aptInstallArgs(RepairJobs::canonI386Packages()),
+                RepairJobs::kInstallTimeoutMs,
+                [done](const CommandResult &install) { done(install.ok()); });
+    });
+}
+
 void repairCanon(QObject *owner, BoolDone done)
 {
     systemctl(owner, QStringList{"enable", "--now", kCcpdUnit}, [owner, done](bool) {
-        systemctl(owner, QStringList{"is-active", "--quiet", kCcpdUnit}, done);
+        installCanonLibraries(owner, [owner, done](bool installed) {
+            if (!installed) {
+                done(false);
+                return;
+            }
+            systemctl(owner, QStringList{"is-active", "--quiet", kCcpdUnit}, done);
+        });
     });
 }
 
@@ -97,6 +130,33 @@ bool isKnownFix(const QString &fixId)
 {
     return fixId == QLatin1String("cups_service") || fixId == QLatin1String("canon_lbp2900")
         || fixId == QLatin1String("brother_dcp_mfc");
+}
+
+QStringList canonI386Packages()
+{
+    return {QStringLiteral("libpopt0:i386"), QStringLiteral("libxml2:i386")};
+}
+
+QStringList foreignArchitectureArgs()
+{
+    return {QStringLiteral("--print-foreign-architectures")};
+}
+
+bool hasForeignArchitecture(const QString &dpkgOutput, const QString &arch)
+{
+    const QStringList lines = dpkgOutput.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+    for (const QString &line : lines) {
+        if (line.trimmed() == arch)
+            return true;
+    }
+    return false;
+}
+
+QStringList aptInstallArgs(const QStringList &packages)
+{
+    return QStringList{QStringLiteral("-y"), QStringLiteral("-q"),
+                       QStringLiteral("--no-install-recommends"), QStringLiteral("install")}
+        + packages;
 }
 
 QFileDevice::Permissions withoutGroupOtherWrite(QFileDevice::Permissions permissions)

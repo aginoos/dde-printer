@@ -119,6 +119,30 @@ TEST(ut_RepairJobs, KnownFixIds)
     EXPECT_FALSE(RepairJobs::isKnownFix("pantum_p33xx"));
 }
 
+TEST(ut_RepairJobs, CanonLibrariesAreFixed)
+{
+    const QStringList packages = RepairJobs::canonI386Packages();
+    EXPECT_EQ(packages, (QStringList{"libpopt0:i386", "libxml2:i386"}));
+}
+
+TEST(ut_RepairJobs, ForeignArchitectureDetection)
+{
+    EXPECT_TRUE(RepairJobs::hasForeignArchitecture("i386\n", "i386"));
+    EXPECT_TRUE(RepairJobs::hasForeignArchitecture("arm64\ni386\n", "i386"));
+    EXPECT_FALSE(RepairJobs::hasForeignArchitecture("", "i386"));
+    EXPECT_FALSE(RepairJobs::hasForeignArchitecture("arm64\n", "i386"));
+    EXPECT_FALSE(RepairJobs::hasForeignArchitecture("i3866\n", "i386"));
+    EXPECT_EQ(RepairJobs::foreignArchitectureArgs(), (QStringList{"--print-foreign-architectures"}));
+}
+
+TEST(ut_RepairJobs, AptInstallArguments)
+{
+    const QStringList args = RepairJobs::aptInstallArgs(RepairJobs::canonI386Packages());
+    EXPECT_EQ(args.first(), QString("-y"));
+    EXPECT_TRUE(args.contains("install"));
+    EXPECT_EQ(args.mid(args.size() - 2), RepairJobs::canonI386Packages());
+}
+
 TEST(ut_RepairJobs, PermissionStripping)
 {
     const QFileDevice::Permissions loose = QFileDevice::ReadOwner | QFileDevice::WriteOwner

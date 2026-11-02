@@ -2,6 +2,12 @@ INCLUDEPATH += $$PWD/../../src/Common
 
 include($$PWD/../../src/Common/Common.pri)
 
+# A few tests #include the implementation file to reach helpers in unnamed
+# namespaces, so those files must not also be compiled on their own.
+for(src, SOURCES) {
+    contains(src, ".*/(avahi_tool|zdevicemanager|zdrivermanager|ztroubleshoot)\\.cpp"): SOURCES -= $$src
+}
+
 SOURCES += $$PWD/ut_common.cpp \
     $$PWD/ut_qtconvert.cpp \
     $$PWD/ut_zsettings.cpp \

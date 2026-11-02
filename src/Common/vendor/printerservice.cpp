@@ -143,18 +143,43 @@ QNetworkReply *PrinterServerInterface::get_request(const QString &path)
    return reply;
 }
 
+QString PrinterService::encodeQueryValue(const QString &value)
+{
+    return QString::fromLatin1(QUrl::toPercentEncoding(value));
+}
+
+QString PrinterService::privacySafeDeviceId(const QString &deviceId)
+{
+    static const QStringList kept = {"MFG", "MANUFACTURER", "MDL", "MODEL", "CMD", "COMMAND SET",
+                                     "COMMANDSET", "CLS", "CLASS", "DES", "DESCRIPTION", "CID"};
+    QStringList fields;
+    for (const QString &field : deviceId.split(';', Qt::SkipEmptyParts)) {
+        const int colon = field.indexOf(':');
+        if (colon <= 0) {
+            continue;
+        }
+        const QString key = field.left(colon).trimmed().toUpper();
+        if (kept.contains(key)) {
+            fields << key + ':' + field.mid(colon + 1).trimmed();
+        }
+    }
+    return fields.isEmpty() ? QString() : fields.join(';') + ';';
+}
+
 PrinterServerInterface *PrinterService::searchDriverSolution(const QString &manufacturer,
                                                              const QString &model, const QString &ieee1284_id)
 {
     QJsonObject obj;
 
-    QString info = QString("&deb_manufacturer=%1&desc=%1 %2").arg(manufacturer).arg(model);
-    if (manufacturer == "HP" || manufacturer == "Hewlett-Packard") {
-        info = QString("&deb_manufacturer=HP&desc=HP %1").arg(model);
-    }
-    QString ieee1284 = ieee1284_id.toUtf8().toBase64();
-    QString urlDriver = m_urlDriver + info + "&ieee1284=" + ieee1284;
-    qCDebug(COMMONMOUDLE) << "Request urlinfo: " << urlDriver;
+    const bool isHp = manufacturer == "HP" || manufacturer == "Hewlett-Packard";
+    const QString make = isHp ? QStringLiteral("HP") : manufacturer;
+    const QString info = QStringLiteral("&deb_manufacturer=") + encodeQueryValue(make)
+            + QStringLiteral("&desc=") + encodeQueryValue(make + ' ' + model);
+    const QString safeId = privacySafeDeviceId(ieee1284_id);
+    const QString ieee1284 = safeId.isEmpty() ? QString() : encodeQueryValue(QString::fromLatin1(safeId.toUtf8().toBase64()));
+    const QString urlDriver = m_urlDriver + info + "&ieee1284=" + ieee1284;
+    // The device ID stays out of the log.
+    qCDebug(COMMONMOUDLE) << "Driver lookup for" << make << model;
     PrinterServerInterface *reply = new PrinterServerInterface(urlDriver, obj);
 
     return reply;

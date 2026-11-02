@@ -50,6 +50,9 @@
 #include <QDBusInterface>
 #include <QProcess>
 #include <QNetworkInterface>
+#include <QNetworkInformation>
+#include <QHostAddress>
+#include <QUrl>
 #include <QClipboard>
 
 #define FAQDOCUMENT_MESSAGE QObject::tr("Help on adding and using printers")
@@ -65,25 +68,31 @@ static bool isCanonCaptPrinter(const QString &printerName)
     return false;
 }
 
-static QStringList getLocalIPv4Addresses()
+// The first usable local address of the requested family; empty when there is no network.
+// IPv6 only counts when it is a global unicast address (2000::/3), link-local ones are useless to clients.
+static QString firstLocalAddress(QAbstractSocket::NetworkLayerProtocol protocol)
 {
-    QStringList ipv4AddressesList;
-    QList<QNetworkInterface> interfaceList = QNetworkInterface::allInterfaces();
-
-    foreach (QNetworkInterface interface, interfaceList) {
-        if (interface.flags() & QNetworkInterface::IsLoopBack) {
+    constexpr auto kUsable = QNetworkInterface::IsUp | QNetworkInterface::IsRunning;
+    const QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
+    for (const QNetworkInterface &iface : interfaces) {
+        if ((iface.flags() & QNetworkInterface::IsLoopBack) || (iface.flags() & kUsable) != kUsable)
             continue;
-        }
-
-        QList<QNetworkAddressEntry> entryList = interface.addressEntries();
-        foreach (QNetworkAddressEntry entry, entryList) {
-            if (entry.ip().protocol() == QAbstractSocket::IPv4Protocol) {
-                ipv4AddressesList.append(entry.ip().toString());
-            }
+        for (const QNetworkAddressEntry &entry : iface.addressEntries()) {
+            const QHostAddress ip = entry.ip();
+            if (ip.protocol() != protocol || ip.isNull() || ip.isLoopback() || ip.isLinkLocal())
+                continue;
+            if (protocol == QAbstractSocket::IPv6Protocol && (ip.toIPv6Address()[0] & 0xE0) != 0x20)
+                continue;
+            return ip.toString();
         }
     }
+    return QString();
+}
 
-    return ipv4AddressesList;
+static bool isIPv6Uri(const QString &uri)
+{
+    const QHostAddress host(QUrl(uri).host());
+    return host.protocol() == QAbstractSocket::IPv6Protocol;
 }
 
 DPrintersShowWindow::DPrintersShowWindow(const QString &printerName, QWidget *parent)
@@ -175,10 +184,6 @@ void DPrintersShowWindow::initUI()
     m_pLeftTipLabel = new QLabel(tr("No Printers"));
     m_pLeftTipLabel->setVisible(false);
     m_pLeftTipLabel->setAccessibleName("tipLabel_leftWidget");
-    QPalette pa = m_pLeftTipLabel->palette();
-    QColor color = pa.color(QPalette::WindowText);
-    pa.setColor(QPalette::WindowText, QColor(color.red(), color.green(), color.blue(), int(255 * 0.3)));
-    m_pLeftTipLabel->setPalette(pa);
     DFontSizeManager::instance()->bind(m_pLeftTipLabel, DFontSizeManager::T5, QFont::DemiBold);
     // 左侧布局
     QVBoxLayout *pLeftVLayout = new QVBoxLayout();
@@ -286,9 +291,8 @@ void DPrintersShowWindow::initUI()
     m_pAdvancedshare->setLabelText(tr("Advanced sharing options"));
     QLabel *shareIpInfo = new QLabel(tr("Shared address:"));
     DFontSizeManager::instance()->bind(shareIpInfo, DFontSizeManager::T8, QFont::Light);
-    QStringList ipv4Addr = getLocalIPv4Addresses();
     m_pShareIpAddr = new QLabel();
-    m_pShareIpAddr->setText(ipv4Addr.join(" "));
+    m_pShareIpAddr->setText(firstLocalAddress(QAbstractSocket::IPv4Protocol));
     DFontSizeManager::instance()->bind(m_pShareIpAddr, DFontSizeManager::T8, QFont::Light);
     m_pShareCopyIpAddr = new ClickableLabel(tr("Copy"));
     QPalette pal = m_pShareCopyIpAddr->palette();
@@ -303,6 +307,7 @@ void DPrintersShowWindow::initUI()
     m_pAdminTool = new AdvanceShareWidget();
     m_pAdminTool->setLabelText(tr("Management Tools"));
     m_pAdminTool->setFixedWidth(480);
+    m_pAdminTool->setVisible(false);  // only offered for HP printers with hplip installed
 
     QHBoxLayout *phAdminLayout = new QHBoxLayout();
     phAdminLayout->addSpacing(10);
@@ -432,13 +437,11 @@ void DPrintersShowWindow::initUI()
     m_pPRightTipLabel1 = new QLabel(tr("No printer configured"));
     m_pPRightTipLabel1->setAlignment(Qt::AlignCenter);
     m_pPRightTipLabel1->setVisible(false);
-    m_pPRightTipLabel1->setPalette(pa);
     m_pPRightTipLabel1->setAccessibleName("rightTipLabel1_rightWidget");
     DFontSizeManager::instance()->bind(m_pPRightTipLabel1, DFontSizeManager::T5, QFont::DemiBold);
     m_pPRightTipLabel2 = new QLabel(tr("Click + to add printers"));
     m_pPRightTipLabel2->setAlignment(Qt::AlignCenter);
     m_pPRightTipLabel2->setVisible(false);
-    m_pPRightTipLabel2->setPalette(pa);
     m_pPRightTipLabel2->setAccessibleName("rightTipLabel2_rightWidget");
     DFontSizeManager::instance()->bind(m_pPRightTipLabel2, DFontSizeManager::T6, QFont::DemiBold);
     QVBoxLayout *pRightMainVLayout = new QVBoxLayout();
@@ -536,6 +539,11 @@ void DPrintersShowWindow::initConnections()
     connect(m_pSettings, &QAction::triggered, this, &DPrintersShowWindow::serverSettingsSlot);
     connect(m_pSwitchShareButton, &SwitchWidget::checkedChanged, this, [&](bool check) {
         QString printerName = m_pPrinterListView->currentIndex().data().toString();
+        if (check) {
+            // A shared queue that is disabled or rejecting jobs is useless to remote clients
+            m_pPrinterManager->setPrinterEnabled(printerName, true);
+            m_pPrinterManager->setPrinterAcceptJob(printerName, true);
+        }
         m_pPrinterManager->setPrinterShared(printerName, check);
         if (check && !(m_pPrinterManager->isSharePrintersEnabled() && m_pPrinterManager->isRemoteAnyEnabled())) {
             // 需要开启共享状态，先检查服务器配置是否开启，如果开启，直接退出。没有开启打开共享配置
@@ -572,6 +580,38 @@ void DPrintersShowWindow::initConnections()
 
     connect(m_pAdvancedshare, &AdvanceShareWidget::clicked, this, &DPrintersShowWindow::serverSettingsSlot);
     connect(m_pAdminTool, &AdvanceShareWidget::clicked, this, &DPrintersShowWindow::showAdminToolsSlot);
+
+    // The dimmed tip colour is derived from the current text colour, so redo it on theme changes
+    updateTipLabelColors();
+    connect(DGuiApplicationHelper::instance(), &DGuiApplicationHelper::themeTypeChanged,
+            this, &DPrintersShowWindow::updateTipLabelColors);
+
+    // Keep the shared address in step with the network state (needs a platform backend)
+    QNetworkInformation::loadDefaultBackend();
+    if (QNetworkInformation *netInfo = QNetworkInformation::instance()) {
+        connect(netInfo, &QNetworkInformation::reachabilityChanged,
+                this, &DPrintersShowWindow::refreshShareAddress);
+    }
+}
+
+void DPrintersShowWindow::updateTipLabelColors()
+{
+    // The application palette follows the active theme; the label palettes are not reliable here
+    QColor color = qApp->palette().color(QPalette::WindowText);
+    color.setAlphaF(0.3);
+    for (QLabel *label : {m_pLeftTipLabel, m_pPRightTipLabel1, m_pPRightTipLabel2}) {
+        QPalette pal = label->palette();
+        pal.setColor(QPalette::WindowText, color);
+        label->setPalette(pal);
+    }
+}
+
+void DPrintersShowWindow::refreshShareAddress()
+{
+    const QString uri = getPrinterUri(m_CurPrinterName.toUtf8().data());
+    // A printer reached over IPv6 is shared back with an IPv6 address, otherwise IPv4
+    const auto family = isIPv6Uri(uri) ? QAbstractSocket::IPv6Protocol : QAbstractSocket::IPv4Protocol;
+    m_pShareIpAddr->setText(firstLocalAddress(family));
 }
 
 void DPrintersShowWindow::showAdminToolsSlot()
@@ -623,6 +663,12 @@ void DPrintersShowWindow::showEvent(QShowEvent *event)
                                                    "deviceStatusChanged", this, SLOT(deviceStatusChanged(QDBusMessage)))) {
             qCWarning(COMMONMOUDLE) << "connect to dbus signal(deviceStatusChanged) failed";
         }
+        for (const char *signalName : {"signalPrinterAdd", "signalPrinterDelete"}) {
+            if (!QDBusConnection::sessionBus().connect(SERVICE_INTERFACE_NAME, SERVICE_INTERFACE_PATH, SERVICE_INTERFACE_NAME,
+                                                       signalName, this, SLOT(printerListChanged(QDBusMessage)))) {
+                qCWarning(COMMONMOUDLE) << "connect to dbus signal failed:" << signalName;
+            }
+        }
     });
 
 }
@@ -636,6 +682,12 @@ void DPrintersShowWindow::selectPrinterByName(const QString &printerName)
             m_CurPrinterName = printerName;
             return;
         }
+    }
+
+    // The requested printer is gone (e.g. removed externally): fall back to the first entry
+    if (m_pPrinterModel->rowCount() > 0) {
+        m_pPrinterListView->setCurrentIndex(m_pPrinterModel->index(0, 0));
+        m_CurPrinterName = m_pPrinterModel->item(0)->text();
     }
 }
 
@@ -897,6 +949,30 @@ void DPrintersShowWindow::deviceStatusChanged(const QDBusMessage &msg)
     }
 }
 
+void DPrintersShowWindow::printerListChanged(const QDBusMessage &msg)
+{
+    if (msg.arguments().count() != 1 || !msg.arguments().at(0).canConvert<QString>()) {
+        qCWarning(COMMONMOUDLE) << "printerListChanged dbus arguments error";
+        return;
+    }
+    const QString printer = msg.arguments().at(0).toString();
+
+    m_pPrinterManager->updateDestinationList();
+    const QStringList cupsPrinters = m_pPrinterManager->getPrintersList();
+    QStringList shownPrinters;
+    for (int i = 0; i < m_pPrinterModel->rowCount(); ++i) {
+        if (m_pPrinterModel->item(i)->flags() & Qt::ItemIsEnabled)
+            shownPrinters << m_pPrinterModel->item(i)->text();
+    }
+    // Changes made by this window already refresh the list themselves
+    if (cupsPrinters == shownPrinters)
+        return;
+
+    if (msg.member() == QLatin1String("signalPrinterAdd") && cupsPrinters.contains(printer))
+        m_CurPrinterName = printer;
+    refreshPrinterListView(m_CurPrinterName);
+}
+
 void DPrintersShowWindow::addPrinterClickSlot()
 {
     if (!m_pSearchWindow) {
@@ -1026,6 +1102,8 @@ void DPrintersShowWindow::renamePrinterSlot(QStandardItem *pItem)
             return;
         bool isDefault = m_pPrinterManager->isDefaultPrinter(m_CurPrinterName);
         bool isAccept = m_pPrinterManager->isPrinterAcceptJob(m_CurPrinterName);
+        // A renamed queue is created from scratch, and CUPS shares new queues by default
+        const bool wasShared = m_pPrinterManager->isPrinterShared(m_CurPrinterName);
         m_pPrinterManager->setPrinterEnabled(m_CurPrinterName, false);
 
         pDest->getPrinterInfo(info, location, deviceURI, ppdFile);
@@ -1044,11 +1122,16 @@ void DPrintersShowWindow::renamePrinterSlot(QStandardItem *pItem)
             m_pPrinterManager->setPrinterDefault(newPrinterName);
         if (isAccept)
             m_pPrinterManager->setPrinterAcceptJob(newPrinterName, true);
+        m_pPrinterManager->setPrinterShared(newPrinterName, wasShared);
         m_pPrinterManager->deletePrinterByName(m_CurPrinterName);
 
         m_CurPrinterName = newPrinterName;
-        // 刷新完成选中重命名的打印机
-        refreshPrinterListView(m_CurPrinterName);
+        // Rebuild the list only after the inline editor has finished closing, and give the
+        // focus back to the list; otherwise Enter leaves the focus on the menu bar.
+        QTimer::singleShot(0, this, [this]() {
+            refreshPrinterListView(m_CurPrinterName);
+            m_pPrinterListView->setFocus();
+        });
     } catch (const std::runtime_error &e) {
         qCWarning(COMMONMOUDLE) << e.what();
     }
@@ -1174,6 +1257,7 @@ void DPrintersShowWindow::printerListWidgetItemChangedSlot(const QModelIndex &pr
         return;
     QString printerName = m_pPrinterListView->currentIndex().data(Qt::DisplayRole).toString();
     m_CurPrinterName = printerName;
+    refreshShareAddress();
     QStringList basePrinterInfo = m_pPrinterManager->getPrinterBaseInfoByName(printerName);
     if (basePrinterInfo.count() == 3) {
         QString showPrinter = printerName;
@@ -1208,6 +1292,8 @@ void DPrintersShowWindow::printerListWidgetItemChangedSlot(const QModelIndex &pr
         m_pLabelTypeShow->setToolTip(basePrinterInfo.at(1));
         m_pLabelStatusShow->setText(basePrinterInfo.at(2));
         DDestination *pDest = m_pPrinterManager->getDestinationByName(printerName);
+        // The HP management tools only make sense for HP printers when hplip is installed
+        m_pAdminTool->setVisible(basePrinterInfo.at(1).startsWith("hp", Qt::CaseInsensitive) && isPackageInstalled("hplip"));
 
         if (pDest != nullptr) {
             if (PRINTER == pDest->getType()) {

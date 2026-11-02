@@ -7,7 +7,6 @@
 DWIDGET_USE_NAMESPACE
 
 class PrinterTestJob;
-class TroubleShoot;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
@@ -22,10 +21,6 @@ public:
 
     void printTestPage();
 
-protected slots:
-    void slotTroubleShootMessage(int proccess, QString messge);
-    void slotTroubleShootStatus(int id, int state);
-
 protected:
     void showErrorMessage(const QString &message);
 
@@ -36,7 +31,5 @@ private:
     QString m_printerName;
 
     PrinterTestJob *m_testJob;
-    TroubleShoot *m_trobleShoot;
-    QString m_message;
     QWidget *m_parent;
 };

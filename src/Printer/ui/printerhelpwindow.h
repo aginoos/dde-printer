@@ -73,13 +73,15 @@ protected slots:
 
 private:
     void initSubUi();
+    void updateWidthForText();
+    void hideMainIfPointerAway();
 
 protected:
     void changeEvent(QEvent *event) override;
     bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
-    QMenu *m_main;
+    QFrame *m_main;
     QLabel *m_textLabel;
     QLabel *m_imageLabel;
     QPushButton *m_popupButton1;

@@ -14,7 +14,6 @@ PrinterTestPageDialog::PrinterTestPageDialog(const QString &printerName, QWidget
     : QObject(nullptr)
     , m_printerName(printerName)
     , m_testJob(nullptr)
-    , m_trobleShoot(nullptr)
     , m_parent(parent)
 {
     connect(this, &PrinterTestPageDialog::signalFinished, this, &QObject::deleteLater);
@@ -28,10 +27,12 @@ void PrinterTestPageDialog::printTestPage()
         return;
     }
 
-    m_trobleShoot = new TroubleShoot(m_printerName, this);
-    connect(m_trobleShoot, &TroubleShoot::signalUpdateProgress, this, &PrinterTestPageDialog::slotTroubleShootMessage);
-    connect(m_trobleShoot, &TroubleShoot::signalStatus, this, &PrinterTestPageDialog::slotTroubleShootStatus);
-    m_trobleShoot->start();
+    // The job runs asynchronously in the CUPS queue; only a failure to submit it is reported here
+    if (!m_testJob->isPass())
+        showErrorMessage(m_testJob->getMessage());
+
+    // Always release the caller so the test page button can be used again
+    emit signalFinished();
 }
 
 void PrinterTestPageDialog::showErrorMessage(const QString &message)
@@ -45,26 +46,4 @@ void PrinterTestPageDialog::showErrorMessage(const QString &message)
     dlg.getButton(0)->setFixedWidth(200);
     dlg.setFixedHeight(202);
     dlg.exec();
-}
-
-void PrinterTestPageDialog::slotTroubleShootMessage(int proccess, QString messge)
-{
-    Q_UNUSED(proccess);
-
-    m_message = messge;
-}
-
-void PrinterTestPageDialog::slotTroubleShootStatus(int id, int state)
-{
-    Q_UNUSED(id);
-
-    if (TStat_Suc == state) {
-        if (!m_testJob->isPass())
-            showErrorMessage(m_testJob->getMessage());
-    } else if (TStat_Fail == state) {
-        showErrorMessage(m_message);
-    }
-
-    if (TStat_Suc == state || TStat_Fail == state)
-        emit signalFinished();
 }

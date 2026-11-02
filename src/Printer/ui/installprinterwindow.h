@@ -86,6 +86,11 @@ signals:
     void updatePrinterList(const QString &newPrinterName);
     void showParentWindows();
 
+public:
+    // Window to show again when the installer finishes (it is not a Qt child of it)
+    void setReturnWindow(QWidget *window) { m_pParentWidget = window; }
+
+
 private:
     DSpinner *m_pSpinner;
 

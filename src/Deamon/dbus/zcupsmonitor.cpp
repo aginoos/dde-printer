@@ -706,7 +706,7 @@ int CupsMonitor::sendDesktopNotification(int replaceId, const QString &summary, 
 
     QDBusPendingReply<unsigned int> reply = DUtil::DNotifySender(summary)
                                             .appName("dde-printer")
-                                            .appIcon(":/images/dde-printer.svg")
+                                            .appIcon("dde-printer")
                                             .appBody(body)
                                             .replaceId(replaceId)
                                             .timeOut(expired)

@@ -310,6 +310,8 @@ private:
     * @date          2019-11-07
     */
     void selectPrinterByName(const QString &printerName);
+    void updateTipLabelColors();
+    void refreshShareAddress();
     /**
     * @projectName   Printer
     * @brief         更新打印机列表的默认选项图标
@@ -365,6 +367,7 @@ private slots:
 
     /*正在后台自动添加的打印机状态变化*/
     void deviceStatusChanged(const QDBusMessage &msg);
+    void printerListChanged(const QDBusMessage &msg);
     void changeEvent(QEvent *event) override;
 
     void showAdminToolsSlot();

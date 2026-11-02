@@ -35,6 +35,13 @@ public:
     static std::optional<SmbCredential> lookupSmb(const QString &uri);
     static bool removeSmb(const QString &uri);
 
+    // Deleting a printer: forgets its password when it is an smb share, ignores everything else.
+    static void forgetPrinter(const QString &deviceUri);
+
+    // A password typed into an smb:// URI (smb://user:password@host/share) is moved into the keyring.
+    // Returns the URI without user name and password; other URIs are returned unchanged.
+    static QString adoptUriCredentials(const QString &uri);
+
 private:
     SecretStore() = delete;
 };

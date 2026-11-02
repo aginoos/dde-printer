@@ -123,3 +123,22 @@ bool SecretStore::removeSmb(const QString &uri)
     reportKeyringError("remove", error);
     return removed == TRUE;
 }
+
+void SecretStore::forgetPrinter(const QString &deviceUri)
+{
+    if (SmbUri::isSmbUri(deviceUri))
+        removeSmb(deviceUri);
+}
+
+QString SecretStore::adoptUriCredentials(const QString &uri)
+{
+    const SmbUriParts parts = SmbUri::parse(uri);
+    if (!parts.isValid() || parts.password.isEmpty())
+        return uri;
+
+    // the URI loses its secrets even when the keyring is unavailable: the password is then simply asked at print time
+    const QString cleanUri = SmbUri::stripCredentials(uri);
+    if (!storeSmb(cleanUri, SmbCredential{parts.user, parts.password, parts.workgroup}))
+        qCWarning(COMMONMOUDLE) << "password not remembered: the keyring is not available";
+    return cleanUri;
+}

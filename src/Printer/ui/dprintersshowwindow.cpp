@@ -13,6 +13,7 @@
 #include "config.h"
 #include "cupsconnectionfactory.h"
 #include "common.h"
+#include "secretstore.h"
 
 #include "printertestpagedialog.h"
 #include "troubleshootdialog.h"
@@ -986,6 +987,7 @@ void DPrintersShowWindow::deletePrinterClickSlot()
         return;
     QString printerName = m_pPrinterListView->currentIndex().data().toString();
     if (!printerName.isEmpty()) {
+        const QString deviceUri = getPrinterUri(printerName.toUtf8().constData());
         DDialog *pDialog = new DDialog(this);
         QLabel *pMessage = new QLabel(tr("Are you sure you want to delete the printer \"%1\" ?").arg(printerName));
         pMessage->setWordWrap(true);
@@ -1012,6 +1014,7 @@ void DPrintersShowWindow::deletePrinterClickSlot()
 
             bool suc = m_pPrinterManager->deletePrinterByName(printerName);
             if (suc) {
+                SecretStore::forgetPrinter(deviceUri);
                 // 刷新打印机列表
                 m_CurPrinterName = "";
                 refreshPrinterListView(m_CurPrinterName);

@@ -872,7 +872,8 @@ QString AddPrinterFactory::defaultPrinterName(const TDeviceInfo &printer, const 
     strName = strDefaultName;
     // 保证和已安装的打印机名字不重复
     int i = 1;
-    while (installedPrinters.contains(strDefaultName)) {
+    // CUPS queue names are case-insensitive, so "Foo" and "foo" collide
+    while (installedPrinters.contains(strDefaultName, Qt::CaseInsensitive)) {
         strDefaultName = strName + "-" + QString::number(i++);
     }
 

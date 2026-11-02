@@ -46,7 +46,6 @@ public:
     bool isUserCancelAnyEnabled() const;
 
     void updateSettings(map<string, string> set);
-    void commit(const char *host_str, int port_n, int encryption_n, const map<string, string> &options);
 
 private:
     map<string, string> settings_;
@@ -490,10 +489,6 @@ public:
     // @description: get cups server's global setting
     // @exception: none
     map<string, string> adminGetServerSettings(void);
-
-    // @param settings: must be not null! refer to adminGetServerSettings
-    // @exception: runtime_error
-    void adminSetServerSettings(const map<string, string> *settings);
 
     // @param resource_uri: must be not null!
     // @param events: optional. Can be one or more of these:

@@ -158,6 +158,9 @@ void DPrintersShowWindow::initUI()
     m_pLoading->move(300 - 32 - 10, 10);
     m_pLoading->setAccessibleName("loader_printerList");
 
+    // 提交服务器设置、等待 CUPS 重启时盖住整个窗口
+    m_pLoadingOverlay = new LoadingOverlay(this);
+
     // 列表的右键菜单
     m_pListViewMenu = new QMenu();
     m_pPrinterRename = new QAction(tr("Rename"), m_pListViewMenu);
@@ -535,6 +538,7 @@ void DPrintersShowWindow::initConnections()
     connect(m_pDefaultAction, &QAction::triggered, this, &DPrintersShowWindow::listWidgetMenuActionSlot);
     connect(m_pDeleteAction, &QAction::triggered, this, &DPrintersShowWindow::deletePrinterClickSlot);
     connect(m_pSettings, &QAction::triggered, this, &DPrintersShowWindow::serverSettingsSlot);
+    connect(m_pPrinterManager, &DPrinterManager::commitFinished, this, &DPrintersShowWindow::onCommitFinished);
     connect(m_pSwitchShareButton, &SwitchWidget::checkedChanged, this, [&](bool check) {
         QString printerName = m_pPrinterListView->currentIndex().data().toString();
         if (check) {
@@ -545,16 +549,10 @@ void DPrintersShowWindow::initConnections()
         m_pPrinterManager->setPrinterShared(printerName, check);
         if (check && !(m_pPrinterManager->isSharePrintersEnabled() && m_pPrinterManager->isRemoteAnyEnabled())) {
             // 需要开启共享状态，先检查服务器配置是否开启，如果开启，直接退出。没有开启打开共享配置
-            m_pPrinterManager->enableSharePrinters(true);
-            m_pPrinterManager->enableRemoteAny(true);
-
             map<string, string> options;
             options.insert({CUPS_SERVER_SHARE_PRINTERS, "1"});
             options.insert({CUPS_SERVER_REMOTE_ANY, "1"});
-            m_pPrinterManager->commit(options);
-            if (!g_cupsConnection) {
-                qCInfo(COMMONMOUDLE) << "Try to restart the cups service";
-            }
+            commitServerOptions(options);
         }
 
         QTimer::singleShot(1000, [=]() {
@@ -853,22 +851,56 @@ void DPrintersShowWindow::serverSettingsSlot()
         options.insert({CUPS_SERVER_DEBUG_LOGGING, m_pSettingsDialog->m_pCheckSaveDebugInfo->isChecked() ? "1" : "0"});
     }
 
-    if (m_pSettingsDialog->m_pCheckShared->isChecked()) {
-        m_pPrinterManager->enableSharePrinters(true);
-        m_pPrinterManager->enableRemoteAny(m_pSettingsDialog->m_pCheckIPP->isChecked());
-    } else {
-        m_pPrinterManager->enableSharePrinters(false);
-        m_pPrinterManager->enableRemoteAny(false);
+    if (options.size() > 0)
+        commitServerOptions(options);
+}
+
+void DPrintersShowWindow::commitServerOptions(const map<string, string> &options)
+{
+    qCInfo(COMMONMOUDLE) << "Server settings changed, asking the privileged service";
+    m_pLoadingOverlay->start(tr("Applying settings, please wait..."));
+    m_pPrinterManager->commitAsync(options);
+}
+
+void DPrintersShowWindow::onCommitFinished(bool success, const QString &message)
+{
+    if (!success) {
+        // Fail closed: nothing was changed, so re-read the real state.
+        m_pLoadingOverlay->stop();
+        qCWarning(COMMONMOUDLE) << "Server settings not applied:" << message;
+        DDialog dlg("", tr("Failed to change the server settings. Please authenticate as an administrator and try again."), this);
+        dlg.setIcon(QIcon::fromTheme("dialog-warning"));
+        dlg.addButton(tr("OK"), true, DDialog::ButtonRecommend);
+        dlg.exec();
+        m_pPrinterManager->updateServerSetting();
+        printerListWidgetItemChangedSlot(QModelIndex());
+        return;
     }
-    m_pPrinterManager->enableRemoteAdmin(m_pSettingsDialog->m_pCheckRemote->isChecked());
-    m_pPrinterManager->enableDebugLogging(m_pSettingsDialog->m_pCheckSaveDebugInfo->isChecked());
-    if (options.size() > 0) {
-        m_pPrinterManager->commit(options);
-        //触发本地cups服务启动
-        if (!g_cupsConnection) {
-            qCInfo(COMMONMOUDLE) << "Try to restart the cups service";
-        }
+    m_cupsCheckRetryCount = 0;
+    waitCupsReady();
+}
+
+void DPrintersShowWindow::waitCupsReady()
+{
+    constexpr int kMaxRetries = 20;
+    constexpr int kRetryIntervalMs = 500;
+
+    auto conn = CupsConnectionFactory::createConnectionBySettings();
+    if (conn && conn->http) {
+        qCInfo(COMMONMOUDLE) << "CUPS service is ready after the settings change";
+        m_pLoadingOverlay->stop();
+        m_pPrinterManager->updateServerSetting();
+        QTimer::singleShot(kRetryIntervalMs, this, [this]() {
+            printerListWidgetItemChangedSlot(QModelIndex());
+        });
+        return;
     }
+    if (++m_cupsCheckRetryCount >= kMaxRetries) {
+        qCWarning(COMMONMOUDLE) << "CUPS service did not come back in time";
+        m_pLoadingOverlay->stop();
+        return;
+    }
+    QTimer::singleShot(kRetryIntervalMs, this, &DPrintersShowWindow::waitCupsReady);
 }
 
 void DPrintersShowWindow::closeEvent(QCloseEvent *event)

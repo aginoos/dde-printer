@@ -10,6 +10,7 @@
 #include "qtconvert.h"
 #include "util/refreshsnmpbackendtask.h"
 #include "printerhelpwindow.h"
+#include "loadingoverlay.h"
 
 #include <DMainWindow>
 #include <DListView>
@@ -357,6 +358,11 @@ private slots:
     void refreshPrinterListView(const QString &newPrinterName);
     // 服务器设置
     void serverSettingsSlot();
+    // 经特权服务提交服务器设置，期间显示等待遮罩
+    void commitServerOptions(const map<string, string> &options);
+    void onCommitFinished(bool success, const QString &message);
+    // CUPS 重启后轮询直到服务恢复
+    void waitCupsReady();
 
     void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
 
@@ -394,6 +400,8 @@ private:
 
     PrinterListView *m_pPrinterListView;
     DSpinner *m_pLoading;
+    LoadingOverlay *m_pLoadingOverlay = nullptr;
+    int m_cupsCheckRetryCount = 0;
 
     QStandardItemModel *m_pPrinterModel;
     QMenu *m_pListViewMenu;

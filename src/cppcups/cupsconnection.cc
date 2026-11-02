@@ -310,16 +310,6 @@ void ServerSettings::updateSettings(map<string, string> set)
         std::swap(set, settings_);
 }
 
-void ServerSettings::commit(const char *host_str, int port_n, int encryption_n, const map<string, string> &options)
-{
-
-    Connection c;
-    if (0 != c.init(host_str, port_n, encryption_n)) {
-        return;
-    }
-    c.adminSetServerSettings(&options);
-}
-
 Connection::Connection(void)
 {
     http = nullptr;
@@ -2616,35 +2606,6 @@ map<string, string> Connection::adminGetServerSettings(void)
     debugprintf("<- Connection::adminGetServerSettings()\n");
 
     return ret;
-}
-
-void Connection::adminSetServerSettings(const map<string, string> *dict)
-{
-    int ret;
-    int num_settings = 0;
-    cups_option_t *settings = nullptr;
-
-    debugprintf("-> Connection::adminSetServerSettings()\n");
-    for (const auto &it : *dict) {
-        const char *name = it.first.data();
-        const char *value = it.second.data();
-        debugprintf("%s: %s\n", name, value);
-        num_settings = cupsAddOption(name,
-                                     value,
-                                     num_settings,
-                                     &settings);
-    }
-
-    debugprintf("num_settings=%d, settings=%p\n", num_settings, settings);
-    ret = cupsAdminSetServerSettings(this->http, num_settings, settings);
-    if (!ret) {
-        cupsFreeOptions(num_settings, settings);
-        debugprintf("<- Connection::adminSetServerSettings() EXCEPTION\n");
-        throw runtime_error("Failed to set settings");
-    }
-
-    cupsFreeOptions(num_settings, settings);
-    debugprintf("<- Connection::adminSetServerSettings()\n");
 }
 
 vector<map<string, string>> Connection::getSubscriptions(const char *uri,

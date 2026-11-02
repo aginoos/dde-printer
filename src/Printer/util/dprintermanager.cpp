@@ -8,10 +8,16 @@
 #include "cupsattrnames.h"
 #include "cupsconnectionfactory.h"
 #include "zsettings.h"
+#include "serversettingsrequest.h"
 
 #include <QDebug>
 #include <QFile>
 #include <QRegularExpression>
+#include <QTimer>
+#include <QDBusConnection>
+#include <QDBusMessage>
+#include <QDBusPendingCallWatcher>
+#include <QDBusPendingReply>
 
 #include <assert.h>
 
@@ -419,13 +425,36 @@ bool DPrinterManager::updateServerSetting()
 
 }
 
-void DPrinterManager::commit(const map<string, string> &options)
+void DPrinterManager::commitAsync(const map<string, string> &options)
 {
-    try {
-        m_pServerSettings.commit(g_Settings->getCupsServerHost().toLocal8Bit(), g_Settings->getCupsServerPort(), g_Settings->getCupsServerEncryption(), options);
-    } catch (const std::runtime_error &e) {
-        qCWarning(UTIL) << e.what();
+    QString problem;
+    const auto request = ServerSettingsRequest::toVariantMap(options, &problem);
+    if (!request) {
+        qCWarning(UTIL) << "Refusing server settings request:" << problem;
+        QTimer::singleShot(0, this, [this, problem]() { emit commitFinished(false, problem); });
+        return;
     }
+
+    QDBusMessage call = QDBusMessage::createMethodCall(
+        QStringLiteral("com.deepin.printer.manager"), QStringLiteral("/com/deepin/printer/manager"),
+        QStringLiteral("com.deepin.printer.manager"), QStringLiteral("SetServerSettings"));
+    call << *request;
+
+    // Leave room for the polkit prompt and for cupsd restarting.
+    constexpr int kCallTimeoutMs = 180000;
+    auto *watcher = new QDBusPendingCallWatcher(
+        QDBusConnection::systemBus().asyncCall(call, kCallTimeoutMs), this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, this, [this, watcher]() {
+        const QDBusPendingReply<int> reply = *watcher;
+        watcher->deleteLater();
+        if (reply.isError()) {
+            qCWarning(UTIL) << "SetServerSettings failed:" << reply.error().name()
+                            << reply.error().message();
+            emit commitFinished(false, reply.error().message());
+            return;
+        }
+        emit commitFinished(true, QString());
+    });
 }
 
 bool DPrinterManager::hasSamePrinter(const QString &printer)

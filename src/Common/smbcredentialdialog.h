@@ -47,7 +47,7 @@ public:
     // Whether the entered data is enough to connect (guest needs nothing)
     bool isInputComplete() const;
 
-protected:
+    // DDialog closes with the index of the clicked button; "Connect" confirms
     void done(int result) override;
 
 private slots:

@@ -32,7 +32,7 @@ You can add printers via network or USB connection.
 
 #### Find Printer
 
-You can add printers via USB connection directly. Or, on the main interface, click![add_normal](../common/add_normal.svg) and you will have three options including **Discover Printer**, **Find Printer**, and **Enter URI**. 
+You can add printers via USB connection directly. Or, on the main interface, click![add_normal](../common/add_normal.svg) and you will have four options including **Discover Printer**, **Find Printer**, **Enter URI**, and **Windows Share**. 
 
 
 
@@ -70,6 +70,25 @@ If no printers are found by  **Discover Printer** and  **Find Printer** , you ca
 
 3. Click **Next** to go to the driver selecting interface. 
 
+
+**Windows Share**
+
+Use this for a printer that is shared by a Windows computer. Share the printer on Windows the usual way; nothing extra is needed on this computer.
+
+1. Click **Windows Share**, enter the IP address or host name of the computer that shares the printer, and click **Browse**.
+
+   ![0|Windows_share](fig/Windows_share.png)
+
+2. Choose the connection identity in the dialog:
+
+   - **Guest**: for shares that allow anonymous access, no user name or password needed.
+   - **Registered User**: enter the user name and password of the Windows computer, and the domain if there is one. Tick **Remember Password** to keep the password in the system keyring so it is used automatically when printing.
+
+3. When the connection succeeds the shared printers are listed. Check the printer to add and the matching driver is selected for you. If authentication fails a message is shown, and the dialog appears again only when you click **Browse** again.
+
+4. Click **Install Driver** (or **Next** to choose a driver) to finish.
+
+> ![notes](../common/notes.svg)Note: The password is never written to the printer settings. If it was not remembered, the first print job opens an authentication dialog and continues once you have entered it. To change a remembered password, put `smb://user:password@address/share` into the printer's URI in its properties; the password is moved into the keyring. Deleting the printer also removes the remembered password.
 
 #### Select drivers
 

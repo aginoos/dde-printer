@@ -9,6 +9,7 @@
 
 #include <dtkwidget_global.h>
 
+#include <QList>
 #include <QString>
 #include <QWidget>
 

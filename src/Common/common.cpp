@@ -730,7 +730,7 @@ int errorToCode(const QDBusMessage &reply)
     if (name == QDBusError::errorString(QDBusError::NoReply) || name == QDBusError::errorString(QDBusError::Timeout)) {
         return CanonTimeout;
     }
-    if (name == QDBusError::errorString(QDBusError::ServiceUnknown) || name == QDBusError::errorString(QDBusError::NameHasNoOwner)) {
+    if (name == QDBusError::errorString(QDBusError::ServiceUnknown)) {
         return CanonUnavailable;
     }
     return CanonFailed;

@@ -6,7 +6,9 @@
 
 #include "commandrunner.h"
 
+#include <QDateTime>
 #include <QFile>
+#include <QLocale>
 #include <QRegularExpression>
 
 #include <pwd.h>
@@ -34,6 +36,30 @@ int jobIdOfLine(const QByteArray &line)
     return ok && id > 0 ? id : -1;
 }
 
+// Epoch seconds of the "[dd/Mon/yyyy:hh:mm:ss +zzzz]" stamp of an error_log
+// line, 0 when the line has none.
+qint64 logLineEpoch(const QByteArray &line)
+{
+    const int open = line.indexOf('[');
+    const int close = open < 0 ? -1 : line.indexOf(']', open);
+    if (close < 0 || close - open > 40)
+        return 0;
+    // "03/Nov/2026:10:00:01 +0800"
+    const QString stamp = QString::fromLatin1(line.mid(open + 1, close - open - 1));
+    if (stamp.size() != 26 || (stamp.at(21) != QLatin1Char('+') && stamp.at(21) != QLatin1Char('-')))
+        return 0;
+    QDateTime time = QLocale::c().toDateTime(stamp.left(20), QStringLiteral("dd/MMM/yyyy:HH:mm:ss"));
+    bool hoursOk = false;
+    bool minutesOk = false;
+    const int hours = stamp.mid(22, 2).toInt(&hoursOk);
+    const int minutes = stamp.mid(24, 2).toInt(&minutesOk);
+    if (!time.isValid() || !hoursOk || !minutesOk)
+        return 0;
+    time.setTimeSpec(Qt::UTC);
+    const int offset = (hours * 3600 + minutes * 60) * (stamp.at(21) == QLatin1Char('-') ? -1 : 1);
+    return time.toSecsSinceEpoch() - offset;
+}
+
 QList<QByteArray> splitLines(const QByteArray &text)
 {
     return text.split('\n');
@@ -42,6 +68,30 @@ QList<QByteArray> splitLines(const QByteArray &text)
 }  // namespace
 
 namespace JobLogReader {
+
+qint64 submissionTime(const QStringList &dateFields)
+{
+    // "Mon 03 Nov 2026 10:00:00 AM CST": the zone name is dropped, the time is
+    // read as local time, which is the zone cupsd and this service run in.
+    QStringList fields = dateFields;
+    if (fields.size() >= 2) {
+        const QString last = fields.last();
+        const bool isZone = last.size() >= 2 && last.size() <= 5 && last.at(0).isLetter()
+            && last != QLatin1String("AM") && last != QLatin1String("PM");
+        if (isZone)
+            fields.removeLast();
+    }
+    const QString text = fields.join(QLatin1Char(' '));
+    const QLocale c = QLocale::c();
+    for (const QString &format : {QStringLiteral("ddd dd MMM yyyy hh:mm:ss AP"),
+                                  QStringLiteral("ddd dd MMM yyyy HH:mm:ss"),
+                                  QStringLiteral("ddd d MMM yyyy hh:mm:ss AP")}) {
+        const QDateTime time = c.toDateTime(text, format);
+        if (time.isValid())
+            return time.toSecsSinceEpoch();
+    }
+    return 0;
+}
 
 QList<JobEntry> parseLpstatJobs(const QString &output, const QString &printer)
 {
@@ -54,28 +104,37 @@ QList<JobEntry> parseLpstatJobs(const QString &output, const QString &printer)
         bool ok = false;
         const int id = fields.at(0).mid(prefix.size()).toInt(&ok);
         if (ok && id > 0)
-            jobs.append({id, fields.at(1)});
+            jobs.append({id, fields.at(1), submissionTime(fields.mid(3))});
     }
     return jobs;
 }
 
 int newestJobOf(const QList<JobEntry> &jobs, const QString &user)
 {
-    int newest = 0;
+    return newestEntryOf(jobs, user).id;
+}
+
+JobEntry newestEntryOf(const QList<JobEntry> &jobs, const QString &user)
+{
+    JobEntry newest;
     if (user.isEmpty())
         return newest;
     for (const JobEntry &job : jobs) {
-        if (job.user == user && job.id > newest)
-            newest = job.id;
+        if (job.user == user && job.id > newest.id)
+            newest = job;
     }
     return newest;
 }
 
-QString extractJobLines(const QByteArray &text, int jobId)
+QString extractJobLines(const QByteArray &text, int jobId, qint64 notBeforeEpoch)
 {
     QByteArray out;
     for (const QByteArray &line : splitLines(text)) {
         if (jobIdOfLine(line) != jobId)
+            continue;
+        // A reused job id: lines older than the job itself belong to someone else.
+        const qint64 stamp = logLineEpoch(line);
+        if (notBeforeEpoch > 0 && stamp > 0 && stamp + kClockSkewSecs < notBeforeEpoch)
             continue;
         const QByteArray cut = line.left(kMaxLineLength);
         if (out.size() + cut.size() + 1 > kMaxOutputBytes)
@@ -85,7 +144,7 @@ QString extractJobLines(const QByteArray &text, int jobId)
     return QString::fromUtf8(out);
 }
 
-QString readJobLog(const QString &path, int jobId, qint64 budgetBytes)
+QString readJobLog(const QString &path, int jobId, qint64 budgetBytes, qint64 notBeforeEpoch)
 {
     QFile file(path);
     if (jobId <= 0 || !file.open(QIODevice::ReadOnly))
@@ -116,7 +175,7 @@ QString readJobLog(const QString &path, int jobId, qint64 budgetBytes)
     QByteArray collected;
     for (auto it = chunks.crbegin(); it != chunks.crend(); ++it)
         collected += *it;
-    return extractJobLines(collected, jobId);
+    return extractJobLines(collected, jobId, notBeforeEpoch);
 }
 
 QString userNameOf(uint uid)
@@ -141,10 +200,11 @@ void readLatestJobLog(QObject *owner, uint uid, const QString &printer,
 
     CommandRunner::run(owner, lpstat, {"-W", "all", "-o", printer},
                        [user, printer, done](const CommandResult &result) {
-        const int jobId = result.ok()
-            ? newestJobOf(parseLpstatJobs(QString::fromLocal8Bit(result.output), printer), user)
-            : 0;
-        done(jobId > 0 ? readJobLog(kErrorLogPath, jobId) : QString());
+        const JobEntry job = result.ok()
+            ? newestEntryOf(parseLpstatJobs(QString::fromLocal8Bit(result.output), printer), user)
+            : JobEntry();
+        done(job.id > 0 ? readJobLog(kErrorLogPath, job.id, kScanBudgetBytes, job.submittedEpoch)
+                        : QString());
     }, kLpstatTimeoutMs);
 }
 

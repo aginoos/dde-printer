@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include <QDateTime>
 #include <QFile>
 #include <QTemporaryFile>
 
@@ -148,4 +149,67 @@ TEST(ut_RepairJobs, UnknownFixFailsWithoutRunning)
     int code = -1;
     RepairJobs::run(&owner, "no_such_fix", [&code](int c) { code = c; });
     EXPECT_EQ(code, 1);
+}
+
+TEST(ut_JobLogReader, SubmissionTimeParsesLpstatDates)
+{
+    const qint64 am = JobLogReader::submissionTime(QString("Mon 03 Nov 2026 10:00:00 AM CST").split(' '));
+    const qint64 pm = JobLogReader::submissionTime(QString("Mon 03 Nov 2026 10:00:00 PM CST").split(' '));
+    const qint64 h24 = JobLogReader::submissionTime(QString("Mon 03 Nov 2026 22:00:00 CST").split(' '));
+    EXPECT_GT(am, 0);
+    EXPECT_EQ(pm - am, 12 * 3600);
+    EXPECT_EQ(h24, pm);
+    EXPECT_EQ(JobLogReader::submissionTime(QStringList{"Mon"}), 0);
+    EXPECT_EQ(JobLogReader::submissionTime(QStringList()), 0);
+}
+
+TEST(ut_JobLogReader, ParseLpstatRecordsSubmissionTime)
+{
+    const auto jobs = JobLogReader::parseLpstatJobs(
+        "Q-12   alice   1024   Mon 03 Nov 2026 10:00:00 AM CST\n", "Q");
+    ASSERT_EQ(jobs.size(), 1);
+    EXPECT_GT(jobs.at(0).submittedEpoch, 0);
+}
+
+TEST(ut_JobLogReader, NewestEntryKeepsTime)
+{
+    QList<JobLogReader::JobEntry> jobs;
+    jobs.append({5, "alice", 100});
+    jobs.append({9, "alice", 200});
+    jobs.append({11, "bob", 300});
+    const auto entry = JobLogReader::newestEntryOf(jobs, "alice");
+    EXPECT_EQ(entry.id, 9);
+    EXPECT_EQ(entry.submittedEpoch, 200);
+    EXPECT_EQ(JobLogReader::newestEntryOf(jobs, "nobody").id, 0);
+}
+
+TEST(ut_JobLogReader, ReusedJobIdOlderLinesAreSkipped)
+{
+    const QByteArray log =
+        "I [03/Nov/2026:08:00:00 +0000] [Job 7] old job of someone else\n"
+        "I [03/Nov/2026:10:00:05 +0000] [Job 7] new job line\n"
+        "I [03/Nov/2026:10:00:06 +0000] [Job 7] second line\n";
+    // 2026-11-03 10:00:00 UTC
+    const qint64 created = QDateTime(QDate(2026, 11, 3), QTime(10, 0, 0), Qt::UTC).toSecsSinceEpoch();
+    const QString filtered = JobLogReader::extractJobLines(log, 7, created);
+    EXPECT_FALSE(filtered.contains("someone else"));
+    EXPECT_TRUE(filtered.contains("new job line"));
+    EXPECT_TRUE(filtered.contains("second line"));
+    // without a creation time nothing is dropped
+    EXPECT_TRUE(JobLogReader::extractJobLines(log, 7).contains("someone else"));
+}
+
+TEST(ut_JobLogReader, LineTimezoneOffsetIsApplied)
+{
+    const QByteArray log = "I [03/Nov/2026:18:00:05 +0800] [Job 3] same instant as 10:00:05 UTC\n";
+    const qint64 created = QDateTime(QDate(2026, 11, 3), QTime(10, 0, 0), Qt::UTC).toSecsSinceEpoch();
+    EXPECT_TRUE(JobLogReader::extractJobLines(log, 3, created).contains("same instant"));
+    // a job created an hour later than the line: the line is stale
+    EXPECT_TRUE(JobLogReader::extractJobLines(log, 3, created + 3600).isEmpty());
+}
+
+TEST(ut_JobLogReader, LinesWithoutStampAreKept)
+{
+    const QByteArray log = "D [Job 4] no timestamp here\n";
+    EXPECT_FALSE(JobLogReader::extractJobLines(log, 4, 4000000000LL).isEmpty());
 }

@@ -8,6 +8,7 @@
 #include <QDBusMessage>
 #include <QDBusPendingCall>
 #include <QDBusPendingCallWatcher>
+#include <QTimer>
 #include <QDBusVariant>
 #include <QMap>
 #include <QMetaType>
@@ -70,6 +71,12 @@ void check(const QDBusConnection &connection, const QString &busName,
 {
     if (busName.isEmpty()) {
         done(AuthResult::Denied);
+        return;
+    }
+
+    if (!connection.isConnected()) {
+        // Never grant, and never leave the caller waiting: answer on the next event loop turn.
+        QTimer::singleShot(0, context, [done]() { done(AuthResult::Error); });
         return;
     }
 

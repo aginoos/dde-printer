@@ -97,7 +97,7 @@ TEST(ut_TroubleShoot, doWorkRunsEveryJobWhenAllPass)
     EXPECT_EQ(progress.at(1).first, 1);
 }
 
-TEST(ut_TroubleShoot, doWorkStopsAtTheFirstFailure)
+TEST(ut_TroubleShoot, doWorkRunsEveryCheckEvenAfterAFailure)
 {
     FakeJob first("first", true), failing("failing", false, "no driver"), never("never", true);
     TroubleShoot task("5150");
@@ -110,11 +110,11 @@ TEST(ut_TroubleShoot, doWorkStopsAtTheFirstFailure)
     QObject::connect(&task, &TaskInterface::signalUpdateProgress,
                      [&progress](int index, QString message) { progress.append({index, message}); });
 
-    EXPECT_EQ(task.doWork(), -1);
-    EXPECT_EQ(never.runs, 0);
-    ASSERT_EQ(progress.size(), 2);
-    EXPECT_EQ(progress.last().first, 1);
-    EXPECT_EQ(progress.last().second, QString("no driver"));   // the failing job's message is reported
+    EXPECT_EQ(task.doWork(), -1);                 // a failure is still reported
+    EXPECT_EQ(never.runs, 1);                     // one failure must not hide the checks after it
+    ASSERT_EQ(progress.size(), 3);
+    EXPECT_EQ(progress.at(1).first, 1);
+    EXPECT_EQ(progress.at(1).second, QString("no driver"));   // the failing job's message is reported
 }
 
 TEST(ut_TroubleShoot, stopPreventsFurtherJobsAndStopsEveryJob)

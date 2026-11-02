@@ -149,7 +149,7 @@ void cupssnmp::setPPDName(const string &strppd)
 
 bool cupssnmp::SNMPOpen()
 {
-#ifdef AF_INET6_ENV
+#ifdef AF_INET6
     m_iFd = _cupsSNMPOpen(AF_INET6);
 #else
     m_iFd = _cupsSNMPOpen(AF_INET);

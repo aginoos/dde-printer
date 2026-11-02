@@ -5,6 +5,7 @@
 #include "advancedsharewidget.h"
 #include "common.h"
 #include "safeprocess.h"
+#include "printeruihelpers.h"
 
 #include <QTextStream>
 #include <DGuiApplicationHelper>
@@ -174,7 +175,7 @@ void ManagementToolWidget::initUI()
 
     QStandardItemModel *adminToolModel = new QStandardItemModel(m_pDeviceList);
     m_packageInfo.clear();
-    getPackageInfo("com.hp.hplip");
+    getPackageInfo(QString::fromLatin1(PrinterUi::kHplipPackage));
 
     for (int i = 0; i < m_packageInfo.size(); ++i) {
         DStandardItem *item = new DStandardItem();

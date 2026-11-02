@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include "printeruihelpers.h"
 #include "installdriverwindow.h"
 #include "zdrivermanager.h"
 #include "addprinter.h"
@@ -690,6 +691,8 @@ void InstallDriverWindow::driverSearchedSlot()
                 strDesc = driver.value("ppd-make").toString() + " " + driver.value("ppd-model").toString();
             else
                 strDesc = driver.value("ppd-make-and-model").toString();
+
+            strDesc = PrinterUi::driverDisplayName(strDesc, PrinterUi::driverOrigin(driver.value(SD_KEY_from).toInt(), driver.contains(SD_KEY_recommended)));
 
             bool isExcat = true;
             QString strReplace;

@@ -167,13 +167,23 @@ int zSettings::getCupsServerEncryption()
     return value("CupsServerEncryption", cupsEncryption()).toInt();
 }
 
+QString zSettings::resolveDriverPlatformUrl(const QByteArray &override, bool allowOverride)
+{
+    // Only builds meant for development and tests may point the lookup at
+    // another server; a release build always asks the official platform.
+    if (allowOverride && !override.isEmpty()) {
+        return QString::fromUtf8(override);
+    }
+    return QStringLiteral(DRIVER_PLATFORM_URL);
+}
+
 const QString zSettings::getDriverPlatformUrl()
 {
-    QString strUrl = getenv("DRIVER_PLATFORM_TEST_URL");
-    if (!strUrl.isEmpty()) {
-        return strUrl;
-    }
-    return DRIVER_PLATFORM_URL;
+#ifndef QT_NO_DEBUG
+    return resolveDriverPlatformUrl(qgetenv("DRIVER_PLATFORM_TEST_URL"), true);
+#else
+    return resolveDriverPlatformUrl(QByteArray(), false);
+#endif
 }
 const QString zSettings::getSystemArch()
 {

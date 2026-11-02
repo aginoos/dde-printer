@@ -5,6 +5,7 @@
 #ifndef ZSETTINGS_H
 #define ZSETTINGS_H
 
+#include <QByteArray>
 #include <QSettings>
 
 class zSettings : public QSettings
@@ -19,6 +20,8 @@ public:
     const QString getLogRules();
     const QString getOSVersion();
     const QString getDriverPlatformUrl();
+    // `override` (the DRIVER_PLATFORM_TEST_URL value) wins only when allowed.
+    static QString resolveDriverPlatformUrl(const QByteArray &override, bool allowOverride);
     const QString getSystemArch(); 
     int getSubscriptionId();
     void setSubscriptionId(int id);

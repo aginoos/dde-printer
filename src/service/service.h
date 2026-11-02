@@ -30,6 +30,8 @@ public slots:
     void LaunchAutoStart(const QString &filePath);
     int CanonPrinterInstall(const QStringList &args);
     int CanonPrinterRemove(const QStringList &args);
+    QString ReadJobErrorLog(const QString &printerName);
+    int RunRepair(const QString &fixId);
 
 private:
     using GrantedHandler = std::function<void(const QDBusMessage &request)>;

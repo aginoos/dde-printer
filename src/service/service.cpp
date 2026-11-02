@@ -9,11 +9,15 @@
 #include "canonjob.h"
 #include "commandrunner.h"
 #include "inputvalidator.h"
+#include "joblogreader.h"
 #include "polkitauthority.h"
+#include "repairjobs.h"
 
 #include <QCoreApplication>
 #include <QDBusConnection>
+#include <QDBusConnectionInterface>
 #include <QDBusError>
+#include <QDBusReply>
 #include <QDebug>
 
 namespace {
@@ -21,6 +25,7 @@ namespace {
 const char kActionCanonAdd[] = "com.deepin.printer.manager.canon-add";
 const char kActionCanonRemove[] = "com.deepin.printer.manager.canon-remove";
 const char kActionAutostart[] = "com.deepin.printer.manager.launch-autostart";
+const char kActionRepair[] = "com.deepin.printer.manager.repair";
 
 constexpr int kMaxActiveTasks = 8;
 constexpr int kIdleExitMs = 30000;
@@ -152,4 +157,47 @@ int Service::CanonPrinterRemove(const QStringList &args)
         });
     });
     return 0;
+}
+
+// Returns lines of the caller's own newest job only, so no authorization
+// dialog is needed; the caller is identified by its bus name, not by input.
+QString Service::ReadJobErrorLog(const QString &printerName)
+{
+    if (!InputValidator::isValidPrinterName(printerName)) {
+        sendErrorReply(QDBusError::InvalidArgs, QStringLiteral("Invalid printer name"));
+        return QString();
+    }
+    if (m_activeTasks >= kMaxActiveTasks) {
+        sendErrorReply(QDBusError::LimitsExceeded, QStringLiteral("Service is busy"));
+        return QString();
+    }
+
+    const QDBusMessage request = message();
+    const QDBusReply<uint> uid = connection().interface()->serviceUid(request.service());
+    if (!uid.isValid()) {
+        sendErrorReply(QDBusError::AccessDenied, QStringLiteral("Unknown caller"));
+        return QString();
+    }
+
+    setDelayedReply(true);
+    beginTask();
+    JobLogReader::readLatestJobLog(this, uid.value(), printerName, [this, request](const QString &log) {
+        completeWith(request.createReply(log));
+    });
+    return QString(); // ignored: the reply is sent later
+}
+
+int Service::RunRepair(const QString &fixId)
+{
+    if (!RepairJobs::isKnownFix(fixId)) {
+        sendErrorReply(QDBusError::InvalidArgs, QStringLiteral("Unknown repair"));
+        return 1;
+    }
+
+    authorizeThen(kActionRepair, [this, fixId](const QDBusMessage &request) {
+        RepairJobs::run(this, fixId, [this, request](int code) {
+            completeWith(request.createReply(code));
+        });
+    });
+    return 0; // ignored: the reply is sent later
 }

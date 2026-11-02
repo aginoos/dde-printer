@@ -298,12 +298,13 @@ void DPropertySetDlg::updateComboByName(const QString &strWidgetName, const QStr
             strText = pManger->translateLocal(strWidgetName, strChoice, strText);
 
             if ((!strText.isEmpty()) && (!strChoice.isEmpty())) {
+                // Entries skipped above must not shift the combo index away from the item position
                 if (strChoice == strDefault) {
-                    iIndex = i;
+                    iIndex = pCombo->count();
                 }
 
                 pCombo->addItem(strText);
-                pCombo->setItemData(i, strChoice, COMBOITEMROLE::VALUEROLE);
+                pCombo->setItemData(pCombo->count() - 1, strChoice, COMBOITEMROLE::VALUEROLE);
             }
         }
 

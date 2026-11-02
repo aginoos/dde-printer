@@ -8,9 +8,9 @@ CONFIG += c++17
 SOURCES += \
     plugin.cpp
 
-QMAKE_CFLAGS += -Wall -Wextra -Wformat=2 -Wno-format-nonliteral -Wshadow -fstack-protector-strong -D_FORTITY_SOURCE=1 -fPIC
-QMAKE_CXXFLAGS += -Wall -Wextra -Wformat=2 -Wno-format-nonliteral -Wshadow -fstack-protector-strong -D_FORTITY_SOURCE=1 -fPIC
-QMAKE_LFLAGS += -z noexecstack -pie -z lazy
+QMAKE_CFLAGS += -Wall -Wextra -Wformat=2 -Wno-format-nonliteral -Wshadow -fstack-protector-strong -fPIC
+QMAKE_CXXFLAGS += -Wall -Wextra -Wformat=2 -Wno-format-nonliteral -Wshadow -fstack-protector-strong -fPIC
+QMAKE_LFLAGS += -z noexecstack -pie -Wl,-z,relro,-z,now
 
 unix:!macx:{
 LIBS += -lusb-1.0

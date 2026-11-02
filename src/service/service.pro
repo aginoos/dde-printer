@@ -26,6 +26,13 @@ SOURCES += main.cpp \
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
+# The service runs as root and handles untrusted D-Bus input: position
+# independent code, stack protector, full RELRO with immediate binding and a
+# non-executable stack. _FORTIFY_SOURCE comes from dpkg-buildflags
+# (hardening=+all in debian/rules).
+QMAKE_CXXFLAGS += -fPIE -fstack-protector-strong
+QMAKE_LFLAGS += -pie -Wl,-z,relro,-z,now -z noexecstack
+
 LIBS += -lcups
 
 HEADERS += \

@@ -153,6 +153,8 @@ TEST(ut_IppUsbPolicy, isUsbBackendUriFor)
 {
     EXPECT_TRUE(isUsbBackendUriFor("usb://Pantum/P?serial=CF6L088530", "cf6l088530"));
     EXPECT_TRUE(isUsbBackendUriFor("hp:/usb/HP?serial=ABC", "ABC"));
+    EXPECT_TRUE(isUsbBackendUriFor("ccp://localhost:59687/usb/ABC", "abc"));
+    EXPECT_FALSE(isUsbBackendUriFor("ccp://localhost:59687/usb/ABC", "XYZ"));
     EXPECT_FALSE(isUsbBackendUriFor("ipp://localhost/?serial=ABC", "ABC"));
     EXPECT_FALSE(isUsbBackendUriFor("usb://Pantum/P?serial=1", ""));
     EXPECT_FALSE(isUsbBackendUriFor("usb://Pantum/P?serial=1", "2"));

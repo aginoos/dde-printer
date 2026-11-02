@@ -12,6 +12,7 @@
 #include <QElapsedTimer>
 #include <QEventLoop>
 #include <QHash>
+#include <QHostAddress>
 #include <QMutex>
 #include <QMutexLocker>
 #include <QNetworkInterface>
@@ -128,9 +129,11 @@ void freeBrowser(QDBusConnection &bus, const QString &path)
 
 bool isLoopbackAddress(const QString &host)
 {
-    return host.compare(QLatin1String("localhost"), Qt::CaseInsensitive) == 0
-            || host.startsWith(QLatin1String("127."))
-            || host == QLatin1String("::1");
+    if (host.compare(QLatin1String("localhost"), Qt::CaseInsensitive) == 0)
+        return true;
+    // a literal only: a host name such as "127.example.com" is not loopback
+    QHostAddress address;
+    return address.setAddress(host) && address.isLoopback();
 }
 
 // Trailing token of 6+ hex digits mixed with letters is the device serial that

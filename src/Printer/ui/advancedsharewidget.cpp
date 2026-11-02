@@ -207,7 +207,12 @@ void ManagementToolWidget::listClickedSlot(const QModelIndex &index)
         return;
     }
 
-    QProcess::startDetached(m_packageInfo.at(index.row()).strExec);
+    QStringList execArgs = QProcess::splitCommand(m_packageInfo.at(index.row()).strExec);
+    if (execArgs.isEmpty()) {
+        return;
+    }
+    const QString execProgram = execArgs.takeFirst();
+    QProcess::startDetached(execProgram, execArgs);
 }
 
 void ManagementToolWidget::getPackageInfo(const QString &packageName)

@@ -391,7 +391,7 @@ void InstallPrinterWindow::showHplipSetupInstruction()
         m_pHplipTipLabel->setText(tr("After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window."));
 
         QTimer::singleShot(1000,  this, [ = ]() {
-            QProcess::startDetached(execFile);
+            QProcess::startDetached(execFile, QStringList());
         });
     }
 }

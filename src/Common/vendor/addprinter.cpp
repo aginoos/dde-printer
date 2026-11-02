@@ -193,7 +193,7 @@ static int shellCmdLocal(const QString &cmd, QString &out, QString &strErr, int 
     QStringList env = QProcess::systemEnvironment();
     env.append("LANG=utf-8");
     proc.setEnvironment(env);
-    proc.start(cmd);
+    proc.startCommand(cmd);
     if (proc.waitForFinished(timeout)) {
         out = proc.readAll();
         if (proc.exitCode() != 0 || proc.exitStatus() != QProcess::NormalExit) {

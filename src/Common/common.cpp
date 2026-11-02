@@ -304,7 +304,7 @@ QVariant ipp_attribute_value(ipp_attribute_t *attr, int i)
 int shellCmd(const QString &cmd, QString &out, QString &strErr, int timeout)
 {
     QProcess proc;
-    proc.start(cmd);
+    proc.startCommand(cmd);
     if (proc.waitForFinished(timeout)) {
         out = proc.readAll();
         if (proc.exitCode() != 0 || proc.exitStatus() != QProcess::NormalExit) {

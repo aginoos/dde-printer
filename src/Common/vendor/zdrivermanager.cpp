@@ -16,6 +16,7 @@
 #include "zsettings.h"
 
 #include <QProcess>
+#include <QUrl>
 #include <QTcpSocket>
 #include <QString>
 #include <QJsonDocument>
@@ -1384,25 +1385,109 @@ QMap<QString, QString> DriverManager::getTextPPD()
     return g_textPPd;
 }
 
-QMap<QString, QVariant> DriverManager::getEveryWhereDriver(const QString &strUri)
+namespace {
+constexpr double EVERYWHERE_PROBE_TIMEOUT_SECONDS = 5.0;
+
+QMap<QString, QVariant> makeEveryWhereDriver()
 {
     QMap<QString, QVariant> driver;
+    driver.insert(SD_KEY_from, PPDFrom_EveryWhere);
+    driver.insert(CUPS_PPD_MAKE_MODEL, QObject::tr("EveryWhere driver"));
+    driver.insert(CUPS_PPD_NAME, "EveryWhere driver");
+    driver.insert(SD_KEY_excat, true);
+    return driver;
+}
 
-    /* LanguageEncoding in generated ppd file is always ISOLatin1,
-     * but it may contains utf-8 encoded character, so we don't use
-     * everywhere model unless this issuse solved.
-     * CUPS issue #5362 */
-    /*http equal ipp */
-    if ((strUri.startsWith("dnssd://") && strUri.contains("/cups")) ||
-            ((strUri.startsWith("ipp://") || strUri.startsWith("ipps") || strUri.startsWith("http") || strUri.startsWith("https")) && strUri.contains("/printers"))) {
-        driver.insert(SD_KEY_from, PPDFrom_EveryWhere);
-        driver.insert(CUPS_PPD_MAKE_MODEL, tr("EveryWhere driver"));
-        driver.insert(CUPS_PPD_NAME, "EveryWhere driver");
-        driver.insert(SD_KEY_excat, true);
+// ipp/ipps printers and http(s) urls that look like an IPP endpoint are worth probing
+bool isIppEverywhereCandidate(const QUrl &url)
+{
+    const QString scheme = url.scheme().toLower();
+    if (scheme == "ipp" || scheme == "ipps")
+        return true;
+    if (scheme != "http" && scheme != "https")
+        return false;
+
+    const QString path = url.path().toLower();
+    return path.startsWith("/ipp") || path.startsWith("/printers") || path.contains("/cups");
+}
+
+// Same criterion as CUPS: the printer answers Get-Printer-Attributes with data
+// that a PPD can be generated from, i.e. a make-and-model and a document format
+// that driverless printing can use (octet-stream is reported by CUPS shared queues).
+bool hasDriverlessAttributes(const map<string, string> &attrs)
+{
+    auto value = [&attrs](const char *key) {
+        const auto it = attrs.find(key);
+        return it == attrs.end() ? QString() : attrValueToQString(it->second);
+    };
+
+    const QString makeModel = value("printer-make-and-model").trimmed();
+    const QString formats = value("document-format-supported").toLower();
+    static const QStringList driverlessFormats = {
+        "image/pwg-raster", "image/urf", "application/pdf", "application/pclm",
+        "application/vnd.cups-raster", "application/vnd.cups-pdf", "application/octet-stream"
+    };
+
+    if (makeModel.isEmpty())
+        return false;
+    for (const QString &format : driverlessFormats) {
+        if (formats.contains(format))
+            return true;
+    }
+    return false;
+}
+
+int defaultPortForScheme(const QString &scheme)
+{
+    if (scheme == "ipp" || scheme == "ipps")
+        return 631;
+    return scheme == "https" ? 443 : 80;
+}
+} // namespace
+
+QMap<QString, QVariant> DriverManager::getEveryWhereDriver(const QString &strUri)
+{
+    const QString uri = strUri.trimmed();
+    if (uri.isEmpty())
+        return QMap<QString, QVariant>();
+
+    /* Queues shared by another CUPS server are always usable.
+     * http equal ipp */
+    if ((uri.startsWith("dnssd://") && uri.contains("/cups")) ||
+            ((uri.startsWith("ipp://") || uri.startsWith("ipps") || uri.startsWith("http") || uri.startsWith("https")) && uri.contains("/printers"))) {
         qCDebug(COMMONMOUDLE) << "Got everywhere driver for" << strUri;
+        return makeEveryWhereDriver();
     }
 
-    return driver;
+    const QUrl url(uri);
+    if (url.host().isEmpty() || !isIppEverywhereCandidate(url))
+        return QMap<QString, QVariant>();
+
+    const QString scheme = url.scheme().toLower();
+    const int port = url.port(defaultPortForScheme(scheme));
+    const int encryption = (scheme == "ipps" || scheme == "https") ? 1 : 0;
+
+    try {
+        // talk to the printer directly; the local CUPS would have to fetch the uri itself
+        auto conPtr = CupsConnectionFactory::createConnection(url.host(), port, encryption);
+        if (!conPtr)
+            return QMap<QString, QVariant>();
+
+        conPtr->setTimeout(EVERYWHERE_PROBE_TIMEOUT_SECONDS);
+        // request what CUPS requests when it builds an IPP Everywhere PPD
+        const vector<string> requestList = {"all", "media-col-database"};
+        const map<string, string> attrs = conPtr->getPrinterAttributes(nullptr, uri.toUtf8().constData(), &requestList);
+
+        if (hasDriverlessAttributes(attrs)) {
+            qCInfo(COMMONMOUDLE) << "Verified IPP Everywhere driver for" << strUri;
+            return makeEveryWhereDriver();
+        }
+        qCDebug(COMMONMOUDLE) << "Not IPP Everywhere:" << strUri;
+    } catch (const std::exception &ex) {
+        qCWarning(COMMONMOUDLE) << "Everywhere probe exception for" << strUri << ":" << QString::fromUtf8(ex.what());
+    }
+
+    return QMap<QString, QVariant>();
 }
 
 QStringList DriverManager::getDriverDepends(const char *strPPD)

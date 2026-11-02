@@ -1607,7 +1607,7 @@ void httpAddrSetPort(http_addr_t *addr,	/* I - Address */
   if (!addr || port <= 0)
     return;
 
-#ifdef AF_INET6_ENV
+#ifdef AF_INET6
   if (addr->addr.sa_family == AF_INET6)
     addr->ipv6.sin6_port = htons(port);
   else
@@ -1622,7 +1622,7 @@ httpAddrLength(const http_addr_t *addr)	/* I - Address */
   if (!addr)
     return (0);
 
-#ifdef AF_INET6_ENV
+#ifdef AF_INET6
   if (addr->addr.sa_family == AF_INET6)
     return (sizeof(addr->ipv6));
   else

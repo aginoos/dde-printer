@@ -23,6 +23,8 @@
 #include <QLibrary>
 
 #include <netdb.h>
+#include <sys/socket.h>
+#include <string.h>
 
 static bool isSdkInit = false;
 typedef bool (*pfInitialize)(const std::string&, bool);
@@ -154,8 +156,6 @@ QString getPrinterUri(const char *name)
 
 QString getHostFromUri(const QString &strUri)
 {
-    QUrl url(strUri);
-
     //fix for hp:/net/HP_Color_LaserJet_Pro_M252dw?ip=10.0.12.6
     QRegularExpression re("ip=(((?:(?:25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))\\.){3}(?:25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))))");
     QRegularExpressionMatch match = re.match(strUri);
@@ -200,7 +200,16 @@ QString getHostFromUri(const QString &strUri)
     if (strUri.startsWith("hp") || strUri.startsWith("usb") || strUri.startsWith("file"))
         return QString();
 
-    return url.host();
+    // ipv6 with zone id (socket://[fe80::1%25eth0]:9100): the escaped zone makes QUrl reject the host
+    QString uritemp = strUri;
+    if (uritemp.contains("%25") && uritemp.contains("]") && uritemp.count(':') > 2) {
+        const int percentPos = uritemp.indexOf("%25");
+        const int bracketPos = uritemp.indexOf(']', percentPos);
+        if (bracketPos != -1)
+            uritemp.remove(percentPos, bracketPos - percentPos);
+    }
+
+    return QUrl(uritemp).host();
 }
 
 QString reslovedHost(const QString &strHost)
@@ -208,11 +217,19 @@ QString reslovedHost(const QString &strHost)
     if (strHost.isEmpty())
         return strHost;
 
-    struct hostent *host = gethostbyname(strHost.toUtf8().data());
-    if (nullptr == host && HOST_NOT_FOUND == h_errno) {
+    // getaddrinfo, unlike gethostbyname, resolves IPv6 literals and names
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    struct addrinfo *result = nullptr;
+    const int err = getaddrinfo(strHost.toUtf8().constData(), nullptr, &hints, &result);
+    if (err != 0) {
         return QObject::tr("%1 not found, please ask the administrator for help, or enter the printer IP address in URI of Properties.").arg(strHost);
     }
 
+    freeaddrinfo(result);
     return QString();
 }
 

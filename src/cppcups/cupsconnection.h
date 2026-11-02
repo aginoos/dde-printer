@@ -17,6 +17,9 @@
 #include <stdexcept>
 using namespace std;
 
+// CUPS default HTTP timeout, used to restore a connection after a short probe
+#define DEFAULT_HTTP_TIMEOUT_SECONDS 30.0
+
 typedef struct tagDest {
     bool is_default;
     string destname;
@@ -550,6 +553,8 @@ public:
                    const vector<string> *filenames,
                    const char *title,
                    const map<string, string> *options);
+
+    void setTimeout(double timeout);
 
 private:
     void do_requesting_user_names(const char *name,

@@ -12,6 +12,8 @@
 #include "zsettings.h"
 #include "cupsattrnames.h"
 
+#include <QRegularExpression>
+#include <QRegularExpressionValidator>
 #include <DApplication>
 #include <DNotifySender>
 
@@ -582,7 +584,7 @@ void CupsMonitor::writeJobLog(bool isSuccess, int jobId, QString strReason)
     obj.insert("driverInfo", driverInfo);
 
     if (driverInfo.contains("Bisheng")) {
-        QString packageName = getPpdInfo(pddPath, "PackageName").replace(QRegExp("^ "), "").replace(QRegExp("\""), "");
+        QString packageName = getPpdInfo(pddPath, "PackageName").replace(QRegularExpression("^ "), "").replace(QRegularExpression("\""), "");
 
         // 获取包版本信息
         QString ver = getPackageVerByName(packageName);

@@ -12,6 +12,8 @@
 #include "printerservice.h"
 #include "qtconvert.h"
 
+#include <QRegularExpression>
+#include <QRegularExpressionValidator>
 #include <DIconButton>
 #include <DComboBox>
 #include <DListWidget>
@@ -38,7 +40,6 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QStackedWidget>
-#include <QRegExp>
 #include <QRegularExpression>
 #include <QScrollArea>
 
@@ -1038,10 +1039,10 @@ void PrinterSearchWindow::searchPrintersByManual()
 
 void PrinterSearchWindow::lineEditURIChanged(const QString &uri)
 {
-    //QRegExp reg("(\\S+)(://)(\\S+)");
+    //QRegularExpression reg("(\\S+)(://)(\\S+)");
     QString strVal = uri.trimmed();
-    QRegExp reg("([^# ]{1,})(:[/]{1,})([^# ]{1,})");
-    QRegExpValidator v(reg);
+    QRegularExpression reg("([^# ]{1,})(:[/]{1,})([^# ]{1,})");
+    QRegularExpressionValidator v(reg);
     int pos = 0;
     QValidator::State state = v.validate(strVal, pos);
     if (state == QValidator::Acceptable) {

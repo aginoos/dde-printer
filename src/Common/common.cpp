@@ -17,7 +17,7 @@
 #include <QStringList>
 #include <QDBusInterface>
 #include <QDBusReply>
-#include <QRegExpValidator>
+#include <QRegularExpressionValidator>
 #include <QDebug>
 #include <QDateTime>
 #include <QLibrary>

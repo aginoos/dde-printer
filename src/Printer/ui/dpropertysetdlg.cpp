@@ -5,6 +5,8 @@
 #include "dpropertysetdlg.h"
 #include "dprinterpropertytemplate.h"
 
+#include <QRegularExpression>
+#include <QRegularExpressionValidator>
 #include <qsettingbackend.h>
 #include <dsettings.h>
 #include <DSettingsOption>
@@ -90,7 +92,7 @@ void DPropertySetDlg::initUI()
 
             auto itemdata = option->data(QString::fromStdString("items"));
 
-            if (itemdata.type() == QVariant::StringList) {
+            if (itemdata.typeId() == QMetaType::QStringList) {
                 QStringList strItems = itemdata.toStringList();
 
                 for (int i = 0; i < strItems.size(); i++) {
@@ -130,7 +132,7 @@ void DPropertySetDlg::initUI()
             QWidget *pWidget = new QWidget;
             auto itemdata = option->data(QString::fromStdString("items"));
 
-            if (itemdata.type() == QVariant::StringList) {
+            if (itemdata.typeId() == QMetaType::QStringList) {
                 QStringList strItems = itemdata.toStringList();
                 QHBoxLayout *pHlayout = new QHBoxLayout;
 
@@ -1123,8 +1125,8 @@ void DPropertySetDlg::printUriUI_EditFinished()
         return;
     }
 
-    QRegExp reg("([^# ]{1,})(:[/]{1,})([^# ]{1,})");
-    QRegExpValidator v(reg);
+    QRegularExpression reg("([^# ]{1,})(:[/]{1,})([^# ]{1,})");
+    QRegularExpressionValidator v(reg);
     int pos = 0;
     QValidator::State state = v.validate(strVal, pos);
 
@@ -1330,15 +1332,15 @@ bool DPropertySetDlg::isBishengDriver()
         return false;
     }
 
-    preference.replace(QRegExp(" "), "").replace(QRegExp("\""), "");
+    preference.replace(QRegularExpression(" "), "").replace(QRegularExpression("\""), "");
     return preference.toLower() == "true";
 }
 
 void DPropertySetDlg::preferenceClickSlot()
 {
     QStringList args;
-    QString model = getBishengInfo("PrinterName").replace(QRegExp("^ "), "").replace("\"", "");
-    QString prefix = getBishengInfo("PackageName").replace(QRegExp("^ "), "").replace(QRegExp("\""), "");
+    QString model = getBishengInfo("PrinterName").replace(QRegularExpression("^ "), "").replace("\"", "");
+    QString prefix = getBishengInfo("PackageName").replace(QRegularExpression("^ "), "").replace(QRegularExpression("\""), "");
 
     args << "setprinter" << prefix << model;
     qCInfo(COMMONMOUDLE) << args;

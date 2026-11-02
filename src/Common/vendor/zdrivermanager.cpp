@@ -1438,12 +1438,13 @@ QStringList DriverManager::getDriverDepends(const char *strPPD)
             ppdMakeModelSplit(strValue, strMake, strModel);
             if (strMake.toLower() == "hp" && strValue.contains("requires proprietary plugin")) {
                 QString arch = g_Settings->getSystemArch();
-                QRegExp regex("(\\d+\\.\\d+\\.\\d+)");
-                if (regex.indexIn(strValue) == -1) {
+                QRegularExpression regex("(\\d+\\.\\d+\\.\\d+)");
+                QRegularExpressionMatch verMatch = regex.match(strValue);
+                if (!verMatch.hasMatch()) {
                     break;
                 }
 
-                QVersionNumber curVer = QVersionNumber::fromString(regex.cap(1));
+                QVersionNumber curVer = QVersionNumber::fromString(verMatch.captured(1));
                 QVersionNumber baseVersion = QVersionNumber::fromString("3.18.12");
                 if (curVer <= baseVersion && !(arch.contains("mips") || arch.contains("loongarch"))) {
                     depends << "hplip-plugin";

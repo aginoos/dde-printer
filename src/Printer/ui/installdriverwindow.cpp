@@ -13,6 +13,8 @@
 #include "common.h"
 #include "qtconvert.h"
 
+#include <QRegularExpression>
+#include <QRegularExpressionValidator>
 #include <DListView>
 #include <DLineEdit>
 #include <DTitlebar>
@@ -237,7 +239,7 @@ void InstallDriverWindow::initUI()
     QLabel *pMakerAndTypeLabel = new QLabel(tr("Vendor and Model"), this);
     m_pManuAndTypeLineEdit = new QLineEdit(this);
     m_pManuAndTypeLineEdit->setToolTip(tr("Enter a complete vendor and model (Only letters, numbers and whitespaces)"));
-    m_pManuAndTypeLineEdit->setValidator(new QRegExpValidator(QRegExp("^[a-zA-Z0-9 ]*$")));
+    m_pManuAndTypeLineEdit->setValidator(new QRegularExpressionValidator(QRegularExpression("^[a-zA-Z0-9 ]*$")));
     m_pManuAndTypeLineEdit->setAccessibleName("manuBtn_installDriver");
     m_pSearchBtn = new QPushButton(tr("Search", "button"), this);
     m_pSearchBtn->setMaximumWidth(105);

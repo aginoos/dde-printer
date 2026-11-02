@@ -662,24 +662,33 @@ void DPropertySetDlg::showConflictDlg(const vector<CONFLICTPAIR> &vecConflictPai
 
 void DPropertySetDlg::updateComboByConflits(const QSet<QString> &nodes)
 {
+    // Only combos that were painted for a conflict are touched again, and they
+    // go back to the theme palette rather than a hard-coded colour, so the text
+    // colour of unrelated or resolved combos is never overridden.
+    static const char kConflictFlag[] = "conflictMarked";
+
     for (auto iter = m_mapOfConflict.begin(); iter != m_mapOfConflict.end(); iter++) {
         if (nodes.contains(iter.key())) {
             continue;
         }
 
-        QString strWidgetName = iter.value();
-        QComboBox *pCombo = qobject_cast<QComboBox *>(m_mapOfListWidget.value(strWidgetName));
-        QPalette pal = pCombo->palette();
-        pal.setColor(QPalette::ButtonText, Qt::black);
-        pCombo->setPalette(pal);
+        QComboBox *pCombo = qobject_cast<QComboBox *>(m_mapOfListWidget.value(iter.value()));
+        if (pCombo && pCombo->property(kConflictFlag).toBool()) {
+            pCombo->setPalette(QPalette());
+            pCombo->setProperty(kConflictFlag, false);
+        }
     }
 
     foreach (QString strOpt, nodes) {
         QString strWidgetName = m_mapOfConflict.value(strOpt);
         QComboBox *pCombo = qobject_cast<QComboBox *>(m_mapOfListWidget.value(strWidgetName));
+        if (!pCombo) {
+            continue;
+        }
         QPalette pal = pCombo->palette();
         pal.setColor(QPalette::ButtonText, Qt::red);
         pCombo->setPalette(pal);
+        pCombo->setProperty(kConflictFlag, true);
     }
 }
 

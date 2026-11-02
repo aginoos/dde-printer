@@ -12,6 +12,17 @@
               "description[zh_CN]": "日志规则",
               "permissions": "readwrite",
               "visibility": "public"
+        },
+        "allow_auto_usb": {
+              "value": true,
+              "serial": 0,
+              "flags": ["global"],
+              "name": "USB plug and play",
+              "name[zh_CN]": "USB 即插即用",
+              "description": "Add USB printers automatically when they are plugged in",
+              "description[zh_CN]": "插入 USB 打印机时自动添加",
+              "permissions": "readwrite",
+              "visibility": "public"
         }
     }
 }

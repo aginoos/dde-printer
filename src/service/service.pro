@@ -1,6 +1,6 @@
 DEFINES += QT_MESSAGELOGCONTEXT
 
-QT += core dbus
+QT += core dbus concurrent
 QT -= gui
 
 CONFIG += c++17
@@ -17,9 +17,12 @@ SOURCES += main.cpp \
     polkitauthority.cpp \
     inputvalidator.cpp \
     autostartguard.cpp \
-    canonjob.cpp
+    canonjob.cpp \
+    cupsconfig.cpp
 
 DEFINES += QT_DEPRECATED_WARNINGS
+
+LIBS += -lcups
 
 HEADERS += \
     service.h \
@@ -27,7 +30,8 @@ HEADERS += \
     polkitauthority.h \
     inputvalidator.h \
     autostartguard.h \
-    canonjob.h
+    canonjob.h \
+    cupsconfig.h
 
 unix {
 isEmpty(PREFIX) {

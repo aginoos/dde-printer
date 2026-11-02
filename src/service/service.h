@@ -10,6 +10,7 @@
 
 #include <QDBusContext>
 #include <QDBusMessage>
+#include <QVariantMap>
 
 #include <functional>
 
@@ -30,6 +31,8 @@ public slots:
     void LaunchAutoStart(const QString &filePath);
     int CanonPrinterInstall(const QStringList &args);
     int CanonPrinterRemove(const QStringList &args);
+    // Boolean cupsd.conf switches only; see cupsconfig.h. Returns 0.
+    int SetServerSettings(const QVariantMap &settings);
 
 private:
     using GrantedHandler = std::function<void(const QDBusMessage &request)>;
@@ -44,5 +47,6 @@ private:
 private:
     int m_activeTasks = 0;
     bool m_canonBusy = false;
+    bool m_settingsBusy = false;
     QTimer m_idleTimer;
 };

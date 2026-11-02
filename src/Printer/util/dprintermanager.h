@@ -24,6 +24,10 @@ public:
     static DPrinterManager *getInstance();
     ~DPrinterManager();
 
+signals:
+    // success, or a message describing why the change was not applied
+    void commitFinished(bool success, const QString &message);
+
 public:
 
     //set allowed user
@@ -83,7 +87,11 @@ public:
     * @date          2019-11-09
     */
     bool updateServerSetting();
-    void commit(const map<string, string> &options);
+    /**
+     * Server settings are written by the privileged service (polkit), never
+     * by this process. Asynchronous; always followed by commitFinished().
+     */
+    void commitAsync(const map<string, string> &options);
     bool hasSamePrinter(const QString &printer);
     QString validataName(const QString &oldPrinterName);
 

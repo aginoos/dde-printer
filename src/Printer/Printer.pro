@@ -13,6 +13,8 @@ SOURCES += \
         main.cpp \
     ui/dprintersshowwindow.cpp \
     util/dprintermanager.cpp \
+    util/serversettingsrequest.cpp \
+    ui/loadingoverlay.cpp \
     util/dprinter.cpp \
     ui/printersearchwindow.cpp \
     util/dprintclass.cpp \
@@ -42,6 +44,8 @@ FORMS +=
 HEADERS += \
     ui/dprintersshowwindow.h \
     util/dprintermanager.h \
+    util/serversettingsrequest.h \
+    ui/loadingoverlay.h \
     util/dprinter.h \
     ui/printersearchwindow.h \
     util/ddestination.h \

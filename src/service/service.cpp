@@ -8,6 +8,7 @@
 #include "autostartguard.h"
 #include "canonjob.h"
 #include "commandrunner.h"
+#include "cupsconfig.h"
 #include "inputvalidator.h"
 #include "polkitauthority.h"
 
@@ -15,11 +16,14 @@
 #include <QDBusConnection>
 #include <QDBusError>
 #include <QDebug>
+#include <QFutureWatcher>
+#include <QtConcurrent>
 
 namespace {
 
 const char kActionCanonAdd[] = "com.deepin.printer.manager.canon-add";
 const char kActionCanonRemove[] = "com.deepin.printer.manager.canon-remove";
+const char kActionServerSettings[] = "com.deepin.printer.manager.set-server-settings";
 const char kActionAutostart[] = "com.deepin.printer.manager.launch-autostart";
 
 constexpr int kMaxActiveTasks = 8;
@@ -152,4 +156,43 @@ int Service::CanonPrinterRemove(const QStringList &args)
         });
     });
     return 0;
+}
+
+int Service::SetServerSettings(const QVariantMap &settings)
+{
+    QString error;
+    const auto parsed = CupsConfig::parse(settings, &error);
+    if (!parsed) {
+        sendErrorReply(QDBusError::InvalidArgs, error);
+        return 0;
+    }
+
+    const QVector<ServerSetting> validated = *parsed;
+    authorizeThen(kActionServerSettings, [this, validated](const QDBusMessage &request) {
+        if (m_settingsBusy) {
+            completeWith(request.createErrorReply(QDBusError::LimitsExceeded,
+                                                  QStringLiteral("Another settings change is running")));
+            return;
+        }
+        m_settingsBusy = true;
+        // libcups blocks (and cupsd restarts) while applying; keep the
+        // event loop free for other callers.
+        auto *watcher = new QFutureWatcher<QString>(this);
+        connect(watcher, &QFutureWatcher<QString>::finished, this, [this, watcher, request]() {
+            const QString failure = watcher->result();
+            watcher->deleteLater();
+            m_settingsBusy = false;
+            if (failure.isEmpty()) {
+                completeWith(request.createReply(0));
+                return;
+            }
+            qWarning() << "SetServerSettings failed:" << failure;
+            completeWith(request.createErrorReply(QDBusError::Failed, failure));
+        });
+        watcher->setFuture(QtConcurrent::run([validated]() {
+            QString failure;
+            return CupsConfig::apply(validated, &failure) ? QString() : failure;
+        }));
+    });
+    return 0; // ignored: the reply is sent later
 }

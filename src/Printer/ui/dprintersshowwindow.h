@@ -310,6 +310,8 @@ private:
     * @date          2019-11-07
     */
     void selectPrinterByName(const QString &printerName);
+    void updateTipLabelColors();
+    void refreshShareAddress();
     /**
     * @projectName   Printer
     * @brief         更新打印机列表的默认选项图标

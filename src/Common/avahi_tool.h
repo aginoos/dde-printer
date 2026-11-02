@@ -86,6 +86,8 @@ QString localIppUsbModelByPort(quint16 port);
 
 // Devices known to ipp-usb together with their health; empty when ipp-usb is missing.
 QList<IppUsbDevice> ippUsbDevices();
+// Parse the text printed by "ipp-usb status" (exposed for testing).
+QList<IppUsbDevice> parseIppUsbStatus(const QString &output);
 
 // dnssd://<escaped name>.<type>.local/?uuid=<uuid>. The name is percent-encoded
 // and the URI is assembled by concatenation, because the encoded name may hold

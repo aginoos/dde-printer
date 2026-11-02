@@ -114,6 +114,7 @@ protected:
     int probe_hplip(const QString &strHost);
     int probe_jetdirect(const QString &strHost);
     int probe_ipp(const QString &strHost);
+    int probe_ipp_service(const QString &strHost);
     int probe_lpd(const QString &strHost);
     int probe_smb(const QString &strHost);
     int probe_snmp(const QString &strHost);

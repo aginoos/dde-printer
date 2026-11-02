@@ -17,8 +17,10 @@
 #include <QUrl>
 #include <QLibrary>
 
+#include <cups/cups.h>
 #include <libsmbclient.h>
 
+#include <memory>
 #include <limits.h>
 #include <stdlib.h>
 
@@ -208,11 +210,20 @@ int RefreshDevicesByBackendTask::addDevices(const map<string, map<string, string
         info.strDeviceId = attrValueToQString(infomap[CUPS_DEV_ID]);
         info.strLocation = attrValueToQString(infomap[CUPS_DEV_LOCATION]);
         info.iType = InfoFrom_Detect;
-        info.strName = info.strInfo;
+        // keep the manufacturer: make-and-model carries it, info is often model only
+        info.strName = info.strMakeAndModel.isEmpty() ? info.strInfo : info.strMakeAndModel;
         /* 过滤dnssd后端发现的打印 避免添加到本地后信息变更导致不可用 */
         if (uri.startsWith("dnssd://")) {
             qCDebug(COMMONMOUDLE) << QString("Does not support non-cups shared dnssd protocol printers,uri=%1").arg(uri);
             continue;
+        }
+        // an lpd printer whose host name does not resolve can never be reached
+        if (uri.startsWith("lpd://")) {
+            const QString lpdHost = getHostFromUri(uri);
+            if (lpdHost.isEmpty() || !reslovedHost(lpdHost).isEmpty()) {
+                qCWarning(COMMONMOUDLE) << "lpd host is not resolved:" << lpdHost;
+                continue;
+            }
         }
         if (uri.startsWith("dnssd://") && !info.strName.isEmpty()) {
             info.strName = info.strName.split("@").first().trimmed();
@@ -297,6 +308,80 @@ RefreshDevicesByHostTask::RefreshDevicesByHostTask(const QString &strHost, int i
     m_strHost = strHost;
 }
 
+namespace {
+// The snmp backend reports lpd uris with the printer's own host name, which
+// often does not resolve here. Searching by ip, so address the printer by it.
+QString lpdUriWithHost(const QString &uri, const QString &strHost)
+{
+    if (!uri.startsWith("lpd://") || uri.contains(strHost, Qt::CaseInsensitive))
+        return uri;
+
+    QUrl url(uri);
+    if (!url.isValid())
+        return uri;
+    url.setHost(strHost);
+    qCInfo(COMMONMOUDLE) << "Replace host of lpd uri:" << uri << "->" << url.toString();
+    return url.toString();
+}
+
+// hp:/net/HP_ColorLaserJet_M253-M254?ip=10.20.255.24 -> "HP ColorLaserJet M253-M254"
+QString modelFromHplipUri(const QString &uri)
+{
+    static const QRegularExpression re("^hp:/net/([^/?]+)");
+    const QRegularExpressionMatch match = re.match(uri);
+    if (!match.hasMatch())
+        return QString();
+
+    return QUrl::fromPercentEncoding(match.captured(1).toUtf8()).replace('_', ' ').trimmed();
+}
+
+bool isValidProbeHost(const QString &host)
+{
+    static const QRegularExpression re("^[A-Za-z0-9._:%\\-\\[\\]]{1,253}$");
+    return re.match(host).hasMatch();
+}
+
+QString ippHostForUri(const QString &host)
+{
+    return host.contains(':') && !host.startsWith('[') ? "[" + host + "]" : host;
+}
+
+// PJL "INFO ID" answers with the quoted identity, e.g. @PJL INFO ID\r\n"HP LaserJet M404"
+QString parsePjlIdentity(const QByteArray &response)
+{
+    const QStringList lines = QString::fromUtf8(response).split(QRegularExpression("[\r\n\f]+"), Qt::SkipEmptyParts);
+    for (const QString &raw : lines) {
+        QString line = raw.trimmed();
+        if (line.startsWith("@PJL", Qt::CaseInsensitive)) {
+            // some printers answer on the echo line itself
+            if (!line.startsWith("@PJL INFO ID", Qt::CaseInsensitive))
+                continue;
+            line = line.mid(QString("@PJL INFO ID").length()).trimmed();
+        }
+        if (line.size() >= 2 && line.startsWith('"') && line.endsWith('"'))
+            line = line.mid(1, line.size() - 2).trimmed();
+        if (!line.isEmpty() && !line.contains("ERROR", Qt::CaseInsensitive))
+            return line;
+    }
+    return QString();
+}
+
+QString queryPjlIdentity(QTcpSocket &socket)
+{
+    socket.write(QByteArrayLiteral("\033%-12345X@PJL INFO ID\r\n\033%-12345X\r\n"));
+    if (!socket.waitForBytesWritten(1000) || !socket.waitForReadyRead(SOCKET_Timeout)) {
+        qCDebug(COMMONMOUDLE) << "PJL query got no answer";
+        return QString();
+    }
+    return parsePjlIdentity(socket.readAll());
+}
+
+QString ippString(ipp_attribute_t *attr)
+{
+    return ippGetCount(attr) > 0 ? QString::fromUtf8(ippGetString(attr, 0, nullptr)) : QString();
+}
+} // namespace
+
 int RefreshDevicesByHostTask::probe_snmp(const QString &strHost)
 {
     qCDebug(COMMONMOUDLE) << strHost;
@@ -316,7 +401,7 @@ int RefreshDevicesByHostTask::probe_snmp(const QString &strHost)
             TDeviceInfo info;
             info.iType = InfoFrom_Host;
             info.strClass = list[0];
-            info.uriList << list[1];
+            info.uriList << lpdUriWithHost(list[1], strHost);
             info.strName = info.strMakeAndModel = list[2];
             info.strInfo = list[3];
             if (list.count() > 4)
@@ -341,6 +426,12 @@ int RefreshDevicesByHostTask::probe_hplip(const QString &strHost)
         //TODO get uri and info
         TDeviceInfo info;
         info.uriList << strRet;
+        // hp-makeuri only gives the uri, take the model from it
+        const QString model = modelFromHplipUri(strRet);
+        if (!model.isEmpty())
+            info.strName = info.strMakeAndModel = model;
+        else
+            qCWarning(COMMONMOUDLE) << "Cannot read model from HPLIP uri:" << strRet;
         info.iType = InfoFrom_Host;
         addDevice(info);
     }
@@ -357,12 +448,125 @@ int RefreshDevicesByHostTask::probe_jetdirect(const QString &strHost)
         TDeviceInfo info;
         info.uriList << QString("socket://%1:%2").arg(strHost).arg(9100);
         info.iType = InfoFrom_Host;
-        qCDebug(COMMONMOUDLE) << info.uriList;
+        // a raw socket carries no identity: ask the printer for manufacturer and model
+        const QString identity = queryPjlIdentity(socket);
+        if (!identity.isEmpty())
+            info.strName = info.strInfo = info.strMakeAndModel = identity;
+        qCDebug(COMMONMOUDLE) << info.uriList << info.strMakeAndModel;
         addDevice(info);
         return 0;
     }
 
     qCDebug(COMMONMOUDLE) << QString("Connect appsocket %1 failed, err: (%2) %3").arg(strHost).arg(socket.error()).arg(socket.errorString());
+    return -1;
+}
+
+namespace {
+// Paths of IPP endpoints that are not the CUPS default, in probing order
+const char *const kIppPaths[] = {"/ipp/print", "/ipp", "/", "/printers/printer"};
+
+struct HttpCloser { void operator()(http_t *h) const { if (h) httpClose(h); } };
+struct IppDeleter { void operator()(ipp_t *r) const { if (r) ippDelete(r); } };
+using HttpPtr = std::unique_ptr<http_t, HttpCloser>;
+using IppPtr = std::unique_ptr<ipp_t, IppDeleter>;
+
+// cupsDoRequest() consumes the request, so a fresh one is built for each path.
+IppPtr requestPrinterInfo(http_t *http, const QString &printerUri, const char *resource)
+{
+    static const char *const requested[] = {"printer-name", "printer-info", "printer-make-and-model",
+                                            "printer-location", "printer-uri-supported", "device-id"};
+    ipp_t *request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
+    // ippNewRequest() already supplies attributes-charset and attributes-natural-language,
+    // which some printers insist on; adding them again would duplicate the attributes.
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, printerUri.toUtf8().constData());
+    ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes",
+                  static_cast<int>(sizeof(requested) / sizeof(requested[0])), nullptr, requested);
+    return IppPtr(cupsDoRequest(http, request, resource));
+}
+
+TDeviceInfo deviceFromIppResponse(ipp_t *response, const QString &printerUri)
+{
+    TDeviceInfo info;
+    info.iType = InfoFrom_Host;
+    info.strClass = "network";
+    info.uriList << printerUri;
+
+    QString makeAndModel;
+    for (ipp_attribute_t *attr = ippFirstAttribute(response); attr; attr = ippNextAttribute(response)) {
+        const char *name = ippGetName(attr);
+        if (!name || ippGetGroupTag(attr) != IPP_TAG_PRINTER)
+            continue;
+
+        if (!strcmp(name, "printer-name")) {
+            info.strName = ippString(attr);
+        } else if (!strcmp(name, "printer-info")) {
+            info.strInfo = ippString(attr);
+        } else if (!strcmp(name, "printer-make-and-model")) {
+            makeAndModel = ippString(attr);
+        } else if (!strcmp(name, "printer-location")) {
+            info.strLocation = ippString(attr);
+        } else if (!strcmp(name, "device-id")) {
+            info.strDeviceId = ippString(attr);
+        } else if (!strcmp(name, "printer-uri-supported")) {
+            for (int i = 0; i < ippGetCount(attr); i++) {
+                const QString uri = QString::fromUtf8(ippGetString(attr, i, nullptr));
+                if (!uri.isEmpty() && !info.uriList.contains(uri))
+                    info.uriList << uri;
+            }
+        }
+    }
+
+    // make-and-model is often inaccurate or lacks the manufacturer, which makes
+    // the driver search fail; printer-info is the better source, model is the fallback.
+    info.strMakeAndModel = info.strInfo.isEmpty() ? makeAndModel : info.strInfo;
+    if (info.strName.isEmpty())
+        info.strName = info.strMakeAndModel;
+    if (info.strInfo.isEmpty())
+        info.strInfo = info.strMakeAndModel;
+    return info;
+}
+} // namespace
+
+// Printers behind a non-CUPS ipp path are invisible to CUPS-style queries, so
+// try the usual endpoints one by one.
+int RefreshDevicesByHostTask::probe_ipp_service(const QString &strHost)
+{
+    if (!isValidProbeHost(strHost)) {
+        qCWarning(COMMONMOUDLE) << "Invalid host for ipp probe:" << strHost;
+        return -1;
+    }
+
+    const int ippPort = 631;
+    int cancel = 0;
+    HttpPtr http(httpConnect2(strHost.toUtf8().constData(), ippPort, nullptr, AF_UNSPEC,
+                              HTTP_ENCRYPTION_IF_REQUESTED, 1, static_cast<int>(IPP_PROBE_TIMEOUT_SECONDS * 1000), &cancel));
+    if (!http) {
+        qCDebug(COMMONMOUDLE) << "Cannot connect to ipp service on" << strHost;
+        return -1;
+    }
+    httpSetTimeout(http.get(), IPP_PROBE_TIMEOUT_SECONDS, nullptr, nullptr);
+
+    for (const char *path : kIppPaths) {
+        if (m_bQuit)
+            return -1;
+
+        const QString printerUri = QString("ipp://%1:%2%3").arg(ippHostForUri(strHost)).arg(ippPort).arg(path);
+        IppPtr response = requestPrinterInfo(http.get(), printerUri, path);
+        if (!response || ippGetStatusCode(response.get()) > IPP_STATUS_OK_CONFLICTING) {
+            qCDebug(COMMONMOUDLE) << "ipp path" << path << "failed:"
+                                  << (response ? ippErrorString(ippGetStatusCode(response.get())) : cupsLastErrorString());
+            continue;
+        }
+
+        TDeviceInfo info = deviceFromIppResponse(response.get(), printerUri);
+        if (info.strName.isEmpty())
+            continue;
+
+        qCInfo(COMMONMOUDLE) << "Found ipp printer:" << info.toString();
+        addDevice(info);
+        return 0;
+    }
+
     return -1;
 }
 
@@ -378,13 +582,10 @@ int RefreshDevicesByHostTask::probe_ipp(const QString &strHost)
         try {
             printersMap = conPtr->getPrinters();
         } catch (const std::runtime_error &e) {
+            // not a CUPS server: the plain ipp endpoints are still probed below
             qCWarning(COMMONMOUDLE) << "runtime error:" << e.what();
-            conPtr->setTimeout(DEFAULT_HTTP_TIMEOUT_SECONDS);
-            return -1;
         }
         conPtr->setTimeout(DEFAULT_HTTP_TIMEOUT_SECONDS);
-    } else {
-        return -1;
     }
 
     for (itPrinters = printersMap.begin(); itPrinters != printersMap.end(); itPrinters++) {
@@ -400,6 +601,8 @@ int RefreshDevicesByHostTask::probe_ipp(const QString &strHost)
 
         addDevice(info);
     }
+
+    probe_ipp_service(strHost);
 
     return 0;
 }
@@ -528,28 +731,33 @@ int RefreshDevicesByHostTask::doWork()
         return -1;
     }
 
+    // ipp and snmp are always probed: they find usable devices fastest
+    probe_ipp(m_strHost);
+    if (m_bQuit)
+        return 0;
+
     probe_snmp(m_strHost);
     if (m_bQuit)
         return 0;
 
-    //如果snmp 找到设备则不用查找socket、ipp、lpd
-    if (getResult().size() <= 0) {
+    // the other protocols are only a fallback when nothing was found yet
+    if (getResult().isEmpty()) {
         probe_jetdirect(m_strHost);
         if (m_bQuit)
             return 0;
+    }
 
-        probe_ipp(m_strHost);
-        if (m_bQuit)
-            return 0;
-
+    if (getResult().isEmpty()) {
         probe_lpd(m_strHost);
         if (m_bQuit)
             return 0;
     }
 
-    probe_hplip(m_strHost);
-    if (m_bQuit)
-        return 0;
+    if (getResult().isEmpty()) {
+        probe_hplip(m_strHost);
+        if (m_bQuit)
+            return 0;
+    }
 
     /*去掉smb协议的打印机探测，网络不通的情况下必然会出现，但是用户一般都不知道samba协议的用法，以为需要登陆才能查找打印机
      *后面考虑把samba协议挪到手动输入uri中，检测smb协议的前缀然后根据是否需要认证选择性弹出对话框

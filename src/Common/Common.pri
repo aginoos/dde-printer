@@ -7,6 +7,11 @@ INCLUDEPATH +=  \
 HEADERS +=  \
     $$PWD/common.h \
     $$PWD/avahi_tool.h \
+    $$PWD/ippusbpolicy.h \
+    $$PWD/ippusbclient.h \
+    $$PWD/ippusbplanner.h \
+    $$PWD/ippusbswitch.h \
+    $$PWD/usbautoaddconfig.h \
     $$PWD/qtconvert.h \
     $$PWD/zsettings.h \
     $$PWD/cupsconnectionfactory.h \
@@ -35,6 +40,11 @@ HEADERS +=  \
 SOURCES +=  \
     $$PWD/common.cpp \
     $$PWD/avahi_tool.cpp \
+    $$PWD/ippusbpolicy.cpp \
+    $$PWD/ippusbclient.cpp \
+    $$PWD/ippusbplanner.cpp \
+    $$PWD/ippusbswitch.cpp \
+    $$PWD/usbautoaddconfig.cpp \
     $$PWD/safeprocess.cpp \
     $$PWD/packageutil.cpp \
     $$PWD/qtconvert.cpp \

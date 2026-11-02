@@ -28,6 +28,8 @@
 #include <QProcessEnvironment>
 #include <QHostAddress>
 #include "safeprocess.h"
+#include "avahi_tool.h"
+#include "ippusbswitch.h"
 #include "packageutil.h"
 
 static QString g_captexec = "/opt/cndrvcups-capt/add";
@@ -519,9 +521,39 @@ int AddPrinterTask::checkUriAndDriver()
     return isUriAndDriverMatched();
 }
 
+// A printer behind ipp-usb is listed on a loopback port that does not survive a restart of
+// ipp-usb: add it by its dnssd address, or hand it over to the usb backend when a vendor
+// driver is chosen. False (with the reason) when the printer cannot be reached either way.
+static bool adaptIppUsbUri(TDeviceInfo &printer, const QMap<QString, QVariant> &solution,
+                           QString &uri, QString &error)
+{
+    if (printer.uriList.isEmpty() || !AvahiTool::isIppUsbUri(printer.uriList.first()))
+        return true;
+
+    const bool driverless = solution[SD_KEY_from].toInt() == PPDFrom_EveryWhere;
+    const IppUsbSwitch::Result result = driverless
+            ? IppUsbSwitch::driverlessUri(printer.uriList.first())
+            : IppUsbSwitch::usbBackendUri(printer.strMakeAndModel);
+    if (!result.ok) {
+        error = result.error;
+        return false;
+    }
+
+    printer.uriList = QStringList(result.uri);
+    uri = result.uri;
+    return true;
+}
+
 int AddPrinterTask::doWork()
 {
     qCDebug(COMMONMOUDLE) << m_printer.uriList << m_solution[CUPS_PPD_NAME].toString();
+
+    if (!adaptIppUsbUri(m_printer, m_solution, m_uri, m_strErr)) {
+        // report the failure; returning without a signal would leave the caller waiting for ever
+        m_iStep = STEP_Failed;
+        nextStep();
+        return -1;
+    }
 
     nextStep();
 

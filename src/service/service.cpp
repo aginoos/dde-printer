@@ -11,6 +11,7 @@
 #include "cupsconfig.h"
 #include "inputvalidator.h"
 #include "joblogreader.h"
+#include "ippusbblacklist.h"
 #include "polkitauthority.h"
 #include "repairjobs.h"
 
@@ -30,6 +31,7 @@ const char kActionCanonRemove[] = "com.deepin.printer.manager.canon-remove";
 const char kActionServerSettings[] = "com.deepin.printer.manager.set-server-settings";
 const char kActionAutostart[] = "com.deepin.printer.manager.launch-autostart";
 const char kActionRepair[] = "com.deepin.printer.manager.repair";
+const char kActionIppusbBlacklist[] = "com.deepin.printer.manager.ippusb-blacklist";
 
 constexpr int kMaxActiveTasks = 8;
 constexpr int kIdleExitMs = 30000;
@@ -241,6 +243,44 @@ int Service::RunRepair(const QString &fixId)
         RepairJobs::run(this, fixId, [this, request](int code) {
             completeWith(request.createReply(code));
         });
+    });
+    return 0; // ignored: the reply is sent later
+}
+
+int Service::AddDeviceToIppusbBlacklist(const QString &vendorProduct)
+{
+    return changeIppusbBlacklist(vendorProduct, true);
+}
+
+int Service::RemoveDeviceFromIppusbBlacklist(const QString &vendorProduct)
+{
+    return changeIppusbBlacklist(vendorProduct, false);
+}
+
+int Service::changeIppusbBlacklist(const QString &vendorProduct, bool add)
+{
+    const auto normalized = IppUsbBlacklist::normalizeVendorProduct(vendorProduct);
+    if (!normalized) {
+        sendErrorReply(QDBusError::InvalidArgs, QStringLiteral("Expected <vendor>:<product> in hexadecimal"));
+        return 0;
+    }
+
+    const QString device = *normalized;
+    authorizeThen(kActionIppusbBlacklist, [this, device, add](const QDBusMessage &request) {
+        if (m_ippusbBusy) {
+            completeWith(request.createErrorReply(QDBusError::LimitsExceeded,
+                                                  QStringLiteral("Another ipp-usb change is running")));
+            return;
+        }
+        m_ippusbBusy = true;
+        const auto done = [this, request](int result) {
+            m_ippusbBusy = false;
+            completeWith(request.createReply(result));
+        };
+        if (add)
+            IppUsbBlacklist::add(this, device, done);
+        else
+            IppUsbBlacklist::remove(this, device, done);
     });
     return 0; // ignored: the reply is sent later
 }

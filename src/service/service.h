@@ -35,6 +35,9 @@ public slots:
     int SetServerSettings(const QVariantMap &settings);
     QString ReadJobErrorLog(const QString &printerName);
     int RunRepair(const QString &fixId);
+    // vendorProduct: "04b8:0e1a". 0 on success, see IppUsbBlacklist::Result otherwise.
+    int AddDeviceToIppusbBlacklist(const QString &vendorProduct);
+    int RemoveDeviceFromIppusbBlacklist(const QString &vendorProduct);
 
 private:
     using GrantedHandler = std::function<void(const QDBusMessage &request)>;
@@ -43,6 +46,7 @@ private:
     // false (after sending an error reply) when the service is overloaded.
     bool authorizeThen(const QString &action, GrantedHandler onGranted);
     void completeWith(const QDBusMessage &reply);
+    int changeIppusbBlacklist(const QString &vendorProduct, bool add);
     void beginTask();
     void endTask();
 
@@ -50,5 +54,6 @@ private:
     int m_activeTasks = 0;
     bool m_canonBusy = false;
     bool m_settingsBusy = false;
+    bool m_ippusbBusy = false;
     QTimer m_idleTimer;
 };

@@ -24,6 +24,7 @@ include($$PWD/cppcups/cppcups.pri)
 include($$PWD/Common/Common.pri)
 include($$PWD/service/service.pri)
 include($$PWD/Printer/Printer.pri)
+include($$PWD/ippusb/ippusb.pri)
 
 SOURCES += \
     $$PWD/main.cpp

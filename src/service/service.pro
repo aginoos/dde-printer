@@ -20,7 +20,8 @@ SOURCES += main.cpp \
     canonjob.cpp \
     cupsconfig.cpp \
     joblogreader.cpp \
-    repairjobs.cpp
+    repairjobs.cpp \
+    ippusbblacklist.cpp
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
@@ -35,7 +36,8 @@ HEADERS += \
     canonjob.h \
     cupsconfig.h \
     joblogreader.h \
-    repairjobs.h
+    repairjobs.h \
+    ippusbblacklist.h
 
 unix {
 isEmpty(PREFIX) {

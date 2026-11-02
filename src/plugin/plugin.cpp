@@ -21,10 +21,14 @@ static MainJob *service = nullptr;
 static SignalCups *cupsSignal = nullptr;
 static SignalUSB *usbThread = nullptr;
 
-static void startHelper(int type)
+static bool startHelper(int type)
 {
    QDBusInterface interface(SERVICE_INTERFACE_NAME, SERVICE_INTERFACE_PATH, SERVICE_INTERFACE_NAME, QDBusConnection::sessionBus());
-   interface.call("setTypeAndState", type);
+   if (!interface.isValid()) {
+       return false;
+   }
+   const QDBusMessage reply = interface.call("setTypeAndState", type);
+   return reply.type() == QDBusMessage::ReplyMessage;
 }
 
 
@@ -127,6 +131,28 @@ SignalUSB::SignalUSB(QObject *parent)
 SignalUSB::~SignalUSB()
 {
     needExit = true;
+    if (m_coldStart) {
+        m_coldStart->wait();
+    }
+}
+
+// At boot the plugin can load before the session bus and the helper's activation are
+// usable, so ask until the helper answers (or the plugin is unloaded).
+void SignalUSB::launchHelperAtStart()
+{
+    constexpr int kMaxAttempts = 60;
+    constexpr unsigned long kRetryMs = 2000;
+    m_coldStart = QThread::create([this]() {
+        for (int attempt = 0; attempt < kMaxAttempts && !needExit; ++attempt) {
+            if (startHelper(2)) {
+                qInfo() << "helper asked to add the USB printers present at start";
+                return;
+            }
+            QThread::msleep(kRetryMs);
+        }
+        qWarning() << "helper not reachable, USB printers present at start are not added";
+    });
+    m_coldStart->start();
 }
 
 void SignalUSB::run()
@@ -148,6 +174,8 @@ void SignalUSB::run()
             qWarning() << "Error to register usb arrived callback";
             break;
         }
+
+        launchHelperAtStart();
 
         while (!needExit) {
             libusb_handle_events_completed(ctx, nullptr);

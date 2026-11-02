@@ -29,16 +29,23 @@ typedef struct tagDest {
 } Dest;
 
 class Connection;
+// Server setting of CUPS builds that can switch DNS-SD (Avahi) printer discovery on and off.
+// Builds without it do not report the key, see ServerSettings::hasDiscoverySupported().
+#define DDE_PRINTER_ENABLE_PRINTER_DISCOVER "printer-discovery-enabled"
+
 class ServerSettings
 {
 public:
     ServerSettings();
+    ServerSettings &enablePrinterDiscovery(bool enabled);
     ServerSettings &enableDebugLogging(bool enabled);
     ServerSettings &enableRemoteAdmin(bool enabled);
     ServerSettings &enableRemoteAny(bool enabled);
     ServerSettings &enableSharePrinters(bool enabled);
     ServerSettings &enableUserCancelAny(bool enabled);
 
+    bool hasDiscoverySupported() const;
+    bool isDiscoveryEnabled() const;
     bool isDebugLoggingEnabled() const;
     bool isRemoteAdminEnabled() const;
     bool isRemoteAnyEnabled() const;

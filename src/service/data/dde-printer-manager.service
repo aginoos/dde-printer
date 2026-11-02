@@ -20,6 +20,8 @@ ReadWritePaths=-/var/cache
 ReadWritePaths=-/var/lib
 # Brother filter permission repair.
 ReadWritePaths=-/usr/lib/cups/filter
+# quirks file that keeps ipp-usb away from selected USB printers
+ReadWritePaths=-/usr/share/ipp-usb
 InaccessiblePaths=/etc/shadow
 InaccessiblePaths=-/etc/NetworkManager/system-connections
 InaccessiblePaths=-/etc/pam.d

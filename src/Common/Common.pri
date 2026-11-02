@@ -36,6 +36,7 @@ SOURCES +=  \
     $$PWD/zjobmanager.cpp \
     $$PWD/reviselogger.cpp \
     $$PWD/vendor/addprinter.cpp \
+    $$PWD/vendor/installinterface.cpp \
     $$PWD/vendor/printerservice.cpp \
     $$PWD/vendor/zdevicemanager.cpp \
     $$PWD/vendor/zdrivermanager.cpp \

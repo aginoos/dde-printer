@@ -108,20 +108,25 @@ bool isInstallable(const QString &package, const QString &version)
     return policyOffers(res.out, version);
 }
 
-bool lastoreAvailable()
+QString lastoreService()
 {
     QDBusConnectionInterface *bus = QDBusConnection::systemBus().interface();
     if (!bus) {
-        return false;
+        return QString();
     }
     const QStringList activatable = bus->activatableServiceNames().value();
     for (const char *name : kLastoreServices) {
         const QString service = QString::fromLatin1(name);
         if (bus->isServiceRegistered(service).value() || activatable.contains(service)) {
-            return true;
+            return service;
         }
     }
-    return false;
+    return QString();
+}
+
+bool lastoreAvailable()
+{
+    return !lastoreService().isEmpty();
 }
 
 }  // namespace PackageUtil

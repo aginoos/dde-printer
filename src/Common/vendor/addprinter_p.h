@@ -20,6 +20,10 @@ typedef struct tagPackageInfo {
     QString packageVer;
 } TPackageInfo;
 
+class QDBusPendingCallWatcher;
+
+// Installs driver packages through lastore (D-Bus) or, on systems without it,
+// through pkexec + apt-get. All waiting is event driven; nothing blocks the UI.
 class InstallInterface : public QObject
 {
     Q_OBJECT
@@ -28,7 +32,9 @@ public:
     explicit InstallInterface(QObject *parent = nullptr);
 
     void setPackages(const QList<TPackageInfo> &packages);
-    void startInstallPackages(bool status = true);
+    // allowRefresh: the package index may be refreshed once if a needed
+    // package version is missing from it.
+    void startInstallPackages(bool allowRefresh = true);
 
     QString getErrorString();
 
@@ -52,6 +58,32 @@ protected:
     QString m_strUpdateType;
     QString m_strUpdateStatus;
     QString m_strErr;
+
+private slots:
+    void onUpdateCallFinished(QDBusPendingCallWatcher *watcher);
+    void onInstallCallFinished(QDBusPendingCallWatcher *watcher);
+    void onAptFinished(int exitCode, QProcess::ExitStatus exitStatus);
+
+private:
+    bool collectPackagesToInstall();
+    bool hasUnavailablePackage(QString &missing) const;
+    bool detectDowngrade();
+    void requestSourceRefresh();
+    void submitInstall();
+    void startAptInstall();
+    bool retryOnLock(const QString &text);
+    void scheduleSubmit(int delayMs);
+    void failWith(const QString &error);
+    void disconnectJob();
+    void disconnectUpdate();
+    QString versionOf(const QString &package) const;
+
+    QString m_service;           // lastore bus name, empty when not available
+    QString m_strJobDesc;
+    int m_lockRetries = 0;
+    int m_timeoutRetries = 0;
+    int m_disconnectRetries = 0;
+    QProcess *m_aptProc = nullptr;
 };
 
 class InstallDriver : public InstallInterface

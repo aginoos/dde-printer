@@ -25,7 +25,9 @@ VersionOrder compareVersions(const QString &lhs, const QString &rhs);
 // Never blocks the UI event loop.
 bool isInstallable(const QString &package, const QString &version);
 
-// True when a lastore daemon (new or legacy name) is running or activatable.
+// Bus name of the lastore daemon (new or legacy) that is running or
+// activatable, or an empty string on systems without lastore.
+QString lastoreService();
 bool lastoreAvailable();
 
 // Parse `apt-cache policy` output; exposed for reuse and testing.

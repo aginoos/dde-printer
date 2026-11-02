@@ -8,5 +8,5 @@ SOURCES += \
     $$PWD/ut_ippusbclient.cpp \
     $$PWD/ut_usbautoaddconfig.cpp \
     $$PWD/ut_ippusbblacklist.cpp \
-    $$PWD/../../src/service/ippusbblacklist.cpp \
-    $$PWD/../../src/service/commandrunner.cpp
+    $$PWD/../../src/service/ippusbblacklist.cpp
+# commandrunner.cpp is compiled by tests/service/service.pri

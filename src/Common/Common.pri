@@ -21,6 +21,7 @@ HEADERS +=  \
     $$PWD/safeprocess.h \
     $$PWD/secretstore.h \
     $$PWD/smburi.h \
+    $$PWD/smbcredentialdialog.h \
     $$PWD/packageutil.h \
     $$PWD/reviselogger.h \
     $$PWD/vendor/addprinter_p.h \
@@ -39,6 +40,7 @@ SOURCES +=  \
     $$PWD/safeprocess.cpp \
     $$PWD/secretstore.cpp \
     $$PWD/smburi.cpp \
+    $$PWD/smbcredentialdialog.cpp \
     $$PWD/packageutil.cpp \
     $$PWD/qtconvert.cpp \
     $$PWD/zsettings.cpp \

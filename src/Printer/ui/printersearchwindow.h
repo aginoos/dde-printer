@@ -37,6 +37,8 @@ class QStandardItem;
 class QTimer;
 QT_END_NAMESPACE
 
+class SmbPrinterPage;
+
 class PrinterSearchWindow : public DMainWindow
 {
     Q_OBJECT
@@ -103,8 +105,9 @@ private slots:
     void installDriverSlot();
     // 驱动下拉框切换
     void driverChangedSlot(int index);
-    // 响应smb消息
-    void smbInfomationSlot(int &ret, const QString &host, QString &group, QString &user, QString &password);
+    // Windows 共享页：选中打印机后搜索驱动
+    void smbDeviceActivatedSlot(const TDeviceInfo &device);
+    void driverSmbSearchedSlot();
 
 signals:
     void updatePrinterList(const QString &printerName);
@@ -155,6 +158,8 @@ private:
     DStandardItem *m_pWidgetItemAuto;
     DStandardItem *m_pWidgetItemManual;
     DStandardItem *m_pWidgetItemURI;
+    DStandardItem *m_pWidgetItemWinShare;
+    SmbPrinterPage *m_pSmbPage;
 
     // 用于查找打印机切换界面
     QStackedWidget *m_pStackedWidget;

@@ -1482,9 +1482,9 @@ void Connection::authenticateJob(int job_id,
 
     if (auth_info_list) {
         num_auth_info = auth_info_list->size();
-        debugprintf("sizeof values = %Zd\n", sizeof(auth_info_values));
-        if (num_auth_info > sizeof(auth_info_values)) {
-            num_auth_info = sizeof(auth_info_values);
+        const size_t capacity = sizeof(auth_info_values) / sizeof(auth_info_values[0]);
+        if (num_auth_info > capacity) {
+            num_auth_info = capacity;
         }
 
         for (i = 0; i < num_auth_info; i++) {
@@ -1502,9 +1502,7 @@ void Connection::authenticateJob(int job_id,
         ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "auth-info",
                       num_auth_info, nullptr,
                       (const char *const *)auth_info_values);
-        for (i = 0; i < num_auth_info; i++) {
-            free(auth_info_values[i]);
-        }
+        // the values point into the caller's strings: ippAddStrings copied them, nothing to free
     }
 
     debugprintf("cupsDoRequest(\"/jobs/\")\n");

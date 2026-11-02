@@ -8,7 +8,7 @@
 #include "addprinter.h"
 #include "common.h"
 #include "uisourcestring.h"
-#include "permissionswindow.h"
+#include "smbprinterpage.h"
 #include "printerservice.h"
 #include "qtconvert.h"
 #include "avahi_tool.h"
@@ -121,14 +121,20 @@ void PrinterSearchWindow::initUi()
     m_pWidgetItemURI->setData(VListViewItemMargin, Dtk::MarginsRole);
     m_pWidgetItemURI->setToolTip(tr("Enter URI"));
     m_pWidgetItemURI->setBackgroundRole(pLeftWidget->backgroundRole());
+    m_pWidgetItemWinShare = new DStandardItem(QIcon::fromTheme("dp_windows_share"), tr("Windows Share"));
+    m_pWidgetItemWinShare->setData(VListViewItemMargin, Dtk::MarginsRole);
+    m_pWidgetItemWinShare->setToolTip(tr("Windows Share"));
+    m_pWidgetItemWinShare->setBackgroundRole(pLeftWidget->backgroundRole());
 
     m_pWidgetItemAuto->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
     m_pWidgetItemManual->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
     m_pWidgetItemURI->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
+    m_pWidgetItemWinShare->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
 
     pTabModel->appendRow(m_pWidgetItemAuto);
     pTabModel->appendRow(m_pWidgetItemManual);
     pTabModel->appendRow(m_pWidgetItemURI);
+    pTabModel->appendRow(m_pWidgetItemWinShare);
     m_pTabListView->setModel(pTabModel);
     m_pTabListView->setCurrentIndex(pTabModel->index(0, 0));
     m_pTabListView->setFocusPolicy(Qt::NoFocus);
@@ -137,6 +143,7 @@ void PrinterSearchWindow::initUi()
     m_pTabListView->setFixedWidth(128);
     m_pTabListView->setItemSpacing(0);
     m_pTabListView->setAccessibleName("listView_mainWindow");
+    m_pTabListView->setIconSize(QSize(16, 16));
 
     QVBoxLayout *pLeftVLayout = new QVBoxLayout();
     pLeftVLayout->addWidget(m_pTabListView);
@@ -505,6 +512,9 @@ void PrinterSearchWindow::initUi()
     pWidget3->setAccessibleName("uriWidget_stackedWidget");
 
     m_pStackedWidget->addWidget(pWidget3);
+    // 右侧 Windows 共享（第4页，顺序与左侧 tab 一致）
+    m_pSmbPage = new SmbPrinterPage(this);
+    m_pStackedWidget->addWidget(m_pSmbPage);
     m_pStackedWidget->setAccessibleName("stackedWidget_centralWidget");
 
     // 右侧整体布局
@@ -549,6 +559,9 @@ void PrinterSearchWindow::initConnections()
     connect(m_pManInstallDriverBtn, &QPushButton::clicked, this, &PrinterSearchWindow::installDriverSlot);
     connect(m_pURIInstallDriverBtn, &QPushButton::clicked, this, &PrinterSearchWindow::installDriverSlot);
 
+    connect(m_pSmbPage, &SmbPrinterPage::installRequested, this, &PrinterSearchWindow::installDriverSlot);
+    connect(m_pSmbPage, &SmbPrinterPage::deviceActivated, this, &PrinterSearchWindow::smbDeviceActivatedSlot);
+
     connect(m_pAutoDriverCom, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &PrinterSearchWindow::driverChangedSlot);
     connect(m_pManDriverCom, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &PrinterSearchWindow::driverChangedSlot);
     connect(m_pURIDriverCom, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &PrinterSearchWindow::driverChangedSlot);
@@ -563,6 +576,7 @@ void PrinterSearchWindow::initConnections()
         m_pWidgetItemAuto->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
         m_pWidgetItemManual->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
         m_pWidgetItemURI->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
+        m_pWidgetItemWinShare->setSizeHint(DSizeModeHelper::element(QSize(108, 36),QSize(108, 48)));
     });
 
     connect(m_pLineEditLocation, &QLineEdit::editingFinished, this, [this]() {
@@ -612,8 +626,10 @@ bool PrinterSearchWindow::autoInstallPrinter(int type, const TDeviceInfo &device
         pDriverCombo = m_pAutoDriverCom;
     } else if (type == 1) {
         pDriverCombo = m_pManDriverCom;
-    } else {
+    } else if (type == 2) {
         pDriverCombo = m_pURIDriverCom;
+    } else {
+        pDriverCombo = m_pSmbPage->driverCombo();
     }
     QMap<QString, QVariant> solution = pDriverCombo->currentData().value<QMap<QString, QVariant>>();
     if (solution.isEmpty())
@@ -652,7 +668,7 @@ bool PrinterSearchWindow::autoInstallPrinter(int type, const TDeviceInfo &device
 void PrinterSearchWindow::listWidgetClickedSlot(const QModelIndex &previous)
 {
     Q_UNUSED(previous)
-    // 0 自动查找 ;1 手动；2 URI
+    // 0 自动查找 ;1 手动；2 URI；3 Windows 共享
     if (m_pStackedWidget->count() > m_pTabListView->currentIndex().row()) {
         m_pStackedWidget->setCurrentIndex(m_pTabListView->currentIndex().row());
         // The HP tip belongs to the printer selected in the tab being shown
@@ -1030,8 +1046,6 @@ void PrinterSearchWindow::searchPrintersByManual()
     m_pPrinterListViewManual->blockSignals(true);
     RefreshDevicesByHostTask *task = new RefreshDevicesByHostTask(location);
     connect(task, &RefreshDevicesByHostTask::signalStatus, this, &PrinterSearchWindow::getDeviceResultByManualSlot);
-    // 当使用ip查找打印机的时候，smb协议流程会出现用户名和密码的输入提示框
-    connect(task, &RefreshDevicesByHostTask::signalSmbPassWord, this, &PrinterSearchWindow::smbInfomationSlot, Qt::BlockingQueuedConnection);
     task->start();
 
     m_pManListSpinner->move((m_pPrinterListViewManual->width() - m_pManListSpinner->width()) / 2,
@@ -1120,6 +1134,11 @@ void PrinterSearchWindow::installDriverSlot()
     } else if (m_pTabListView->currentIndex().row() == 2) { //URI 手动构造设备结构体
         device.uriList.append(m_pLineEditURI->text());
         device.iType = InfoFrom_Manual;
+    } else { // Windows 共享：URI 去掉口令，按需记住密码
+        device = m_pSmbPage->checkedDevice();
+        if (device.uriList.isEmpty())
+            return;
+        device = m_pSmbPage->prepareInstall(device);
     }
 
     if (!autoInstallPrinter(m_pTabListView->currentIndex().row(), device)) {
@@ -1160,18 +1179,27 @@ void PrinterSearchWindow::driverChangedSlot(int index)
     }
 }
 
-void PrinterSearchWindow::smbInfomationSlot(int &ret, const QString &host, QString &group, QString &user, QString &password)
+void PrinterSearchWindow::smbDeviceActivatedSlot(const TDeviceInfo &device)
 {
-    PermissionsWindow *pPermissionsWindow = new PermissionsWindow();
-    pPermissionsWindow->setHost(host);
-    int result = pPermissionsWindow->exec();
-    if (result > 0) {
-        ++ret;
-        user = pPermissionsWindow->getUser();
-        group = pPermissionsWindow->getGroup();
-        password = pPermissionsWindow->getPassword();
-    }
-    pPermissionsWindow->deleteLater();
+    DriverSearcher *pDriverSearcher = DriverManager::getInstance()->createSearcher(device);
+    connect(pDriverSearcher, &DriverSearcher::signalDone, this, &PrinterSearchWindow::driverSmbSearchedSlot);
+    pDriverSearcher->startSearch();
+}
+
+void PrinterSearchWindow::driverSmbSearchedSlot()
+{
+    DriverSearcher *pDriverSearcher = static_cast<DriverSearcher *>(sender());
+    if (!pDriverSearcher)
+        return;
+    m_drivers = pDriverSearcher->getDrivers();
+    const bool hasOfflineDriver = pDriverSearcher->hasOfflineDriver();
+    pDriverSearcher->deleteLater();
+    fillDriverCombo(m_pSmbPage->driverCombo(), m_drivers);
+
+    const bool driversFound = m_pSmbPage->driverCombo()->count() >= 2;
+    m_pSmbPage->finishDriverSearch(driversFound);
+    if (!driversFound)
+        driverSearchNoMatchDialog(hasOfflineDriver);
 }
 
 void PrinterSearchWindow::rebuildAutoProtocolCom()

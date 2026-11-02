@@ -73,3 +73,18 @@ TEST(ut_IppUsbClient, malformedIdIsRejectedWithoutTouchingTheBus)
     EXPECT_EQ(removeFromBlacklist("04b8:0e1a;rm"), Outcome::InvalidArgument);
     EXPECT_EQ(addToBlacklist(""), Outcome::InvalidArgument);
 }
+
+TEST(ut_IppUsbClient, malformedIdsAreRefusedBeforeAnyBusCall)
+{
+    for (const char *bad : {"", "03f0", "03f0:", "03f0:02Z1", "03f0:02a1 ", "03f0:02a1\n", "../etc:passwd", "03f0:02a1:00"}) {
+        EXPECT_EQ(addToBlacklist(bad), Outcome::InvalidArgument) << bad;
+        EXPECT_EQ(removeFromBlacklist(bad), Outcome::InvalidArgument) << bad;
+    }
+}
+
+TEST(ut_IppUsbClient, otherErrorsAreFailures)
+{
+    EXPECT_EQ(outcomeFromReply(errorReply(QDBusError::InvalidArgs)), Outcome::InvalidArgument);
+    EXPECT_FALSE(isSuccess(outcomeFromReply(errorReply(QDBusError::NoReply))));
+    EXPECT_FALSE(isSuccess(outcomeFromReply(errorReply(QDBusError::ServiceUnknown))));
+}

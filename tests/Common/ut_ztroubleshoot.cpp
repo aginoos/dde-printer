@@ -234,3 +234,137 @@ TEST(ut_TroubleShoot, connectableHostKeepsPlainIpv6Literals)
 {
     EXPECT_EQ(connectableHost("socket://[2001:db8::1]:9100", "2001:db8::1"), QString("2001:db8::1"));
 }
+
+// ------------------------------------------------------ CheckCupsErrorLog
+
+namespace {
+
+CupsErrorEntry errorEntry(int id, const QString &fixId)
+{
+    CupsErrorEntry entry;
+    entry.id = id;
+    entry.pattern = "x";
+    entry.category = "filter";
+    entry.fixId = fixId;
+    return entry;
+}
+
+}  // namespace
+
+TEST(ut_TroubleShoot, cupsErrorLogWithoutMatchOffersNothing)
+{
+    CheckCupsErrorLog job("Q");
+    EXPECT_TRUE(job.getActions().isEmpty());
+    EXPECT_TRUE(job.getDetails().isEmpty());
+    EXPECT_FALSE(job.hasExpandableContent());
+    EXPECT_TRUE(job.repairId().isEmpty());
+    EXPECT_TRUE(job.logText().isEmpty());
+}
+
+TEST(ut_TroubleShoot, cupsErrorLogMatchWithLogAndFixOffersThreeActions)
+{
+    CheckCupsErrorLog job("Q");
+    job.m_match = errorEntry(1, "cups_service");
+    job.m_log = "E [date] something failed";
+
+    const QList<TroubleShootAction> actions = job.getActions();
+    ASSERT_EQ(actions.size(), 3);
+    EXPECT_EQ(actions.at(0).id, TroubleShootAction::ViewLog);
+    EXPECT_EQ(actions.at(1).id, TroubleShootAction::CopyLog);
+    EXPECT_EQ(actions.at(2).id, TroubleShootAction::Repair);
+    EXPECT_EQ(job.repairId(), QString("cups_service"));
+    EXPECT_TRUE(job.hasExpandableContent());
+    EXPECT_EQ(job.logText(), job.m_log);
+}
+
+TEST(ut_TroubleShoot, cupsErrorLogWithoutFixOrLogOmitsThoseActions)
+{
+    CheckCupsErrorLog noFix("Q");
+    noFix.m_match = errorEntry(2, QString());
+    noFix.m_log = "line";
+    ASSERT_EQ(noFix.getActions().size(), 2);
+
+    CheckCupsErrorLog noLog("Q");
+    noLog.m_match = errorEntry(2, "cups_service");
+    ASSERT_EQ(noLog.getActions().size(), 1);
+    EXPECT_EQ(noLog.getActions().first().id, TroubleShootAction::Repair);
+}
+
+TEST(ut_TroubleShoot, cupsErrorLogDetailsNameCauseAndAction)
+{
+    CheckCupsErrorLog job("Q");
+    job.m_match = errorEntry(9999, QString());   // an id without dedicated text still gets generic text
+    const QList<TroubleShootDetail> details = job.getDetails();
+    ASSERT_EQ(details.size(), 2);
+    EXPECT_FALSE(details.at(0).text.isEmpty());
+    EXPECT_FALSE(details.at(1).text.isEmpty());
+}
+
+TEST(ut_TroubleShoot, repairResultTextsDifferBySuccess)
+{
+    CheckCupsErrorLog log("Q");
+    EXPECT_NE(log.repairResultText(true), log.repairResultText(false));
+    CheckDriver base("Q");
+    EXPECT_NE(base.repairResultText(true), base.repairResultText(false));
+}
+
+TEST(ut_TroubleShoot, cupsErrorLogForAnEmptyPrinterFailsClosed)
+{
+    // Without the root service the log cannot be read: the job reports the failure, never a pass.
+    CheckCupsErrorLog job("");
+    QList<int> states;
+    QObject::connect(&job, &TroubleShootJob::signalStateChanged,
+                     [&states](int state, const QString &) { states.append(state); });
+    const bool pass = job.isPass();
+    ASSERT_FALSE(states.isEmpty());
+    EXPECT_EQ(states.first(), static_cast<int>(TStat_Running));
+    if (!pass) {
+        EXPECT_EQ(states.last(), static_cast<int>(TStat_Fail));
+        EXPECT_FALSE(job.getMessage().isEmpty());
+    }
+}
+
+// ------------------------------------------------------ CheckSpecificModel
+
+TEST(ut_TroubleShoot, specificModelOffersARepairOnlyWhenAChecksFailedAndAFixExists)
+{
+    CheckSpecificModel job("Q");
+    EXPECT_TRUE(job.getActions().isEmpty());
+    EXPECT_TRUE(job.repairId().isEmpty());
+    EXPECT_FALSE(job.hasExpandableContent());
+
+    job.m_entry.id = "canon_lbp2900";
+    job.m_entry.fixId = "canon_lbp2900";
+    EXPECT_TRUE(job.getActions().isEmpty());          // nothing failed yet
+
+    job.m_failed.append(ModelCheck());
+    ASSERT_EQ(job.getActions().size(), 1);
+    EXPECT_EQ(job.getActions().first().id, TroubleShootAction::Repair);
+    EXPECT_EQ(job.repairId(), QString("canon_lbp2900"));
+    EXPECT_TRUE(job.hasExpandableContent());
+
+    job.m_entry.fixId.clear();                        // report-only model
+    EXPECT_TRUE(job.getActions().isEmpty());
+}
+
+TEST(ut_TroubleShoot, specificModelRepairTextFallsBackToTheGenericOne)
+{
+    CheckSpecificModel job("Q");
+    job.m_entry.id = "no-such-model-id";
+    EXPECT_EQ(job.repairResultText(true), job.TroubleShootJob::repairResultText(true));
+    EXPECT_EQ(job.repairResultText(false), job.TroubleShootJob::repairResultText(false));
+}
+
+TEST(ut_TroubleShoot, specificModelVerifyRepairWithoutChecksPasses)
+{
+    CheckSpecificModel job("Q");
+    EXPECT_TRUE(job.verifyRepair());
+    EXPECT_TRUE(job.m_failed.isEmpty());
+}
+
+TEST(ut_TroubleShoot, specificModelIsHiddenForUnknownPrinters)
+{
+    CheckSpecificModel job("");
+    EXPECT_TRUE(job.isPass());
+    EXPECT_TRUE(job.isHidden());
+}

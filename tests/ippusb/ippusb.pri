@@ -7,6 +7,7 @@ SOURCES += \
     $$PWD/ut_ippusbplanner.cpp \
     $$PWD/ut_ippusbclient.cpp \
     $$PWD/ut_usbautoaddconfig.cpp \
+    $$PWD/ut_ippusbswitch.cpp \
     $$PWD/ut_ippusbblacklist.cpp \
     $$PWD/../../src/service/ippusbblacklist.cpp
 # commandrunner.cpp is compiled by tests/service/service.pri

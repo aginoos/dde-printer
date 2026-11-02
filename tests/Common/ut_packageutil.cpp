@@ -127,3 +127,19 @@ TEST(ut_PackageUtil, isInstallableRejectsInvalidArguments)
     EXPECT_FALSE(isInstallable("foo", "1 2"));
     EXPECT_FALSE(isInstallable("foo", "--version"));
 }
+
+TEST(ut_PackageUtil, lastoreAvailabilityAgreesWithTheServiceName)
+{
+    const QString service = lastoreService();
+    EXPECT_EQ(lastoreAvailable(), !service.isEmpty());
+    if (!service.isEmpty()) {
+        EXPECT_TRUE(service == "org.deepin.dde.Lastore1" || service == "com.deepin.lastore");
+    }
+}
+
+TEST(ut_PackageUtil, unknownPackageIsNotInstallable)
+{
+    // apt-cache reports no candidate (or is missing): either way nothing is offered
+    EXPECT_FALSE(isInstallable("ut-no-such-package-zz", QString()));
+    EXPECT_FALSE(isInstallable("ut-no-such-package-zz", "1.0"));
+}

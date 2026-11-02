@@ -457,6 +457,13 @@ vector<Dest> Connection::getDests(void)
     return ret;
 }
 
+void Connection::setTimeout(double timeout)
+{
+    if (this->http && timeout > 0) {
+        httpSetTimeout(this->http, timeout, nullptr, nullptr);
+    }
+}
+
 map<string, map<string, string>> Connection::getPrinters(void)
 {
     ipp_t *request = ippNewRequest(CUPS_GET_PRINTERS);
@@ -1991,20 +1998,15 @@ void Connection::addPrinterOptionDefault(const char *name, const char *option,
 
 void Connection::deletePrinterOptionDefault(const char *name, const char *option)
 {
-    const char suffix[] = "-default";
-    char *opt = nullptr;
+    // std::string owns the buffer: no unchecked malloc and no leak
+    const std::string opt = std::string(option) + "-default";
     ipp_t *request = nullptr, *answer = nullptr;
     int i;
-    size_t optionlen;
 
-    optionlen = strlen(option);
-    opt = (char *)malloc(optionlen + sizeof(suffix) + 1);
-    memcpy(opt, option, optionlen);
-    strcpy(opt + optionlen, suffix);
     request = add_modify_printer_request(name);
     for (i = 0; i < 2; i++) {
         ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_DELETEATTR,
-                     opt, nullptr, nullptr);
+                     opt.c_str(), nullptr, nullptr);
         answer = cupsDoRequest(this->http, request, "/admin/");
         if (answer && ippGetStatusCode(answer) == IPP_NOT_POSSIBLE) {
             ippDelete(answer);

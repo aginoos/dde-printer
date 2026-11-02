@@ -14,6 +14,10 @@
 #include "zjobmanager.h"
 #include "cupsconnectionfactory.h"
 #include "cupsppd.h"
+#include "cupserrormap.h"
+#include "modelcheck.h"
+#include "modelfixmap.h"
+#include "troubleshootservice.h"
 
 #include <QTcpSocket>
 #include <QUrl>
@@ -81,6 +85,29 @@ static QStringList getDirectDevices()
     }
 
     return uris;
+}
+
+static QString printerMakeAndModel(const QString &printerName)
+{
+    map<string, string> attrs;
+    vector<string> reqs {CUPS_OP_MAKE_MODEL};
+
+    try {
+        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
+        if (conPtr)
+            attrs = conPtr->getPrinterAttributes(printerName.toUtf8().data(), nullptr, &reqs);
+    } catch (const std::exception &ex) {
+        qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
+        return QString();
+    }
+
+    const auto it = attrs.find(CUPS_OP_MAKE_MODEL);
+    return it == attrs.end() ? QString() : attrValueToQString(it->second);
+}
+
+QString TroubleShootJob::repairResultText(bool success) const
+{
+    return success ? tr("The repair has been completed.") : tr("The repair did not succeed.");
 }
 
 CheckCupsServer::CheckCupsServer(QObject *parent)
@@ -361,6 +388,135 @@ bool CheckAttributes::isPass()
     return true;
 }
 
+CheckCupsErrorLog::CheckCupsErrorLog(const QString &printerName, QObject *parent)
+    : TroubleShootJob(printerName, parent)
+{
+}
+
+QString CheckCupsErrorLog::getJobName()
+{
+    return tr("Check CUPS error log");
+}
+
+QList<TroubleShootAction> CheckCupsErrorLog::getActions()
+{
+    if (!m_match)
+        return {};
+
+    QList<TroubleShootAction> actions;
+    if (!m_log.isEmpty()) {
+        actions << TroubleShootAction{TroubleShootAction::ViewLog, tr("View log"), QStringLiteral("dp_cups_log_view")}
+                << TroubleShootAction{TroubleShootAction::CopyLog, tr("Copy info"), QStringLiteral("dp_cups_log_copy")};
+    }
+    if (!m_match->fixId.isEmpty())
+        actions << TroubleShootAction{TroubleShootAction::Repair, tr("One-click fix"), QStringLiteral("dp_cups_log_fix")};
+    return actions;
+}
+
+QList<TroubleShootDetail> CheckCupsErrorLog::getDetails()
+{
+    if (!m_match)
+        return {};
+
+    const CupsErrorText text = CupsErrorMap::textFor(m_match->id);
+    return {TroubleShootDetail{tr("Possible cause: %1").arg(text.cause), false},
+            TroubleShootDetail{tr("Recommended action: %1").arg(text.action), false}};
+}
+
+QString CheckCupsErrorLog::repairId() const
+{
+    return m_match ? m_match->fixId : QString();
+}
+
+QString CheckCupsErrorLog::repairResultText(bool success) const
+{
+    return success ? tr("The print service has been repaired.") : tr("The print service could not be repaired.");
+}
+
+bool CheckCupsErrorLog::isPass()
+{
+    emit signalStateChanged(TStat_Running, tr("Checking CUPS error log..."));
+
+    const TroubleshootService::LogResult reply = TroubleshootService::readJobErrorLog(m_printerName);
+    if (!reply.ok) {
+        m_strMessage = tr("The CUPS error log could not be checked");
+        emit signalStateChanged(TStat_Fail, m_strMessage);
+        return false;
+    }
+
+    m_log = reply.text;
+    if (!m_log.isEmpty())
+        m_match = CupsErrorMap::match(CupsErrorMap::load(), m_log);
+
+    if (m_match) {
+        qCWarning(COMMONMOUDLE) << m_printerName << "CUPS error id" << m_match->id;
+        m_strMessage = CupsErrorMap::textFor(m_match->id).title;
+        emit signalStateChanged(TStat_Fail, m_strMessage);
+        return false;
+    }
+
+    m_strMessage = tr("No CUPS error found");
+    emit signalStateChanged(TStat_Suc, m_strMessage);
+    return true;
+}
+
+CheckSpecificModel::CheckSpecificModel(const QString &printerName, QObject *parent)
+    : TroubleShootJob(printerName, parent)
+{
+}
+
+QString CheckSpecificModel::getJobName()
+{
+    return tr("Check model-specific issues");
+}
+
+QList<TroubleShootAction> CheckSpecificModel::getActions()
+{
+    if (m_failed.isEmpty() || m_entry.fixId.isEmpty())
+        return {};
+    return {TroubleShootAction{TroubleShootAction::Repair, tr("One-click fix"), QStringLiteral("dp_cups_log_fix")}};
+}
+
+bool CheckSpecificModel::verifyRepair()
+{
+    m_failed = ModelCheckRunner::failedChecks(m_entry.checks);
+    return m_failed.isEmpty();
+}
+
+QString CheckSpecificModel::repairResultText(bool success) const
+{
+    const ModelTexts texts = ModelFixMap::textsFor(m_entry.id);
+    if (texts.found)
+        return success ? texts.fixOk : texts.fixFail;
+    return TroubleShootJob::repairResultText(success);
+}
+
+bool CheckSpecificModel::isPass()
+{
+    const QString makeAndModel = printerMakeAndModel(m_printerName);
+    m_entry = ModelFixMap::match(ModelFixMap::load(), makeAndModel);
+    if (!m_entry.isValid()) {
+        // Nothing is known about this model: the row stays out of the way.
+        m_hidden = true;
+        emit signalStateChanged(TStat_Suc, QString());
+        return true;
+    }
+
+    emit signalStateChanged(TStat_Running, tr("Checking model-specific issues..."));
+    m_failed = ModelCheckRunner::failedChecks(m_entry.checks);
+
+    const ModelTexts texts = ModelFixMap::textsFor(m_entry.id);
+    if (m_failed.isEmpty()) {
+        m_strMessage = texts.found ? texts.ok : tr("No model-specific issue found");
+        emit signalStateChanged(TStat_Suc, m_strMessage);
+        return true;
+    }
+
+    m_strMessage = texts.found ? texts.problem : tr("Model-specific issues were found");
+    emit signalStateChanged(TStat_Fail, m_strMessage);
+    return false;
+}
+
 PrinterTestJob::PrinterTestJob(const QString &printerName, QObject *parent, bool bSync)
     : TroubleShootJob(printerName, parent)
     , m_jobId(-1)
@@ -511,6 +667,12 @@ TroubleShoot::~TroubleShoot()
     stop();
 }
 
+void TroubleShoot::addDiagnosticJobs()
+{
+    addJob(new CheckCupsErrorLog(m_printerName, this));
+    addJob(new CheckSpecificModel(m_printerName, this));
+}
+
 int TroubleShoot::addJob(TroubleShootJob *job)
 {
     if (!job)
@@ -537,16 +699,16 @@ void TroubleShoot::stop()
 
 int TroubleShoot::doWork()
 {
-    int i = 0;
-    for (; i < m_jobs.count() && !m_bQuit; i++) {
+    int result = 0;
+    for (int i = 0; i < m_jobs.count() && !m_bQuit; i++) {
         bool bPass = m_jobs[i]->isPass();
         emit signalUpdateProgress(i, m_jobs[i]->getMessage());
 
         qCDebug(COMMONMOUDLE) << m_jobs[i]->getJobName() << m_jobs[i]->getMessage();
-        if (!bPass) {
-            return -1;
-        }
+        // The remaining checks still run: one failure should not hide another.
+        if (!bPass)
+            result = -1;
     }
 
-    return 0;
+    return result;
 }

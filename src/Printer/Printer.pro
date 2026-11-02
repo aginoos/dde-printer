@@ -122,7 +122,10 @@ debugconf.files = $${PWD}/logconf/dde-printer_debug.json
 logconf.path = $${PREFIX}/share/deepin-log-viewer/deepin-log.conf.d
 logconf.files = $${PWD}/logconf/dde-printer.json
 
-INSTALLS += target desktop hicolor trans dconfigfile debugconf logconf
+troubleshootdata.path = $${PREFIX}/share/dde-printer/troubleshoot
+troubleshootdata.files = $${PWD}/../Common/vendor/troubleshoot_data/*.json
+
+INSTALLS += target desktop hicolor trans dconfigfile debugconf logconf troubleshootdata
 }
 
 #从debian/rules里面获取定义好的VERSION，然后转成字符串

@@ -7,6 +7,8 @@
 #include "printerhelpwindow.h"
 
 #include <DAbstractDialog>
+#include "ztroubleshoot.h"
+
 #include <DDialog>
 #include <QFrame>
 #include <QLabel>
@@ -28,6 +30,9 @@ class TroubleShootItem : public QFrame
 public:
     TroubleShootItem(TroubleShootJob *job, int index, QWidget *parent = nullptr);
 
+signals:
+    void actionClicked(int jobIndex, TroubleShootAction::Id actionId);
+
 protected:
     void slotStateChanged(int state, const QString &message);
 
@@ -39,6 +44,15 @@ private:
     QLabel *m_titleLabel;
     QLabel *m_messageLabel;
     int m_index;
+
+    QVBoxLayout *m_layout = nullptr;
+    QWidget *m_detailWidget = nullptr;  // details and buttons, built once the check is done
+    QString m_currentMessage;
+    bool m_expanded = false;
+
+    void buildDetailWidget();
+    void expandDetail();
+    void showMessage(const QString &message);
 };
 
 class TroubleShootDialog : public DAbstractDialog
@@ -50,6 +64,7 @@ public:
 
 protected slots:
     void slotTroubleShootStatus(int id, int state);
+    void handleActionClicked(int jobIndex, TroubleShootAction::Id actionId);
 
 private:
     QString m_printerName;
@@ -58,5 +73,10 @@ private:
     QPushButton *m_button;
     QPushButton *m_helpButton;
     PrinterHelpWindow *m_pHelpWindow = nullptr;
+    bool m_repairRunning = false;
+
+    void showLog(TroubleShootJob *job);
+    void runRepair(TroubleShootJob *job);
+    void showResultMessage(bool success, const QString &text);
 };
 

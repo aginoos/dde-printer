@@ -29,11 +29,13 @@
 #include <QJsonArray>
 #include <QEventLoop>
 #include <QTimer>
+#include <QFutureWatcher>
 #include <QVersionNumber>
 #include <QDir>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QtConcurrent/QtConcurrent>
 
 #include <map>
 
@@ -773,19 +775,28 @@ DriverSearcher::DriverSearcher(const TDeviceInfo &printer, QObject *parent)
 
 void DriverSearcher::startSearch()
 {
-    QString strMake, strModel;
+    /* 1. 匹配EveryWhere driver驱动, 查询到需要继续查询其他可用驱动。
+     * The probe asks the printer itself and can take seconds, so it runs in
+     * the thread pool and the search continues when it is back. */
+    const QString uri = m_printer.uriList[0];
+    auto *watcher = new QFutureWatcher<QMap<QString, QVariant>>(this);
+    connect(watcher, &QFutureWatcher<QMap<QString, QVariant>>::finished, this, [this, watcher]() {
+        const QMap<QString, QVariant> driver = watcher->result();
+        watcher->deleteLater();
+        if (!driver.isEmpty()) {
+            m_drivers.append(driver);
+            qCInfo(COMMONMOUDLE) << "Got EveryWhere driver";
+        }
+        searchServerDrivers();
+    });
+    watcher->setFuture(QtConcurrent::run([uri]() { return g_driverManager->getEveryWhereDriver(uri); }));
+}
 
-    /* 1. 匹配EveryWhere driver驱动, 查询到需要继续查询其他可用驱动 */
-    QMap<QString, QVariant> driver = g_driverManager->getEveryWhereDriver(m_printer.uriList[0]);
-    if (!driver.isEmpty()) {
-        m_drivers.append(driver);
-        qCInfo(COMMONMOUDLE) << "Got EveryWhere driver";
-    }
-
+void DriverSearcher::searchServerDrivers()
+{
     /* 等待服务器查找结果返回之后再开始查找本地驱动
      * 如果服务有精确查找到驱动，再执行一次本地精确查找
     */
-
     PrinterServerInterface *search = g_printerServer->searchDriverSolution(m_strMake, m_strModel, m_printer.strDeviceId);
     if (search) {
         connect(search, &PrinterServerInterface::signalDone, this, &DriverSearcher::slotDriverDone);
@@ -810,15 +821,19 @@ void DriverSearcher::setMatchLocalDriver(bool match)
     m_matchLocalDriver = match;
 }
 
+// Order: driverless (everywhere), online drivers in the order the server gave
+// them, local drivers, open source ones, migration ones. The manual selection
+// entry is appended by the UI.
 static void insertDriver(QList<QMap<QString, QVariant>> &drivers, QList<QMap<QString, QVariant>> &mdrivers)
 {
-    QList<QMap<QString, QVariant>> net, local, open, migration;
+    QList<QMap<QString, QVariant>> everywhere, net, local, open, migration;
 
-    for (int i = 0; i < mdrivers.count(); ++i) { // 可用驱动类型
-        auto item = mdrivers[i];
-        if (item.contains(SD_KEY_recommended)) {
+    for (const auto &item : mdrivers) {
+        if (item[SD_KEY_from].toInt() == PPDFrom_EveryWhere) {
+            everywhere.append(item);
+        } else if (item.contains(SD_KEY_recommended)) {
             net.append(item);
-        } else if (item[SD_KEY_from].toInt() != PPDFrom_EveryWhere) {
+        } else {
             bool isMigration = item[CUPS_PPD_NAME].toString().contains("printer-driver-deepinwine");
             bool isOpen = item[CUPS_PPD_MAKE_MODEL].toString().contains("cups");
             if (!isMigration && !isOpen) {
@@ -831,10 +846,8 @@ static void insertDriver(QList<QMap<QString, QVariant>> &drivers, QList<QMap<QSt
         }
     }
 
+    drivers.append(everywhere);
     drivers.append(net);
-    if (mdrivers[0][SD_KEY_from].toInt() == PPDFrom_EveryWhere) {
-        drivers.append(mdrivers[0]);
-    }
     drivers.append(local);
     drivers.append(open);
     drivers.append(migration);

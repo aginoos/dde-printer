@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include "usbqueueid.h"
 #include "dprintersshowwindow.h"
 #include "zdrivermanager.h"
 #include "dpropertysetdlg.h"
@@ -1047,6 +1048,8 @@ void DPrintersShowWindow::deletePrinterClickSlot()
             bool suc = m_pPrinterManager->deletePrinterByName(printerName);
             if (suc) {
                 SecretStore::forgetPrinter(deviceUri);
+                // A USB printer that was moved off ipp-usb goes back on it; a failure here never blocks the deletion.
+                (void)UsbQueueId::releaseFromBlacklist(deviceUri);
                 // 刷新打印机列表
                 m_CurPrinterName = "";
                 refreshPrinterListView(m_CurPrinterName);

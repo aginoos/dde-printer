@@ -17,6 +17,7 @@ SOURCES += \
     ui/loadingoverlay.cpp \
     util/dprinter.cpp \
     util/custompagesize.cpp \
+    util/usbqueueid.cpp \
     ui/printersearchwindow.cpp \
     util/dprintclass.cpp \
     util/ddestination.cpp \ 
@@ -50,6 +51,7 @@ HEADERS += \
     ui/loadingoverlay.h \
     util/dprinter.h \
     util/custompagesize.h \
+    util/usbqueueid.h \
     ui/printersearchwindow.h \
     util/ddestination.h \
     util/dprintclass.h \   

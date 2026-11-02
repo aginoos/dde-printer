@@ -15,6 +15,7 @@
 #include <QVector>
 #include <QString>
 #include <QMap>
+#include <QCoreApplication>
 
 typedef struct conflictNode {
     QString strOption;
@@ -62,6 +63,7 @@ typedef OPTNODE GENERALOPTNODE;
 
 class DPrinter : public DDestination
 {
+    Q_DECLARE_TR_FUNCTIONS(DPrinter)
 
 public:
     DPrinter();

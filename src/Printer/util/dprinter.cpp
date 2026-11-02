@@ -170,10 +170,10 @@ QVector<QMap<QString, QString>> DPrinter::getColorModelChooses()
 
         if (strVal == "Gray") {
             choose["choice"] = "Gray";
-            choose["text"] = "Grayscale";
+            choose["text"] = tr("Grayscale");
         } else {
             choose["choice"] = "RGB";
-            choose["text"] = "Color";
+            choose["text"] = tr("Color");
         }
 
         vecChoose.push_back(choose);

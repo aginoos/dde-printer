@@ -8,7 +8,7 @@
 #include <DApplication>
 #include <DLog>
 
-#include <DApplicationSettings>
+#include <dapplicationsettings.h>
 
 DWIDGET_USE_NAMESPACE
 DCORE_USE_NAMESPACE

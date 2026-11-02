@@ -64,6 +64,7 @@ private:
     void driverSearchNoMatchDialog(bool isExist);
     void changeEvent(QEvent *event) override;
     void showHplipDriverInfo(int index);
+    void updateHplipTip(DListView *listView, QLabel *tipLabel);
 
 private slots:
     void listWidgetClickedSlot(const QModelIndex &previous);

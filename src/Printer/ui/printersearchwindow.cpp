@@ -42,7 +42,7 @@
 #include <QScrollArea>
 #include <QTimer>
 
-static const QString strHplipName = "com.hp.hplip";
+static const QString strHplipName = "hplip";
 static int netCount = 0;
 
 PrinterSearchWindow::PrinterSearchWindow(QWidget *parent)
@@ -603,12 +603,20 @@ void PrinterSearchWindow::listWidgetClickedSlot(const QModelIndex &previous)
     // 0 自动查找 ;1 手动；2 URI
     if (m_pStackedWidget->count() > m_pTabListView->currentIndex().row()) {
         m_pStackedWidget->setCurrentIndex(m_pTabListView->currentIndex().row());
-        if (m_pTabListView->currentIndex().row() == 0) {
-        }
-        if (m_pTabListView->currentIndex().row() == 1) {
-        } else if (m_pTabListView->currentIndex().row() == 2) {
-        }
+        // The HP tip belongs to the printer selected in the tab being shown
+        const int tab = m_pTabListView->currentIndex().row();
+        if (tab == 0)
+            updateHplipTip(m_pPrinterListViewAuto, m_phplipAutoTipLabel);
+        else if (tab == 1)
+            updateHplipTip(m_pPrinterListViewManual, m_phplipTipLabel);
     }
+}
+
+void PrinterSearchWindow::updateHplipTip(DListView *listView, QLabel *tipLabel)
+{
+    const TDeviceInfo device = listView->currentIndex().data(Dtk::UserRole + 1).value<TDeviceInfo>();
+    const bool isHp = device.strMakeAndModel.startsWith("hp", Qt::CaseInsensitive);
+    tipLabel->setText(isHp && isPackageInstalled(strHplipName) ? UI_PRINTER_HPLIP_TIPINFO : QString());
 }
 
 QString PrinterSearchWindow::printerDescription(const TDeviceInfo &info, bool manual)

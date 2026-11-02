@@ -1,9 +1,9 @@
 TEMPLATE = app
 CONFIG -= app_bundle
-QT += core testlib dbus
+QT += core gui widgets testlib dbus
 
-CONFIG += testcase no_testcase_installs c++11 link_pkgconfig
-PKGCONFIG += dtkwidget dtkgui
+CONFIG += testcase no_testcase_installs c++17 link_pkgconfig
+PKGCONFIG += dtk6widget dtk6gui dtk6core
 
 unix:QMAKE_RPATHDIR += $$OUT_PWD/../src
 unix:LIBS += -lgtest -lcups

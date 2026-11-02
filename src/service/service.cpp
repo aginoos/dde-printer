@@ -9,6 +9,7 @@
 #include "canonjob.h"
 #include "commandrunner.h"
 #include "inputvalidator.h"
+#include "ippusbblacklist.h"
 #include "polkitauthority.h"
 
 #include <QCoreApplication>
@@ -21,6 +22,7 @@ namespace {
 const char kActionCanonAdd[] = "com.deepin.printer.manager.canon-add";
 const char kActionCanonRemove[] = "com.deepin.printer.manager.canon-remove";
 const char kActionAutostart[] = "com.deepin.printer.manager.launch-autostart";
+const char kActionIppusbBlacklist[] = "com.deepin.printer.manager.ippusb-blacklist";
 
 constexpr int kMaxActiveTasks = 8;
 constexpr int kIdleExitMs = 30000;
@@ -152,4 +154,42 @@ int Service::CanonPrinterRemove(const QStringList &args)
         });
     });
     return 0;
+}
+
+int Service::AddDeviceToIppusbBlacklist(const QString &vendorProduct)
+{
+    return changeIppusbBlacklist(vendorProduct, true);
+}
+
+int Service::RemoveDeviceFromIppusbBlacklist(const QString &vendorProduct)
+{
+    return changeIppusbBlacklist(vendorProduct, false);
+}
+
+int Service::changeIppusbBlacklist(const QString &vendorProduct, bool add)
+{
+    const auto normalized = IppUsbBlacklist::normalizeVendorProduct(vendorProduct);
+    if (!normalized) {
+        sendErrorReply(QDBusError::InvalidArgs, QStringLiteral("Expected <vendor>:<product> in hexadecimal"));
+        return 0;
+    }
+
+    const QString device = *normalized;
+    authorizeThen(kActionIppusbBlacklist, [this, device, add](const QDBusMessage &request) {
+        if (m_ippusbBusy) {
+            completeWith(request.createErrorReply(QDBusError::LimitsExceeded,
+                                                  QStringLiteral("Another ipp-usb change is running")));
+            return;
+        }
+        m_ippusbBusy = true;
+        const auto done = [this, request](int result) {
+            m_ippusbBusy = false;
+            completeWith(request.createReply(result));
+        };
+        if (add)
+            IppUsbBlacklist::add(this, device, done);
+        else
+            IppUsbBlacklist::remove(this, device, done);
+    });
+    return 0; // ignored: the reply is sent later
 }

@@ -17,7 +17,8 @@ SOURCES += main.cpp \
     polkitauthority.cpp \
     inputvalidator.cpp \
     autostartguard.cpp \
-    canonjob.cpp
+    canonjob.cpp \
+    ippusbblacklist.cpp
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
@@ -27,7 +28,8 @@ HEADERS += \
     polkitauthority.h \
     inputvalidator.h \
     autostartguard.h \
-    canonjob.h
+    canonjob.h \
+    ippusbblacklist.h
 
 unix {
 isEmpty(PREFIX) {

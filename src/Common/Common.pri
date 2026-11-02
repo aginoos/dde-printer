@@ -10,6 +10,7 @@ HEADERS +=  \
     $$PWD/ippusbpolicy.h \
     $$PWD/ippusbclient.h \
     $$PWD/ippusbplanner.h \
+    $$PWD/ippusbswitch.h \
     $$PWD/usbautoaddconfig.h \
     $$PWD/qtconvert.h \
     $$PWD/zsettings.h \
@@ -36,6 +37,7 @@ SOURCES +=  \
     $$PWD/ippusbpolicy.cpp \
     $$PWD/ippusbclient.cpp \
     $$PWD/ippusbplanner.cpp \
+    $$PWD/ippusbswitch.cpp \
     $$PWD/usbautoaddconfig.cpp \
     $$PWD/safeprocess.cpp \
     $$PWD/packageutil.cpp \

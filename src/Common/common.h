@@ -39,8 +39,6 @@ void removeMakeInModel(const QString &strMake, QString &strModel);
 //解析make-and-model字段中的厂商和型号信息
 void ppdMakeModelSplit(const QString &strMakeAndModel, QString &strMake, QString &strModel);
 
-int shellCmd(const QString &cmd, QString &out, QString &strErr, int timeout = 30000);
-
 //获取ipp请求的值
 QVariant ipp_attribute_value(ipp_attribute_t *attr, int i);
 
@@ -75,7 +73,27 @@ typedef void (*pfWriteEventLog)(const std::string &);
 pfWriteEventLog getWriteEventLog();
 void unloadEventLib();
 
+// Result of managerCanonPrinter(): 0..2 are the service's own codes, the rest
+// are client-side failures. Anything other than CanonOk (and CanonExists for
+// "add") must be treated as failure.
+enum CanonManagerResult {
+    CanonOk = 0,
+    CanonFailed = 1,
+    CanonExists = 2,
+    CanonAccessDenied = 100,
+    CanonInvalidArgs,
+    CanonBusy,
+    CanonUnavailable,
+    CanonTimeout,
+    CanonBadReply
+};
+
+// action is "add" or "remove". Fails closed on every D-Bus error.
 int managerCanonPrinter(const QString &action, const QStringList &args);
+// Ask the root service to run a vendor autostart.sh; true only on a valid reply.
+bool managerLaunchAutoStart(const QString &configDir);
+// Translated, user-facing text for a CanonManagerResult.
+QString canonManagerErrorText(int code);
 
 bool isPackageInstalled(const QString &packageName);
 #endif // COMMON_H

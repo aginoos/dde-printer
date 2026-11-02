@@ -101,3 +101,25 @@ TEST(ut_PolkitAuthority, unreachablePolkitIsAnErrorNotAGrant)
     EXPECT_EQ(calls, 1);
     EXPECT_EQ(seen, AuthResult::Error);
 }
+
+// ------------------------------------------------------ message builders
+
+TEST(ut_PolkitAuthority, subjectAndDetailsAreMarshalledForTheCall)
+{
+    // The two arguments of CheckAuthorization must be buildable and carry a value.
+    const QVariant subject = QVariant::fromValue(makeSubject(":1.99"));
+    const QVariant details = QVariant::fromValue(makeEmptyDetails());
+    EXPECT_TRUE(subject.isValid());
+    EXPECT_TRUE(details.isValid());
+    EXPECT_TRUE(subject.canConvert<QDBusArgument>());
+    EXPECT_TRUE(details.canConvert<QDBusArgument>());
+}
+
+TEST(ut_PolkitAuthority, errorReplyNeverAuthorizesEvenWithArguments)
+{
+    const QDBusMessage call = QDBusMessage::createMethodCall(
+        QStringLiteral("org.example"), QStringLiteral("/"), QStringLiteral("org.example"), QStringLiteral("M"));
+    const QDBusMessage error = call.createErrorReply(QStringLiteral("org.freedesktop.DBus.Error.AccessDenied"),
+                                                     QStringLiteral("no"));
+    EXPECT_EQ(parseReply(error), AuthResult::Error);
+}

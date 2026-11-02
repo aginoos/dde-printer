@@ -27,6 +27,8 @@
 #include <QVBoxLayout>
 #include <QLocale>
 #include <QPalette>
+#include <QComboBox>
+#include <QSignalBlocker>
 #include <QFile>
 #include <QProcess>
 
@@ -36,12 +38,14 @@
 #include "../util/dprintermanager.h"
 #include "../util/dprinter.h"
 #include "common.h"
+#include "custompagedialog.h"
 #include "safeprocess.h"
 
 #define FLAGITEMSPACE "\b\b\b\b\b\b\b\b"
 #define ITEMWIDTH 100
 #define ITEMHEIGHT 56
 #define UNSUPPORTED "-1"
+#define CUSTOMPAGECHOICE "Custom"
 
 enum COMBOITEMROLE {
     VALUEROLE = Qt::UserRole + 1,
@@ -769,6 +773,14 @@ void DPropertySetDlg::pageSizeCombo_clicked(int iIndex)
         return;
     }
 
+    // "Custom" is the entry CUPS adds for printers that accept free sizes; it opens the editor
+    // instead of becoming the selection.
+    QComboBox *pPageCombo = qobject_cast<QComboBox *>(m_mapOfListWidget.value(QString::fromStdString("PageSize_Combo")));
+    if (pPageCombo && pPageCombo->itemData(iIndex, COMBOITEMROLE::VALUEROLE).toString() == CUSTOMPAGECHOICE) {
+        openCustomPageDialog();
+        return;
+    }
+
     QString strChoice = changeComboSelectionByName(QString::fromStdString("PageSize_Combo"), iIndex);
 
     if (strChoice == UNSUPPORTED) {
@@ -1387,4 +1399,36 @@ QString DPropertySetDlg::getBishengInfo(QString info)
     }
 
     return nullptr;
+}
+
+void DPropertySetDlg::openCustomPageDialog()
+{
+    const QString strPageCombo = QString::fromStdString("PageSize_Combo");
+    const QString strPrevious = m_mapDynamicUIValue.value(strPageCombo);
+    CustomPageDialog dialog(m_strPrinterName, this);
+    const bool bSaved = dialog.exec() == QDialog::Accepted;
+
+    QComboBox *pCombo = qobject_cast<QComboBox *>(m_mapOfListWidget.value(strPageCombo));
+    if (!pCombo) {
+        return;
+    }
+
+    // The selection must not trigger pageSizeCombo_clicked while it is rebuilt.
+    const QSignalBlocker blocker(pCombo);
+    if (bSaved) {
+        DDestination *pDest = DPrinterManager::getInstance()->getDestinationByName(m_strPrinterName);
+        if (pDest != nullptr && DESTTYPE::PRINTER == pDest->getType()) {
+            DPrinter *pPrinter = static_cast<DPrinter *>(pDest);
+            pCombo->clear();
+            updatePageSizeCombo(pPrinter->getPageSize(), pPrinter->getPageSizeChooses());
+        }
+        return;
+    }
+
+    for (int i = 0; i < pCombo->count(); ++i) {
+        if (pCombo->itemData(i, COMBOITEMROLE::VALUEROLE).toString() == strPrevious) {
+            pCombo->setCurrentIndex(i);
+            return;
+        }
+    }
 }

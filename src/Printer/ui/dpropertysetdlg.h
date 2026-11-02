@@ -61,6 +61,7 @@ private:
     QVector<GENERALOPTNODE> getGeneralNodes();
     bool isBishengDriver();
     QString getBishengInfo(QString info);
+    void openCustomPageDialog();
 
 private slots:
     void pageSizeCombo_clicked(int iIndex);

@@ -141,7 +141,7 @@ static QString replaceChineseWithAsterisk(const QString &text)
 
     for (int i = 0; i < result.length(); ++i) {
         QChar character = result[i];
-        if (character >= 0x4e00 && character <= 0x9fff) {
+        if (character.unicode() >= 0x4e00 && character.unicode() <= 0x9fff) {
             result.replace(i, 1, "*");
         }
     }
@@ -439,14 +439,14 @@ int CupsMonitor::getNotifications(int &notifysSize)
                 switch (iState) {
                 case IPP_JSTATE_PROCESSING:
                     if (m_processingJob.contains(iJob)) {
-                        const QTime &t = m_processingJob[iJob];
-                        if (!t.isNull() && t.elapsed() > PROCESSINGTIP) {
+                        const QElapsedTimer &t = m_processingJob[iJob];
+                        if (t.isValid() && t.elapsed() > PROCESSINGTIP) {
                             strReason = tr("%1 timed out, reason: %2").arg(strJobName).arg(strReason);
                             sendDesktopNotification(0, qApp->productName(), strReason, 3000);
-                            m_processingJob[iJob] = QTime();
+                            m_processingJob[iJob] = QElapsedTimer();
                         }
                     } else {
-                        QTime t;
+                        QElapsedTimer t;
                         t.start();
                         m_processingJob.insert(iJob, t);
                     }
@@ -635,7 +635,7 @@ int CupsMonitor::doWork()
     m_pendingNotification.clear();
     m_processingJob.clear();
 
-    QTime t;
+    QElapsedTimer t;
     t.start();
     while (!m_bQuit) {
         int size = 0;

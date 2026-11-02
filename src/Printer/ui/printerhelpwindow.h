@@ -73,6 +73,7 @@ protected slots:
 
 private:
     void initSubUi();
+    void primePopupForWayland();
     void updateWidthForText();
     void hideMainIfPointerAway();
 

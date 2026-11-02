@@ -18,6 +18,7 @@
 #include <QClipboard>
 #include <QScrollArea>
 #include <QPainter>
+#include <QGuiApplication>
 #include <QGridLayout>
 #include <QCoreApplication>
 #include <QDesktopServices>
@@ -203,6 +204,7 @@ void CustomLabel::initUi()
     m_main->setMouseTracking(true);
     m_main->setContentsMargins(0, 0, 0, 0);
     m_main->setAttribute(Qt::WA_Hover, true);
+    primePopupForWayland();
 
     geteElidedText(m_popupButton->font(), tipInfo1, m_popupButton->width() - 20);
     m_popupButton->setText(tipInfo1);
@@ -243,6 +245,23 @@ void CustomLabel::initConnection()
             m_manufacturerWidget = new PrinterManufacturerWidget(qobject_cast<DMainWindow *>(window()));
         }
         m_manufacturerWidget->show();
+        m_main->hide();
+    });
+}
+
+// A Wayland compositor places the first mapping of a window by itself and ignores move(),
+// so the popup would appear in the middle of the screen on the first hover. One hidden
+// show/hide far off screen lets the compositor map the surface before the user hovers.
+// X11 honours move() from the start and is left alone.
+void CustomLabel::primePopupForWayland()
+{
+    if (!QGuiApplication::platformName().startsWith(QLatin1String("wayland"), Qt::CaseInsensitive))
+        return;
+    QTimer::singleShot(0, this, [this]() {
+        if (m_main->isVisible())
+            return;
+        m_main->move(QPoint(-1000, -1000));
+        m_main->show();
         m_main->hide();
     });
 }
@@ -330,7 +349,7 @@ bool CustomLabel::eventFilter(QObject *watched, QEvent *event)
 void CustomLabel::updateIcon()
 {
     QIcon icon(QIcon::fromTheme("icon_tips"));
-    m_imageLabel->setPixmap(icon.pixmap(QSize(20, 20)));
+    m_imageLabel->setPixmap(icon.pixmap(QSize(24, 24)));
 }
 
 PrinterManufacturerWidget::PrinterManufacturerWidget(DMainWindow *parent) : DMainWindow(parent)

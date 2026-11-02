@@ -433,6 +433,14 @@ TEST(ut_ZDriverManager, packageInfoMustLookLikeDebianIdentifiers)
     EXPECT_FALSE(isTrustedPackageInfo("foo\n", "1.0"));
 }
 
+TEST(ut_ZDriverManager, packagesOutsideTheDriverWhitelistAreDropped)
+{
+    EXPECT_FALSE(isTrustedPackageInfo("openssh-server", "1.0"));
+    EXPECT_FALSE(isTrustedPackageInfo("libc6", ""));
+    EXPECT_TRUE(isTrustedPackageInfo("hplip", ""));
+    EXPECT_TRUE(isTrustedPackageInfo("com.pantum.pantum", "1.0.0"));
+}
+
 // ------------------------------------------------------------ everywhere
 
 TEST(ut_ZDriverManager, everywhereCandidateSchemes)

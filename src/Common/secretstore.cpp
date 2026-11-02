@@ -107,8 +107,10 @@ std::optional<SmbCredential> SecretStore::lookupSmb(const QString &uri)
     if (!secret)
         return std::nullopt;
 
-    const std::optional<SmbCredential> credential = decode(QByteArray(secret));
-    secret_password_free(secret);
+    QByteArray plain(secret);
+    const std::optional<SmbCredential> credential = decode(plain);
+    plain.fill('\0');   // the copy made for decoding does not linger on the heap
+    secret_password_free(secret);   // libsecret wipes its own buffer
     return credential;
 }
 

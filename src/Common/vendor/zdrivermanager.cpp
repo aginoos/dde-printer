@@ -15,6 +15,7 @@
 #include "cupsconnectionfactory.h"
 #include "zsettings.h"
 #include "safeprocess.h"
+#include "packageutil.h"
 
 #include <QProcess>
 #include <QUrl>
@@ -955,7 +956,7 @@ static bool isTrustedPackageInfo(const QString &package, const QString &version)
     if (package.isEmpty()) {
         return true;  // handled later as "no driver package"
     }
-    const bool nameOk = SafeProcess::isValidPackageName(package);
+    const bool nameOk = SafeProcess::isValidPackageName(package) && PackageUtil::isAllowedDriverPackage(package);
     const bool versionOk = version.isEmpty() || SafeProcess::isValidPackageVersion(version);
     if (!nameOk || !versionOk) {
         qCWarning(COMMONMOUDLE) << "dropping driver with invalid package info:" << package << version;
@@ -1029,7 +1030,7 @@ void DriverSearcher::WriteSearchLog(int iCode, const QString &reply)
         obj.insert("tid", 1000100002);
         obj.insert("mfg", QJsonValue(m_strMake));
         obj.insert("model", QJsonValue(m_strModel));
-        obj.insert("1284id", QJsonValue(m_printer.strDeviceId));
+        obj.insert("1284id", QJsonValue(PrinterService::privacySafeDeviceId(m_printer.strDeviceId)));
         obj.insert("driverInfo", QJsonValue(reply));
         obj.insert("replyCode", iCode);
         QString platformInfo = QString(QJsonDocument(obj).toJson(QJsonDocument::Compact));

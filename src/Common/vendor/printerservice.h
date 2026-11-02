@@ -64,6 +64,15 @@ public:
 
     PrinterServerInterface *feedbackResult(int solution_id, bool success,
                                            const QString &reason = "", const QString &feedback = "", int record_id = 0);
+    // IEEE 1284 device ID reduced to the fields a driver lookup needs
+    // (manufacturer, model, command set, class, description, compatible IDs).
+    // Serial numbers and every field not on that list are removed, so a
+    // unique device identifier never leaves the machine.
+    static QString privacySafeDeviceId(const QString &deviceId);
+    // Value of a URL query item with everything but unreserved characters
+    // percent-encoded.
+    static QString encodeQueryValue(const QString &value);
+
     PrinterServerInterface *searchDriverSolution(const QString &manufacturer, const QString &model,
                                                  const QString &ieee1284_id = "");
 

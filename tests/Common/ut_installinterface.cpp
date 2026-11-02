@@ -124,9 +124,9 @@ TEST(ut_InstallInterface, invalidPackageInformationFailsBeforeAnyInstall)
 TEST(ut_InstallInterface, notInstalledPackagesAreCollectedOnce)
 {
     InstallInterface installer;
-    installer.setPackages({pkg("ut-no-such-package-zz"), pkg("ut-no-such-package-zz"), pkg("ut-other-missing-zz", "1.0")});
+    installer.setPackages({pkg("printer-driver-ut-missing-zz"), pkg("printer-driver-ut-missing-zz"), pkg("printer-driver-ut-other-zz", "1.0")});
     ASSERT_TRUE(installer.collectPackagesToInstall());
-    EXPECT_EQ(installer.m_installPackages, (QStringList{"ut-no-such-package-zz", "ut-other-missing-zz"}));
+    EXPECT_EQ(installer.m_installPackages, (QStringList{"printer-driver-ut-missing-zz", "printer-driver-ut-other-zz"}));
 }
 
 TEST(ut_InstallInterface, installedPackageAtRequestedVersionOrNewerIsSkipped)
@@ -135,10 +135,12 @@ TEST(ut_InstallInterface, installedPackageAtRequestedVersionOrNewerIsSkipped)
     if (dpkgVersion.isEmpty())
         GTEST_SKIP() << "dpkg is not registered in the dpkg database here";
 
+    PackageUtil::setExtraAllowedDriverPackages({"dpkg"});
     InstallInterface installer;
     installer.setPackages({pkg("dpkg"), pkg("dpkg", dpkgVersion), pkg("dpkg", "0.0.1")});
     ASSERT_TRUE(installer.collectPackagesToInstall());
     EXPECT_TRUE(installer.m_installPackages.isEmpty());
+    PackageUtil::setExtraAllowedDriverPackages({});
 }
 
 TEST(ut_InstallInterface, installedPackageOlderThanRequestedIsUpgraded)
@@ -146,10 +148,12 @@ TEST(ut_InstallInterface, installedPackageOlderThanRequestedIsUpgraded)
     if (PackageUtil::installedVersion("dpkg").isEmpty())
         GTEST_SKIP() << "dpkg is not registered in the dpkg database here";
 
+    PackageUtil::setExtraAllowedDriverPackages({"dpkg"});
     InstallInterface installer;
     installer.setPackages({pkg("dpkg", "999:1")});
     ASSERT_TRUE(installer.collectPackagesToInstall());
     EXPECT_EQ(installer.m_installPackages, QStringList{"dpkg"});
+    PackageUtil::setExtraAllowedDriverPackages({});
 }
 
 TEST(ut_InstallInterface, hplipPluginNeverCountsAsUnavailable)
@@ -178,8 +182,8 @@ TEST(ut_InstallInterface, downgradeIsRefused)
 TEST(ut_InstallInterface, noDowngradeWhenVersionUnknownOrPackageMissing)
 {
     InstallInterface installer;
-    installer.setPackages({pkg("ut-no-such-package-zz", "1.0"), pkg("dpkg")});
-    installer.m_installPackages = QStringList{"ut-no-such-package-zz", "dpkg"};
+    installer.setPackages({pkg("printer-driver-ut-missing-zz", "1.0"), pkg("dpkg")});
+    installer.m_installPackages = QStringList{"printer-driver-ut-missing-zz", "dpkg"};
     EXPECT_FALSE(installer.detectDowngrade());
 }
 
@@ -283,4 +287,46 @@ TEST(ut_InstallInterface, aptExitCodesMapToStatus)
 
     installer.onAptFinished(0, QProcess::CrashExit);
     EXPECT_EQ(log.seen.last(), static_cast<int>(TStat_Fail));
+}
+
+// ------------------------------------------------- driver package whitelist
+
+TEST(ut_InstallInterface, packageOutsideTheDriverWhitelistIsRefused)
+{
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg("openssh-server")});
+    EXPECT_FALSE(installer.collectPackagesToInstall());
+    EXPECT_TRUE(installer.m_installPackages.isEmpty());
+    EXPECT_FALSE(installer.getErrorString().isEmpty());
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+}
+
+TEST(ut_InstallInterface, oneBadPackageBlocksTheWholeRequest)
+{
+    InstallInterface installer;
+    installer.setPackages({pkg("printer-driver-ut-missing-zz"), pkg("systemd-sysv")});
+    EXPECT_FALSE(installer.collectPackagesToInstall());
+}
+
+TEST(ut_InstallInterface, aptFallbackNeedsTheUsersConfirmation)
+{
+    QStringList asked;
+    DriverInstallConfirm::setHandler([&asked](const QStringList &lines) {
+        asked = lines;
+        return false;
+    });
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.m_installPackages = QStringList{"printer-driver-ut-missing-zz", "hplip"};
+    installer.setPackages({pkg("printer-driver-ut-missing-zz", "1.2-3"), pkg("hplip")});
+    installer.startAptInstall();
+    DriverInstallConfirm::setHandler(nullptr);
+
+    if (SafeProcess::findTool("pkexec").isEmpty()) {
+        GTEST_SKIP() << "pkexec is not installed here; the dialog is not reached";
+    }
+    EXPECT_EQ(asked, (QStringList{"printer-driver-ut-missing-zz (1.2-3)", "hplip"}));
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+    EXPECT_EQ(installer.m_aptProc, nullptr);
 }

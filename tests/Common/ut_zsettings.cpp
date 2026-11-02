@@ -121,3 +121,17 @@ TEST_F(ut_zsettings, getCupsServerEncryption)
     int ret = g_Settings->getCupsServerEncryption();
     EXPECT_EQ(ret, 0);
 }
+
+TEST(ut_zsettingsDriverUrl, overrideIsIgnoredWhenNotAllowed)
+{
+    const QString official = zSettings::resolveDriverPlatformUrl(QByteArray(), false);
+    EXPECT_TRUE(official.startsWith("https://"));
+    EXPECT_EQ(zSettings::resolveDriverPlatformUrl("http://evil.example/x", false), official);
+}
+
+TEST(ut_zsettingsDriverUrl, overrideAppliesOnlyWhenAllowedAndNotEmpty)
+{
+    const QString official = zSettings::resolveDriverPlatformUrl(QByteArray(), true);
+    EXPECT_EQ(zSettings::resolveDriverPlatformUrl("http://127.0.0.1:8080/x", true), QString("http://127.0.0.1:8080/x"));
+    EXPECT_EQ(zSettings::resolveDriverPlatformUrl("", true), official);
+}

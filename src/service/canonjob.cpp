@@ -6,6 +6,7 @@
 
 #include "commandrunner.h"
 
+#include <QRegularExpression>
 #include <QStringList>
 
 #include <memory>
@@ -118,6 +119,41 @@ bool isCcpQueue(const QByteArray &lpstatOutput, const QString &name)
     return false;
 }
 
+// True when the lpstat -v listing has a queue called `name`, whatever its backend.
+bool queueExists(const QByteArray &lpstatOutput, const QString &name)
+{
+    const QString prefix = QString("device for %1: ").arg(name);
+    for (const QString &line : QString::fromLocal8Bit(lpstatOutput).split('\n')) {
+        if (line.startsWith(prefix))
+            return true;
+    }
+    return false;
+}
+
+// `token` (an address or serial number) as a whole word of the listing, so
+// that "1.1.1.1" is not found inside "11.1.1.10" or a short serial inside a longer one.
+bool listingMentionsDevice(const QByteArray &listing, const QString &token)
+{
+    if (token.isEmpty())
+        return false;
+    const QString pattern = QString("(?<![0-9A-Za-z_-])(?<![0-9]\\.)%1(?![0-9A-Za-z_-])(?!\\.[0-9])")
+                                .arg(QRegularExpression::escape(token));
+    return QRegularExpression(pattern).match(QString::fromLocal8Bit(listing)).hasMatch();
+}
+
+// Refuses to take over an existing queue that is not a CAPT (ccp://) queue.
+void addQueueIfFree(const ContextPtr &ctx, const CanonInstallRequest &req)
+{
+    CommandRunner::run(ctx->owner, ctx->tools.lpstat, {"-v"}, [ctx, req](const CommandResult &res) {
+        const bool exists = queueExists(res.output, req.printerName);
+        if (exists && !isCcpQueue(res.output, req.printerName)) {
+            finish(ctx, CanonJob::kFailed);
+            return;
+        }
+        addQueue(ctx, req);
+    });
+}
+
 ContextPtr makeContext(QObject *owner, CanonJob::Done done)
 {
     auto ctx = std::make_shared<Context>();
@@ -135,18 +171,18 @@ void install(QObject *owner, const CanonInstallRequest &request, Done done)
 {
     const ContextPtr ctx = makeContext(owner, std::move(done));
     const Tools &t = ctx->tools;
-    if (t.lpadmin.isEmpty() || t.ccpdadmin.isEmpty() || t.systemctl.isEmpty()) {
+    if (t.lpadmin.isEmpty() || t.lpstat.isEmpty() || t.ccpdadmin.isEmpty() || t.systemctl.isEmpty()) {
         finish(ctx, kFailed);
         return;
     }
 
     // Already known to the CAPT daemon: nothing to do (exit code 2).
     CommandRunner::run(owner, t.ccpdadmin, {}, [ctx, request](const CommandResult &listing) {
-        if (listing.output.contains(request.deviceInfo.toLocal8Bit())) {
+        if (listingMentionsDevice(listing.output, request.deviceInfo)) {
             finish(ctx, kAlreadyInstalled);
             return;
         }
-        addQueue(ctx, request);
+        addQueueIfFree(ctx, request);
     });
 }
 

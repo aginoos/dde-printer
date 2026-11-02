@@ -24,6 +24,7 @@ enum Result {
     kNotInstalled = 3,    // no ipp-usb binary
     kWriteFailed = 4,
     kRestartFailed = 5,   // the entry is written but ipp-usb could not be restarted
+    kDeviceHealthy = 6,   // ipp-usb reports the device as working; it is not blacklisted
 };
 
 using Done = std::function<void(int result)>;
@@ -40,6 +41,9 @@ bool isValidModel(const QString &model);
 
 // Model of the first device with this vendor:product in `ipp-usb status` output.
 std::optional<QString> modelFromStatus(const QString &statusOutput, const QString &vendorProduct);
+
+// Text after "status:" on the line following the device; empty when absent.
+QString statusFromStatusOutput(const QString &statusOutput, const QString &vendorProduct);
 
 bool hasEntry(const QString &content, const QString &vendorProduct);
 QString withEntry(const QString &content, const QString &vendorProduct, const QString &model);

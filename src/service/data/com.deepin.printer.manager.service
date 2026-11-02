@@ -1,4 +1,5 @@
 [D-BUS Service]
 Name=com.deepin.printer.manager
+User=root
 Exec=/usr/bin/false
 SystemdService=dde-printer-manager.service

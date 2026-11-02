@@ -98,6 +98,27 @@ std::optional<QString> modelFromStatus(const QString &statusOutput, const QStrin
     return std::nullopt;
 }
 
+QString statusFromStatusOutput(const QString &statusOutput, const QString &vendorProduct)
+{
+    // The status sits on the line right after the device line: "      status: OK"
+    static const QRegularExpression deviceLine(QStringLiteral(
+        "^\\s*\\d+\\.\\s+Bus\\s+\\d+\\s+Device\\s+\\d+\\s+([0-9a-fA-F]{4}:[0-9a-fA-F]{4})\\s+\"([^\"]*)\"\\s*$"));
+    const QStringList lines = statusOutput.split(QLatin1Char('\n'));
+    for (int i = 0; i < lines.size(); ++i) {
+        const QRegularExpressionMatch match = deviceLine.match(lines.at(i));
+        if (!match.hasMatch() || match.captured(1).toLower() != vendorProduct)
+            continue;
+        if (i + 1 >= lines.size())
+            return QString();
+        const QString next = lines.at(i + 1).trimmed();
+        const QString key = QStringLiteral("status:");
+        if (!next.startsWith(key, Qt::CaseInsensitive))
+            return QString();
+        return next.mid(key.size()).trimmed();
+    }
+    return QString();
+}
+
 bool hasEntry(const QString &content, const QString &vendorProduct)
 {
     return findMarker(splitLines(content), vendorProduct) >= 0;
@@ -246,6 +267,13 @@ void add(QObject *owner, const QString &vendorProduct, Done done)
                 : std::nullopt;
         if (!model) {
             done(result.ok() ? kNotListed : kFailed);
+            return;
+        }
+        // Only a device ipp-usb cannot drive is worth blacklisting; a working
+        // one must keep using ipp-usb. A missing status line is not "OK".
+        const QString status = statusFromStatusOutput(QString::fromUtf8(result.output), vendorProduct);
+        if (status.compare(QStringLiteral("OK"), Qt::CaseInsensitive) == 0) {
+            done(kDeviceHealthy);
             return;
         }
         addWithModel(owner, vendorProduct, *model, *current, done);

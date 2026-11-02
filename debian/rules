@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 #export DH_VERBOSE=1
 include /usr/share/dpkg/pkg-info.mk
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
 	dh $@ --parallel --buildsystem=qmake6

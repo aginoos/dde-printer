@@ -463,10 +463,17 @@ QList<IppUsbDevice> ippUsbDevices()
 
 QString buildDnssdUri(const QString &serviceName, const QString &uuid, const QString &type)
 {
+    // The type comes from the network too: anything that is not "_name._tcp" or
+    // "_name._udp" falls back to plain IPP.
+    static const QRegularExpression typePattern(QStringLiteral("\\A_[A-Za-z0-9-]{1,32}\\._(tcp|udp)\\z"));
+    const QString safeType = typePattern.match(type).hasMatch() ? type : QStringLiteral("_ipp._tcp");
+
     QString uri = QStringLiteral("dnssd://") + QString::fromLatin1(QUrl::toPercentEncoding(serviceName))
-            + QLatin1Char('.') + type + QStringLiteral(".local/");
+            + QLatin1Char('.') + safeType + QStringLiteral(".local/");
+    // The uuid is a TXT record of the device: encode it so it cannot add
+    // parameters or end the query.
     if (!uuid.isEmpty())
-        uri += QStringLiteral("?uuid=") + uuid;
+        uri += QStringLiteral("?uuid=") + QString::fromLatin1(QUrl::toPercentEncoding(uuid));
     return uri;
 }
 

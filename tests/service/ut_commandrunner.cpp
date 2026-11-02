@@ -11,6 +11,9 @@
 
 #include "commandrunner.h"
 
+#include <cerrno>
+#include <signal.h>
+
 namespace {
 
 struct Outcome
@@ -160,4 +163,56 @@ TEST(ut_CommandRunner, commandResultOkRequiresStartedInTimeAndZeroExit)
     result.timedOut = false;
     result.exitCode = 1;
     EXPECT_FALSE(result.ok());
+}
+
+TEST(ut_CommandRunner, timeoutIsReportedAsTimedOut)
+{
+    const Outcome outcome = runAndWait(tool("sleep"), {"10"}, 300);
+    ASSERT_EQ(outcome.calls, 1);
+    EXPECT_TRUE(outcome.result.timedOut);
+}
+
+TEST(ut_CommandRunner, timeoutStopsTheWholeProcessGroup)
+{
+    // The shell starts a background sleep and prints its pid; both must die.
+    const Outcome outcome = runAndWait(tool("sh"), {"-c", "sleep 30 & echo $!; wait"}, 500);
+    ASSERT_EQ(outcome.calls, 1);
+    EXPECT_TRUE(outcome.result.timedOut);
+    bool ok = false;
+    const int childPid = QString::fromLatin1(outcome.result.output).trimmed().toInt(&ok);
+    ASSERT_TRUE(ok);
+    ASSERT_GT(childPid, 1);
+    QTest::qWait(400);
+    EXPECT_EQ(::kill(childPid, 0), -1);
+    EXPECT_EQ(errno, ESRCH);
+}
+
+TEST(ut_CommandRunner, appendCappedStopsAtTheLimit)
+{
+    QByteArray buffer;
+    CommandRunner::appendCapped(&buffer, "abcd", 6);
+    EXPECT_EQ(buffer, QByteArray("abcd"));
+    CommandRunner::appendCapped(&buffer, "efgh", 6);
+    EXPECT_EQ(buffer, QByteArray("abcdef"));
+    CommandRunner::appendCapped(&buffer, "ij", 6);
+    EXPECT_EQ(buffer, QByteArray("abcdef"));
+    CommandRunner::appendCapped(&buffer, QByteArray(), 100);
+    EXPECT_EQ(buffer.size(), 6);
+}
+
+TEST(ut_CommandRunner, outputIsCapped)
+{
+    // Roughly 2 MiB of output must be cut at the limit.
+    const Outcome outcome = runAndWait(tool("sh"), {"-c", "head -c 2097152 /dev/zero"}, 20000);
+    ASSERT_EQ(outcome.calls, 1);
+    EXPECT_EQ(outcome.result.output.size(), CommandRunner::kMaxOutputBytes);
+}
+
+TEST(ut_CommandRunner, childRunsInItsOwnSession)
+{
+    const Outcome outcome = runAndWait(tool("sh"), {"-c", "ps -o sid= -p $$ | tr -d ' '; echo $$"});
+    ASSERT_EQ(outcome.calls, 1);
+    const QStringList lines = QString::fromLatin1(outcome.result.output).split('\n', Qt::SkipEmptyParts);
+    if (lines.size() == 2)   // ps may be missing in minimal containers
+        EXPECT_EQ(lines.at(0), lines.at(1));
 }

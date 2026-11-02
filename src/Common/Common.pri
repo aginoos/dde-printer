@@ -28,6 +28,7 @@ HEADERS +=  \
     $$PWD/smburi.h \
     $$PWD/smbcredentialdialog.h \
     $$PWD/packageutil.h \
+    $$PWD/driverinstallconfirm.h \
     $$PWD/reviselogger.h \
     $$PWD/vendor/addprinter_p.h \
     $$PWD/vendor/addprinter.h \
@@ -58,6 +59,7 @@ SOURCES +=  \
     $$PWD/smburi.cpp \
     $$PWD/smbcredentialdialog.cpp \
     $$PWD/packageutil.cpp \
+    $$PWD/driverinstallconfirm.cpp \
     $$PWD/qtconvert.cpp \
     $$PWD/zsettings.cpp \
     $$PWD/cupsconnectionfactory.cpp \

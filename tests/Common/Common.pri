@@ -6,7 +6,7 @@ include($$PWD/../../src/Common/Common.pri)
 # A few tests #include the implementation file to reach helpers in unnamed
 # namespaces, so those files must not also be compiled on their own.
 for(src, SOURCES) {
-    contains(src, ".*/(avahi_tool|zdevicemanager|zdrivermanager|ztroubleshoot|installinterface)\\.cpp"): SOURCES -= $$src
+    contains(src, ".*/(avahi_tool|zdevicemanager|zdrivermanager|ztroubleshoot|installinterface|addprinter)\\.cpp"): SOURCES -= $$src
 }
 
 SOURCES += $$PWD/ut_common.cpp \
@@ -25,4 +25,5 @@ SOURCES += $$PWD/ut_common.cpp \
     $$PWD/ut_safeprocess.cpp \
     $$PWD/ut_packageutil.cpp \
     $$PWD/ut_zdevicemanager.cpp \
-    $$PWD/ut_installinterface.cpp
+    $$PWD/ut_installinterface.cpp \
+    $$PWD/ut_addprinter.cpp

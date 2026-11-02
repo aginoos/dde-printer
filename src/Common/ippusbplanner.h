@@ -13,7 +13,7 @@
 
 #include "avahi_tool.h"
 #include "ippusbclient.h"
-#include "zdevicemanager.h"
+#include "vendor/zdevicemanager.h"
 
 /*
  * Decides how (and whether) a USB printer that was just plugged in is added

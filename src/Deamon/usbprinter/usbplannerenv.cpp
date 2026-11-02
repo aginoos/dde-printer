@@ -12,6 +12,8 @@
 #include <QStandardPaths>
 #include <QThread>
 
+#include <cups/cups.h>
+
 #include <exception>
 #include <map>
 #include <string>

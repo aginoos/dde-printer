@@ -17,6 +17,8 @@
 #include <QThread>
 #include <QtConcurrent/QtConcurrent>
 
+#include <cups/cups.h>
+
 #include <exception>
 #include <string>
 #include <vector>

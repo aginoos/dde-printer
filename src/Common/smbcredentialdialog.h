@@ -8,12 +8,12 @@
 #include <DDialog>
 
 class QAbstractButton;
+class QCheckBox;
 class QLabel;
 
 namespace Dtk {
 namespace Widget {
 class DButtonBox;
-class QCheckBox;
 class DLineEdit;
 class DPasswordEdit;
 }  // namespace Widget
@@ -71,7 +71,7 @@ private:
     Dtk::Widget::DLineEdit *m_userEdit = nullptr;
     Dtk::Widget::DLineEdit *m_domainEdit = nullptr;
     Dtk::Widget::DPasswordEdit *m_passwordEdit = nullptr;
-    Dtk::Widget::QCheckBox *m_rememberBox = nullptr;
+    QCheckBox *m_rememberBox = nullptr;
 };
 
 #endif  // SMBCREDENTIALDIALOG_H

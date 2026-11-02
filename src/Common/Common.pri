@@ -13,6 +13,8 @@ HEADERS +=  \
     $$PWD/zjobmanager.h \
     $$PWD/cupsattrnames.h \
     $$PWD/config.h \
+    $$PWD/safeprocess.h \
+    $$PWD/packageutil.h \
     $$PWD/reviselogger.h \
     $$PWD/vendor/addprinter_p.h \
     $$PWD/vendor/addprinter.h \
@@ -25,6 +27,8 @@ HEADERS +=  \
 
 SOURCES +=  \
     $$PWD/common.cpp \
+    $$PWD/safeprocess.cpp \
+    $$PWD/packageutil.cpp \
     $$PWD/qtconvert.cpp \
     $$PWD/zsettings.cpp \
     $$PWD/cupsconnectionfactory.cpp \

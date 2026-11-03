@@ -38,7 +38,7 @@ int countInstalled(const QString &statusOutput)
 
 CanonI386::Runner &runner()
 {
-    static Runner instance;
+    static CanonI386::Runner instance;
     return instance;
 }
 

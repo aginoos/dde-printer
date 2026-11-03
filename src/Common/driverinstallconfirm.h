@@ -24,6 +24,10 @@ QString describe(const QString &package, const QString &version);
 // Replaces the dialog (tests); an empty function restores the default.
 void setHandler(Handler handler);
 
+// Test seam: replaces the check "is there a widget application to show the dialog"; an empty function
+// restores the real check.
+void setGuiAvailableForTest(std::function<bool()> available);
+
 // True when the user agreed. Without a GUI application nobody can agree, so
 // the default answer is no.
 bool confirm(const QStringList &descriptions);

@@ -5,6 +5,8 @@
 #include "avahi_tool.h"
 #include "common.h"
 
+#include <functional>
+
 #include <QDBusArgument>
 #include <QDBusConnection>
 #include <QDBusMessage>
@@ -26,6 +28,13 @@
 namespace AvahiTool {
 
 namespace {
+
+// Test seams; the defaults (no override) keep the behaviour of the real Avahi and ipp-usb lookups.
+// g_publishedServices stands in for the D-Bus browse and resolve step, g_ippUsbProgramOverride for the
+// ipp-usb executable lookup. They are reached by the tests that include this file.
+std::function<QList<ServiceRecord>(const QStringList &types, int interfaceIndex, int timeoutMs)> g_publishedServices;
+QString g_ippUsbProgramOverride;
+
 
 const QString kAvahiService = QStringLiteral("org.freedesktop.Avahi");
 const QString kServerInterface = QStringLiteral("org.freedesktop.Avahi.Server");

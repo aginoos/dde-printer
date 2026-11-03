@@ -40,6 +40,8 @@ void removeMakeInModel(const QString &strMake, QString &strModel);
 
 //解析make-and-model字段中的厂商和型号信息
 void ppdMakeModelSplit(const QString &strMakeAndModel, QString &strMake, QString &strModel);
+// Cuts the vendor suffixes and version tail off a model name (used when matching drivers).
+void formatModelName(const QString &strMake, QString &strModel);
 
 //获取ipp请求的值
 QVariant ipp_attribute_value(ipp_attribute_t *attr, int i);

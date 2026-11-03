@@ -36,7 +36,10 @@ TEST(ut_DriverInstallConfirm, nothingToInstallIsNeverConfirmed)
 
 TEST(ut_DriverInstallConfirm, withoutAGuiApplicationNobodyAgrees)
 {
-    // The test binary runs a QCoreApplication, so the default dialog path must refuse.
+    // The test binary runs inside a QApplication, so the "no GUI" situation is simulated: the default dialog
+    // path must refuse without showing anything (a shown dialog would block the test run).
     DriverInstallConfirm::setHandler(nullptr);
+    DriverInstallConfirm::setGuiAvailableForTest([]() { return false; });
     EXPECT_FALSE(DriverInstallConfirm::confirm({"hplip (3.23)"}));
+    DriverInstallConfirm::setGuiAvailableForTest(nullptr);
 }

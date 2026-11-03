@@ -102,7 +102,8 @@ bool isKnownFix(const QString &fixId)
 
 QStringList canonI386Packages()
 {
-    return {QStringLiteral("libpopt0:i386"), QStringLiteral("libxml2:i386")};
+    return {QStringLiteral("libpopt0:i386"), QStringLiteral("libxml2:i386"),
+            QStringLiteral("libstdc++6:i386")};
 }
 
 QStringList foreignArchitectureArgs()

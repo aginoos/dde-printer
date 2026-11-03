@@ -63,9 +63,9 @@ protected:
         const QString libsAfter = s.libsPresentAfterInstall ? "ii" : "un";
         QString query = "case \"$*\" in\n*Architecture*)\n";
         query += s.allQueryFails ? "exit 1;;\n" : printLines(s.allQueryOutput.split('\n', Qt::SkipEmptyParts)) + "; exit 0;;\n";
-        query += "*)\nif [ -f '" + d + "/installed' ]; then " + printLines({libsAfter, libsAfter})
-            + "; elif [ " + (s.libsInstalledAtStart ? "1" : "0") + " = 1 ]; then " + printLines({"ii", "ii"})
-            + "; else " + printLines({"un", "un"}) + "; fi;;\nesac";
+        query += "*)\nif [ -f '" + d + "/installed' ]; then " + printLines(QStringList(RepairJobs::canonI386Packages().size(), libsAfter))
+            + "; elif [ " + (s.libsInstalledAtStart ? "1" : "0") + " = 1 ]; then " + printLines(QStringList(RepairJobs::canonI386Packages().size(), "ii"))
+            + "; else " + printLines(QStringList(RepairJobs::canonI386Packages().size(), "un")) + "; fi;;\nesac";
         m_tools.add("dpkg-query", query);
 
         if (withSystemd) {
@@ -123,7 +123,7 @@ TEST_F(ut_CanonI386Run, nothingToDoOnlyStartsCcpd)
     EXPECT_EQ(runRepair(), RepairCode::Ok);
     EXPECT_TRUE(m_tools.callsOf("systemd-run").isEmpty());
     EXPECT_EQ(m_tools.callsOf("systemctl"),
-              (QList<QStringList>{{"enable", "--now", "ccpd.service"}, {"is-active", "--quiet", "ccpd.service"}}));
+              (QList<QStringList>{{"enable", "--now", "agino-ccpd.service"}, {"is-active", "--quiet", "agino-ccpd.service"}}));
 }
 
 TEST_F(ut_CanonI386Run, ccpdNotActiveAfterwardsIsAPlainFailure)

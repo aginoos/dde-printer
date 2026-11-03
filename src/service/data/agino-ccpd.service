@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 agino
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Canon's /etc/init.d/ccpd has an empty Default-Start, so on Debian 13
+# "systemctl enable ccpd" fails (update-rc.d refuses it) and the daemon never
+# starts. This native unit wraps the same script and can be enabled normally.
+[Unit]
+Description=Canon Printer Daemon for CUPS (ccpd)
+After=cups.service
+ConditionPathExists=/etc/init.d/ccpd
+
+[Service]
+Type=forking
+ExecStart=/etc/init.d/ccpd start
+ExecStop=/etc/init.d/ccpd stop
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

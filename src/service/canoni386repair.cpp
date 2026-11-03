@@ -15,7 +15,7 @@
 namespace {
 
 const char kArch[] = "i386";
-const char kCcpdUnit[] = "ccpd.service";
+const char kCcpdUnit[] = "agino-ccpd.service";
 // Time added to a unit's runtime limit for systemd-run itself to return.
 constexpr int kWaitSlackMs = 15000;
 

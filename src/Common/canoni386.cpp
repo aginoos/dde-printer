@@ -63,7 +63,8 @@ QString fixId()
 
 QStringList requiredLibraries()
 {
-    return {QStringLiteral("libpopt0:i386"), QStringLiteral("libxml2:i386")};
+    return {QStringLiteral("libpopt0:i386"), QStringLiteral("libxml2:i386"),
+            QStringLiteral("libstdc++6:i386")};
 }
 
 Status parseStatus(const QString &foreignArchitectures, const QString &libraryStatus, int expectedLibraries)

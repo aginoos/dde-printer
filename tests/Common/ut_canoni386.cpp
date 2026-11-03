@@ -79,9 +79,9 @@ TEST(ut_CanonI386Repair, TransientUnitArgumentsAreFixed)
 
 TEST(ut_CanonI386Repair, QueryArguments)
 {
-    const QStringList args = statusQueryArgs({"libpopt0:i386", "libxml2:i386"});
+    const QStringList args = statusQueryArgs({"libpopt0:i386", "libxml2:i386", "libstdc++6:i386"});
     EXPECT_EQ(args.mid(0, 2), (QStringList{"-W", "-f"}));
-    EXPECT_EQ(args.mid(args.size() - 2), (QStringList{"libpopt0:i386", "libxml2:i386"}));
+    EXPECT_EQ(args.mid(args.size() - 3), (QStringList{"libpopt0:i386", "libxml2:i386", "libstdc++6:i386"}));
     EXPECT_TRUE(aptUpdateArgs().contains("update"));
 }
 
@@ -164,7 +164,7 @@ TEST(ut_CanonI386, QueryStatusReadsArchitectureAndLibraries)
         calls.append({program, args});
         if (program == "dpkg")
             return reply(true, "i386\n");
-        return reply(false, "ii \nii \n");   // dpkg-query exits non-zero when a package is unknown
+        return reply(false, "ii \nii \nii \n");   // dpkg-query exits non-zero when a package is unknown
     });
 
     const CanonI386::Status status = CanonI386::queryStatus();
@@ -173,14 +173,14 @@ TEST(ut_CanonI386, QueryStatusReadsArchitectureAndLibraries)
     EXPECT_EQ(calls[0].first, QString("dpkg"));
     EXPECT_EQ(calls[0].second, QStringList{"--print-foreign-architectures"});
     EXPECT_EQ(calls[1].first, QString("dpkg-query"));
-    EXPECT_EQ(calls[1].second.mid(calls[1].second.size() - 2), CanonI386::requiredLibraries());
+    EXPECT_EQ(calls[1].second.mid(calls[1].second.size() - CanonI386::requiredLibraries().size()), CanonI386::requiredLibraries());
 }
 
 TEST(ut_CanonI386, QueryStatusTreatsAFailedArchitectureCommandAsDisabled)
 {
     RunnerGuard guard;
     CanonI386::setRunner([](const QString &program, const QStringList &) {
-        return program == "dpkg" ? reply(false, "i386\n") : reply(true, "ii \nii \n");
+        return program == "dpkg" ? reply(false, "i386\n") : reply(true, "ii \nii \nii \n");
     });
     const CanonI386::Status status = CanonI386::queryStatus();
     EXPECT_FALSE(status.architectureEnabled);

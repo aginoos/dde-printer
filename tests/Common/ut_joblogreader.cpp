@@ -124,7 +124,7 @@ TEST(ut_RepairJobs, KnownFixIds)
 TEST(ut_RepairJobs, CanonLibrariesAreFixed)
 {
     const QStringList packages = RepairJobs::canonI386Packages();
-    EXPECT_EQ(packages, (QStringList{"libpopt0:i386", "libxml2:i386"}));
+    EXPECT_EQ(packages, (QStringList{"libpopt0:i386", "libxml2:i386", "libstdc++6:i386"}));
 }
 
 TEST(ut_RepairJobs, ForeignArchitectureDetection)
@@ -142,7 +142,7 @@ TEST(ut_RepairJobs, AptInstallArguments)
     const QStringList args = RepairJobs::aptInstallArgs(RepairJobs::canonI386Packages());
     EXPECT_EQ(args.first(), QString("-y"));
     EXPECT_TRUE(args.contains("install"));
-    EXPECT_EQ(args.mid(args.size() - 2), RepairJobs::canonI386Packages());
+    EXPECT_EQ(args.mid(args.size() - RepairJobs::canonI386Packages().size()), RepairJobs::canonI386Packages());
 }
 
 TEST(ut_RepairJobs, PermissionStripping)

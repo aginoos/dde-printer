@@ -5,10 +5,11 @@
       "id": "canon_lbp2900",
       "match": ["Canon LBP2900"],
       "checks": [
-        {"type": "service-active", "unit": "ccpd"},
-        {"type": "service-enabled", "unit": "ccpd"},
+        {"type": "service-active", "unit": "agino-ccpd"},
+        {"type": "service-enabled", "unit": "agino-ccpd"},
         {"type": "package-installed", "package": "libpopt0:i386"},
-        {"type": "package-installed", "package": "libxml2:i386"}
+        {"type": "package-installed", "package": "libxml2:i386"},
+        {"type": "package-installed", "package": "libstdc++6:i386"}
       ],
       "fix": "canon_lbp2900"
     },

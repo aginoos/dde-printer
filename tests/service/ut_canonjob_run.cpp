@@ -99,8 +99,8 @@ TEST_F(ut_CanonJobRun, installRunsEveryStepInOrderWithPlainArguments)
         {"ccpdadmin"},                                    // list invalid spools
         {"ccpdadmin", "-x", "stale_spool"},
         {"ccpdadmin", "-p", "LBP2900", "-o", "net:192.168.1.20"},
-        {"systemctl", "restart", "ccpd.service"},
-        {"systemctl", "enable", "ccpd.service"},
+        {"systemctl", "restart", "agino-ccpd.service"},
+        {"systemctl", "enable", "agino-ccpd.service"},
     };
     EXPECT_EQ(m_tools.calls(), expected);
 }
@@ -197,8 +197,8 @@ TEST_F(ut_CanonJobRun, removeOfACapQueueCleansUpAndRestartsTheDaemon)
         {"ccpdadmin"},
         {"ccpdadmin", "-x", "gone_spool"},
         {"ccpdadmin", "-x", "LBP2900"},
-        {"systemctl", "restart", "ccpd.service"},
-        {"systemctl", "enable", "ccpd.service"},
+        {"systemctl", "restart", "agino-ccpd.service"},
+        {"systemctl", "enable", "agino-ccpd.service"},
     };
     EXPECT_EQ(m_tools.calls(), expected);
 }

@@ -67,7 +67,7 @@ dbus.path = $${PREFIX}/share/dbus-1/system.d
 dbus.files = $$PWD/data/com.deepin.printer.manager.conf
 
 serviced.path = $${PREFIX}/lib/systemd/system
-serviced.files = $$PWD/data/dde-printer-manager.service
+serviced.files = $$PWD/data/dde-printer-manager.service $$PWD/data/agino-ccpd.service
 
 polkit.path = $${PREFIX}/share/polkit-1/actions
 polkit.files = $$PWD/data/com.deepin.printer.manager.policy

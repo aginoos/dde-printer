@@ -28,7 +28,7 @@ struct Context {
 
 using ContextPtr = std::shared_ptr<Context>;
 
-const char kCcpdUnit[] = "ccpd.service";
+const char kCcpdUnit[] = "agino-ccpd.service";
 const char kInvalidSpoolMarker[] = "invalid Spool Name";
 
 Tools locateTools()

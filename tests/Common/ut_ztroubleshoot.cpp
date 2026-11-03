@@ -999,11 +999,12 @@ TEST(ut_TroubleShoot, specificModelPassesWhenEveryCheckPasses)
     EXPECT_EQ(log.states, (QList<int>{TStat_Running, TStat_Suc}));
     EXPECT_EQ(job.getMessage(), ModelFixMap::textsFor("canon_lbp2900").ok);
     EXPECT_TRUE(job.getActions().isEmpty());
-    // All four checks of the entry run, in the order of the table.
-    EXPECT_EQ(queries.calls, (QStringList{"systemctl is-active --quiet -- ccpd",
-                                          "systemctl is-enabled --quiet -- ccpd",
+    // All five checks of the entry run, in the order of the table.
+    EXPECT_EQ(queries.calls, (QStringList{"systemctl is-active --quiet -- agino-ccpd",
+                                          "systemctl is-enabled --quiet -- agino-ccpd",
                                           "dpkg-query -W -f=${Status} -- libpopt0:i386",
-                                          "dpkg-query -W -f=${Status} -- libxml2:i386"}));
+                                          "dpkg-query -W -f=${Status} -- libxml2:i386",
+                                          "dpkg-query -W -f=${Status} -- libstdc++6:i386"}));
 }
 
 TEST(ut_TroubleShoot, specificModelOffersARepairWhenACheckFailsAndVerifiesIt)
@@ -1013,7 +1014,7 @@ TEST(ut_TroubleShoot, specificModelOffersARepairWhenACheckFailsAndVerifiesIt)
     world.attrs = makeModel("Canon LBP2900");
     bool serviceActive = false;
     ScriptedQueries queries([&serviceActive](const QStringList &args) {
-        return args.contains("ccpd") && args.first() == "is-active" ? serviceActive : true;
+        return args.contains("agino-ccpd") && args.first() == "is-active" ? serviceActive : true;
     });
 
     CheckSpecificModel job("Q");

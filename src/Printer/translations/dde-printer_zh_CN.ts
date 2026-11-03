@@ -26,6 +26,10 @@
         <source> not found</source>
         <translation>未找到</translation>
     </message>
+    <message>
+        <source>This driver needs administrator authorization. Please add the printer in the Print Manager.</source>
+        <translation>该驱动需要管理员授权，请在打印管理器中添加该打印机。</translation>
+    </message>
 </context>
 <context>
     <name>CheckAttributes</name>
@@ -106,6 +110,14 @@
         <location filename="../../Common/vendor/ztroubleshoot.cpp" line="294"/>
         <source>The connection is valid</source>
         <translation>打印机连接状态正常</translation>
+    </message>
+    <message>
+        <source>The USB port is used by ipp-usb. Add the printer again with the driverless (network) option.</source>
+        <translation>USB 端口被 ipp-usb 占用，请选择免驱（网络）方式重新添加打印机。</translation>
+    </message>
+    <message>
+        <source>ipp-usb reports a problem with this printer: %1</source>
+        <translation>ipp-usb 报告该打印机存在问题：%1</translation>
     </message>
 </context>
 <context>
@@ -727,6 +739,14 @@
         <source>Install Driver</source>
         <translation>安装驱动</translation>
     </message>
+    <message>
+        <source>Applying settings, please wait...</source>
+        <translation>正在应用设置，请稍候...</translation>
+    </message>
+    <message>
+        <source>Failed to change the server settings. Please authenticate as an administrator and try again.</source>
+        <translation>修改服务器设置失败，请以管理员身份认证后重试。</translation>
+    </message>
 </context>
 <context>
     <name>DPropertySetDlg</name>
@@ -933,6 +953,34 @@
         <source>Failed to install %1</source>
         <translation>安装%1失败</translation>
     </message>
+    <message>
+        <source>The driver package information is invalid.</source>
+        <translation>驱动包信息无效。</translation>
+    </message>
+    <message>
+        <source>The package %1 is not an accepted printer driver package.</source>
+        <translation>软件包 %1 不是受认可的打印机驱动包。</translation>
+    </message>
+    <message>
+        <source>The package %1 is already installed in a higher version (%2) than the driver requires (%3); installing the driver would downgrade it.</source>
+        <translation>软件包 %1 已安装更高版本（%2），高于驱动所需版本（%3），安装驱动会导致降级。</translation>
+    </message>
+    <message>
+        <source>The driver package %1 is not available from the software sources.</source>
+        <translation>软件源中没有驱动包 %1。</translation>
+    </message>
+    <message>
+        <source>No package installer is available on this system.</source>
+        <translation>系统中没有可用的软件包安装器。</translation>
+    </message>
+    <message>
+        <source>The driver installation was cancelled.</source>
+        <translation>驱动安装已取消。</translation>
+    </message>
+    <message>
+        <source>Administrator authorization was denied.</source>
+        <translation>管理员授权被拒绝。</translation>
+    </message>
 </context>
 <context>
     <name>InstallPrinterWindow</name>
@@ -1034,6 +1082,10 @@
         <location filename="../ui/installprinterwindow.cpp" line="394"/>
         <source>After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window.</source>
         <translation>驱动安装成功后，需要配置打印机，请在向导弹框中操作。</translation>
+    </message>
+    <message>
+        <source>Installing printer driver... Please do not disconnect. This may take a few minutes. Thank you for your patience.</source>
+        <translation>正在安装打印机驱动...请不要断开连接，可能需要几分钟，感谢您的耐心等待。</translation>
     </message>
 </context>
 <context>
@@ -1349,6 +1401,26 @@
         <source>OK</source>
         <comment>button</comment>
         <translation>确 定</translation>
+    </message>
+    <message>
+        <source>Windows Share</source>
+        <translation>Windows 共享</translation>
+    </message>
+    <message>
+        <source>Protocol</source>
+        <translation>协议</translation>
+    </message>
+    <message>
+        <source>Auto Select</source>
+        <translation>自动选择</translation>
+    </message>
+    <message>
+        <source>%1 shared</source>
+        <translation>%1（共享）</translation>
+    </message>
+    <message>
+        <source>(use %1 protocol)</source>
+        <translation>（使用 %1 协议）</translation>
     </message>
 </context>
 <context>
@@ -1909,6 +1981,349 @@
         <source>OK</source>
         <comment>button</comment>
         <translation>确 定</translation>
+    </message>
+    <message>
+        <source>There is no information to copy.</source>
+        <translation>没有可复制的信息。</translation>
+    </message>
+    <message>
+        <source>Copied</source>
+        <translation>已复制</translation>
+    </message>
+    <message>
+        <source>The repair service is not available.</source>
+        <translation>修复服务不可用。</translation>
+    </message>
+</context>
+<context>
+    <name>TroubleShootItem</name>
+    <message>
+        <source>Expand more</source>
+        <translation>展开更多</translation>
+    </message>
+    <message>
+        <source>Troubleshoot: </source>
+        <translation>故障排查：</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <comment>button</comment>
+        <translation>取消</translation>
+    </message>
+</context>
+<context>
+    <name>CustomPageDialog</name>
+    <message>
+        <source>Custom Paper</source>
+        <translation>自定义纸张</translation>
+    </message>
+    <message>
+        <source>Millimeters</source>
+        <translation>毫米</translation>
+    </message>
+    <message>
+        <source>Inches</source>
+        <translation>英寸</translation>
+    </message>
+    <message>
+        <source>Paper Name</source>
+        <translation>纸张名称</translation>
+    </message>
+    <message>
+        <source>Unit</source>
+        <translation>单位</translation>
+    </message>
+    <message>
+        <source>Width</source>
+        <translation>宽度</translation>
+    </message>
+    <message>
+        <source>Height</source>
+        <translation>高度</translation>
+    </message>
+    <message>
+        <source>Margins</source>
+        <translation>页边距</translation>
+    </message>
+    <message>
+        <source>Top</source>
+        <translation>上</translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation>左</translation>
+    </message>
+    <message>
+        <source>Bottom</source>
+        <translation>下</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation>右</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <comment>button</comment>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <comment>button</comment>
+        <translation>保存</translation>
+    </message>
+    <message>
+        <source>Custom paper %1</source>
+        <translation>自定义纸张 %1</translation>
+    </message>
+    <message>
+        <source>Please enter a paper name</source>
+        <translation>请输入纸张名称</translation>
+    </message>
+    <message>
+        <source>The paper name is too long</source>
+        <translation>纸张名称过长</translation>
+    </message>
+    <message>
+        <source>The paper name contains characters that are not allowed</source>
+        <translation>纸张名称包含不允许的字符</translation>
+    </message>
+    <message>
+        <source>The paper width is outside the range supported by the printer</source>
+        <translation>纸张宽度超出打印机支持的范围</translation>
+    </message>
+    <message>
+        <source>The paper height is outside the range supported by the printer</source>
+        <translation>纸张高度超出打印机支持的范围</translation>
+    </message>
+    <message>
+        <source>Margins cannot be negative</source>
+        <translation>页边距不能为负数</translation>
+    </message>
+    <message>
+        <source>The margins are larger than the paper</source>
+        <translation>页边距大于纸张</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <comment>button</comment>
+        <translation>确定</translation>
+    </message>
+    <message>
+        <source>Failed to save the custom paper sizes</source>
+        <translation>保存自定义纸张失败</translation>
+    </message>
+</context>
+<context>
+    <name>SmbPrinterPage</name>
+    <message>
+        <source>Find Windows Shared Printer</source>
+        <translation>查找 Windows 共享打印机</translation>
+    </message>
+    <message>
+        <source>Enter IP Address</source>
+        <translation>输入 IP 地址</translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <comment>button</comment>
+        <translation>浏览</translation>
+    </message>
+    <message>
+        <source>No printers found</source>
+        <translation>未找到打印机</translation>
+    </message>
+    <message>
+        <source>Enter IP, then Browse</source>
+        <translation>请输入 IP 后点击浏览</translation>
+    </message>
+    <message>
+        <source>Authentication Completed</source>
+        <translation>认证完成</translation>
+    </message>
+    <message>
+        <source>Select Printer</source>
+        <translation>选择打印机</translation>
+    </message>
+    <message>
+        <source>Please enter a valid IP address or hostname</source>
+        <translation>请输入有效的 IP 地址或主机名</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>确定</translation>
+    </message>
+</context>
+<context>
+    <name>IppUsbSwitch</name>
+    <message>
+        <source>The ipp-usb printer is not published on the network, so it cannot be added with the driverless solution.</source>
+        <translation>该 ipp-usb 打印机未在网络上发布，无法使用免驱方案添加。</translation>
+    </message>
+    <message>
+        <source>ipp-usb does not list this printer.</source>
+        <translation>ipp-usb 未列出该打印机。</translation>
+    </message>
+    <message>
+        <source>Failed to add the printer to ipp-usb blacklist.</source>
+        <translation>将打印机加入 ipp-usb 黑名单失败。</translation>
+    </message>
+    <message>
+        <source>The USB address of the printer did not appear after switching off ipp-usb.</source>
+        <translation>关闭 ipp-usb 后未出现该打印机的 USB 地址。</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Username</source>
+        <translation>用户名</translation>
+    </message>
+    <message>
+        <source>Domain</source>
+        <translation>域</translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation>密码</translation>
+    </message>
+    <message>
+        <source>Remember Password</source>
+        <translation>记住密码</translation>
+    </message>
+    <message>
+        <source>Connection Identity</source>
+        <translation>连接身份</translation>
+    </message>
+    <message>
+        <source>Guest</source>
+        <translation>访客</translation>
+    </message>
+    <message>
+        <source>Registered User</source>
+        <translation>注册用户</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <source>Connect</source>
+        <translation>连接</translation>
+    </message>
+    <message>
+        <source>Authentication Required for %1</source>
+        <translation>连接 %1 需要认证</translation>
+    </message>
+    <message>
+        <source>Authentication required to connect to printer "%1"</source>
+        <translation>连接打印机“%1”需要认证</translation>
+    </message>
+</context>
+<context>
+    <name>RefreshDevicesSmbTask</name>
+    <message>
+        <source>Please enter a valid IP address or hostname</source>
+        <translation>请输入有效的 IP 地址或主机名</translation>
+    </message>
+    <message>
+        <source>Windows sharing support (libsmbclient) is not available</source>
+        <translation>Windows 共享支持（libsmbclient）不可用</translation>
+    </message>
+    <message>
+        <source>Failed to access %1. Please check if the username or password is correct, and ensure the Windows sharing service is configured correctly.</source>
+        <translation>访问 %1 失败，请检查用户名或密码是否正确，并确认 Windows 共享服务配置正确。</translation>
+    </message>
+</context>
+<context>
+    <name>AddCanonCAPTPrinter</name>
+    <message>
+        <source>The Canon driver needs administrator authorization. Please add the printer in the Print Manager.</source>
+        <translation>佳能驱动需要管理员授权，请在打印管理器中添加该打印机。</translation>
+    </message>
+    <message>
+        <source>Canon capt install fail.</source>
+        <translation>佳能 CAPT 驱动安装失败。</translation>
+    </message>
+</context>
+<context>
+    <name>TroubleShootJob</name>
+    <message>
+        <source>The repair has been completed.</source>
+        <translation>修复已完成。</translation>
+    </message>
+    <message>
+        <source>The repair did not succeed.</source>
+        <translation>修复未成功。</translation>
+    </message>
+</context>
+<context>
+    <name>CheckCupsErrorLog</name>
+    <message>
+        <source>Check CUPS error log</source>
+        <translation>检查 CUPS 错误日志</translation>
+    </message>
+    <message>
+        <source>View log</source>
+        <translation>查看日志</translation>
+    </message>
+    <message>
+        <source>Copy info</source>
+        <translation>复制信息</translation>
+    </message>
+    <message>
+        <source>One-click fix</source>
+        <translation>一键修复</translation>
+    </message>
+    <message>
+        <source>Possible cause: %1</source>
+        <translation>可能原因：%1</translation>
+    </message>
+    <message>
+        <source>Recommended action: %1</source>
+        <translation>建议操作：%1</translation>
+    </message>
+    <message>
+        <source>The print service has been repaired.</source>
+        <translation>打印服务已修复。</translation>
+    </message>
+    <message>
+        <source>The print service could not be repaired.</source>
+        <translation>无法修复打印服务。</translation>
+    </message>
+    <message>
+        <source>Checking CUPS error log...</source>
+        <translation>正在检查 CUPS 错误日志...</translation>
+    </message>
+    <message>
+        <source>The CUPS error log could not be checked</source>
+        <translation>无法检查 CUPS 错误日志</translation>
+    </message>
+    <message>
+        <source>No CUPS error found</source>
+        <translation>未发现 CUPS 错误</translation>
+    </message>
+</context>
+<context>
+    <name>CheckSpecificModel</name>
+    <message>
+        <source>Check model-specific issues</source>
+        <translation>检查机型相关问题</translation>
+    </message>
+    <message>
+        <source>One-click fix</source>
+        <translation>一键修复</translation>
+    </message>
+    <message>
+        <source>Checking model-specific issues...</source>
+        <translation>正在检查机型相关问题...</translation>
+    </message>
+    <message>
+        <source>No model-specific issue found</source>
+        <translation>未发现机型相关问题</translation>
+    </message>
+    <message>
+        <source>Model-specific issues were found</source>
+        <translation>发现机型相关问题</translation>
     </message>
 </context>
 </TS>

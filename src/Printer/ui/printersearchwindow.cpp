@@ -215,7 +215,7 @@ void PrinterSearchWindow::initUi()
     pAutoFrame1->setAccessibleName("autoFrame1_autoWidget");
 
     QLabel *pLabelProtocol = new QLabel(tr("Protocol"));
-    pLabelProtocol->setFixedWidth(46);
+    pLabelProtocol->setMinimumWidth(pLabelProtocol->fontMetrics().horizontalAdvance(pLabelProtocol->text()) + 8);
     pLabelProtocol->setAccessibleName("labelProtocol_autoFrame2");
     m_pAutoProtocolCom = new QComboBox();
     m_pAutoProtocolCom->addItem(tr("Auto Select"));

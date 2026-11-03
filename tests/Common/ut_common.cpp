@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include <QDBusError>
 #include <QRegularExpression>
 
 #include "common.h"
@@ -489,3 +490,179 @@ TEST_F(ut_Common, getCurrentTimeRecordsTimestamps)
     EXPECT_TRUE(getCurrentTime(RESET_TIME).isEmpty());
 }
 
+
+namespace {
+
+struct ManagerScope
+{
+    bool owned = true;
+    QStringList methods;
+    QList<QVariantList> arguments;
+    QDBusMessage reply;
+
+    ManagerScope()
+    {
+        reply = QDBusMessage::createMethodCall("a", "/b", "c", "d").createReply(0);
+        ManagerTransport transport;
+        transport.isOwnedByRoot = [this]() { return owned; };
+        transport.call = [this](const QString &method, const QVariantList &args) {
+            methods << method;
+            arguments << args;
+            return reply;
+        };
+        setManagerTransport(transport);
+    }
+    ~ManagerScope() { resetManagerTransport(); }
+
+    void replyWith(const QVariant &value)
+    {
+        reply = QDBusMessage::createMethodCall("a", "/b", "c", "d").createReply(value);
+    }
+    void replyError(QDBusError::ErrorType type)
+    {
+        reply = QDBusMessage::createMethodCall("a", "/b", "c", "d").createErrorReply(type, "x");
+    }
+};
+
+const QStringList kValidAdd = {"canon1", "CNCUPSLBP6030CAPT.ppd", "usb:ABC123"};
+
+}  // namespace
+
+TEST_F(ut_Common, canonAddCallsInstallWithArguments)
+{
+    ManagerScope m;
+    EXPECT_EQ(managerCanonPrinter("add", kValidAdd), (int)CanonOk);
+    EXPECT_EQ(m.methods, QStringList{"CanonPrinterInstall"});
+    ASSERT_EQ(m.arguments.size(), 1);
+    EXPECT_EQ(m.arguments.first().first().toStringList(), kValidAdd);
+}
+
+TEST_F(ut_Common, canonRemoveCallsRemove)
+{
+    ManagerScope m;
+    EXPECT_EQ(managerCanonPrinter("remove", {"canon1"}), (int)CanonOk);
+    EXPECT_EQ(m.methods, QStringList{"CanonPrinterRemove"});
+}
+
+TEST_F(ut_Common, canonExistsOnlyAcceptedForAdd)
+{
+    ManagerScope m;
+    m.replyWith(2);
+    EXPECT_EQ(managerCanonPrinter("add", kValidAdd), (int)CanonExists);
+    EXPECT_EQ(managerCanonPrinter("remove", {"canon1"}), (int)CanonBadReply);
+}
+
+TEST_F(ut_Common, canonReplyCodesFailClosed)
+{
+    ManagerScope m;
+    m.replyWith(1);
+    EXPECT_EQ(managerCanonPrinter("add", kValidAdd), (int)CanonFailed);
+    m.replyWith(77);
+    EXPECT_EQ(managerCanonPrinter("add", kValidAdd), (int)CanonBadReply);
+    m.replyWith("zero");
+    EXPECT_EQ(managerCanonPrinter("add", kValidAdd), (int)CanonBadReply);
+    m.reply = QDBusMessage::createMethodCall("a", "/b", "c", "d").createReply(QVariantList{0, 1});
+    EXPECT_EQ(managerCanonPrinter("add", kValidAdd), (int)CanonBadReply);   // more than one value
+    m.reply = QDBusMessage::createMethodCall("a", "/b", "c", "d");          // not a reply at all
+    EXPECT_EQ(managerCanonPrinter("add", kValidAdd), (int)CanonBadReply);
+}
+
+TEST_F(ut_Common, canonBusErrorsAreMapped)
+{
+    ManagerScope m;
+    const QList<QPair<QDBusError::ErrorType, int>> table = {
+        {QDBusError::AccessDenied, CanonAccessDenied}, {QDBusError::InvalidArgs, CanonInvalidArgs},
+        {QDBusError::LimitsExceeded, CanonBusy},       {QDBusError::NoReply, CanonTimeout},
+        {QDBusError::Timeout, CanonTimeout},           {QDBusError::ServiceUnknown, CanonUnavailable},
+        {QDBusError::Other, CanonFailed}};
+    for (const auto &entry : table) {
+        m.replyError(entry.first);
+        EXPECT_EQ(managerCanonPrinter("add", kValidAdd), entry.second) << entry.first;
+    }
+}
+
+TEST_F(ut_Common, canonServiceNotOwnedByRootIsUnavailableWithoutCall)
+{
+    ManagerScope m;
+    m.owned = false;
+    EXPECT_EQ(managerCanonPrinter("add", kValidAdd), (int)CanonUnavailable);
+    EXPECT_TRUE(m.methods.isEmpty());
+}
+
+TEST_F(ut_Common, launchAutoStartSucceedsOnlyOnReply)
+{
+    ManagerScope m;
+    EXPECT_TRUE(managerLaunchAutoStart("/opt/apps/vendor/"));
+    EXPECT_EQ(m.methods, QStringList{"LaunchAutoStart"});
+    EXPECT_EQ(m.arguments.first().first().toString(), QString("/opt/apps/vendor/"));
+    m.replyError(QDBusError::AccessDenied);
+    EXPECT_FALSE(managerLaunchAutoStart("/opt/apps/vendor/"));
+    m.owned = false;
+    m.methods.clear();
+    EXPECT_FALSE(managerLaunchAutoStart("/opt/apps/vendor/"));
+    EXPECT_TRUE(m.methods.isEmpty());
+}
+
+TEST_F(ut_Common, formatModelNameTruncatesAtVersionAndSuffix)
+{
+    QString model = "MG4100 series Ver.3.90";
+    formatModelName("Canon", model);
+    EXPECT_EQ(model, QString("MG4100"));
+
+    model = "LaserJet 4 Plus v2013.111 Postscript (recommended)";
+    formatModelName("HP", model);
+    EXPECT_EQ(model, QString("LaserJet 4 Plus"));
+}
+
+TEST_F(ut_Common, formatModelNameKeepsVersionLikeModelNames)
+{
+    QString model = "PX V500";   // " v" followed by more than a one-digit/dotted version
+    formatModelName("Epson", model);
+    EXPECT_EQ(model, QString("PX V500"));
+}
+
+TEST_F(ut_Common, formatModelNameExpandsHpShortNames)
+{
+    QString model = "dj 840c";
+    formatModelName("HP", model);
+    EXPECT_EQ(model, QString("DeskJet 840c"));
+    model = "lj 1020";
+    formatModelName("HP", model);
+    EXPECT_EQ(model, QString("LaserJet 1020"));
+}
+
+TEST_F(ut_Common, formatModelNameCleansSeparatorsAndMakePrefix)
+{
+    QString model = "Epson PX-V500";
+    formatModelName("Epson", model);
+    EXPECT_EQ(model, QString("PX V500"));
+    model = "HL-L2350DW";
+    formatModelName("Brother", model);
+    EXPECT_EQ(model, QString("HL L2350DW"));
+}
+
+TEST_F(ut_Common, formatModelNameDropsBishengMarker)
+{
+    QString model = "Foo 100 (Bisheng)";
+    formatModelName("Bar", model);
+    EXPECT_EQ(model, QString("Foo 100"));
+}
+
+TEST_F(ut_Common, ippAttributeValueConvertsByTag)
+{
+    ipp_t *ipp = ippNew();
+    ippAddString(ipp, IPP_TAG_PRINTER, IPP_TAG_NAME, "printer-name", nullptr, "  Office  ");
+    ippAddInteger(ipp, IPP_TAG_PRINTER, IPP_TAG_INTEGER, "copies", 42);
+    ippAddBoolean(ipp, IPP_TAG_PRINTER, "accepting", 1);
+    ippAddRange(ipp, IPP_TAG_PRINTER, "range", 1, 5);
+    const char *kw[] = {"one", "two"};
+    ippAddStrings(ipp, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "kw", 2, nullptr, kw);
+
+    EXPECT_EQ(ipp_attribute_value(ippFindAttribute(ipp, "printer-name", IPP_TAG_ZERO), 0).toString(), QString("Office"));
+    const QVariant copies = ipp_attribute_value(ippFindAttribute(ipp, "copies", IPP_TAG_ZERO), 0);
+    EXPECT_EQ(copies.toInt(), 42);
+    EXPECT_EQ(ipp_attribute_value(ippFindAttribute(ipp, "accepting", IPP_TAG_ZERO), 0).toBool(), true);
+    EXPECT_FALSE(ipp_attribute_value(ippFindAttribute(ipp, "range", IPP_TAG_ZERO), 0).isValid());   // unsupported tag
+    EXPECT_EQ(ipp_attribute_value(ippFindAttribute(ipp, "kw", IPP_TAG_ZERO), 1).toString(), QString("two"));
+    ippDelete(ipp);
+}

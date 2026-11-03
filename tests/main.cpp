@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include <QApplication>
 #include <QCoreApplication>
 #include <QDir>
 #include <QTemporaryDir>
@@ -25,7 +26,8 @@ int main(int argc, char *argv[])
         QDir(home.path()).mkpath(".config");
     }
 
-    QCoreApplication app(argc, argv);
+    // QApplication (offscreen) so that widget/dialog state logic can be unit-tested too
+    QApplication app(argc, argv);
     ::testing::InitGoogleTest(&argc, argv);
     int ret = RUN_ALL_TESTS();
 

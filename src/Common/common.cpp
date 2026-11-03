@@ -682,10 +682,15 @@ const char kManagerPath[] = "/com/deepin/printer/manager";
 // Polkit may show an authentication dialog and wait for the user.
 const int kManagerTimeoutMs = 120 * 1000;
 
+ManagerTransport g_managerTransport;
+
 // The service is root-only by bus policy; verify the owner anyway so that a
 // spoofed service can never answer for it.
 bool isManagerOwnedByRoot()
 {
+    if (g_managerTransport.isOwnedByRoot) {
+        return g_managerTransport.isOwnedByRoot();
+    }
     QDBusConnectionInterface *bus = QDBusConnection::systemBus().interface();
     if (!bus) {
         return false;
@@ -701,6 +706,9 @@ bool isManagerOwnedByRoot()
 // Asynchronous call that keeps painting but ignores user input meanwhile.
 QDBusMessage callManager(const QString &method, const QVariantList &arguments)
 {
+    if (g_managerTransport.call) {
+        return g_managerTransport.call(method, arguments);
+    }
     QDBusMessage msg = QDBusMessage::createMethodCall(kManagerService, kManagerPath, kManagerService, method);
     msg.setArguments(arguments);
 
@@ -778,6 +786,9 @@ bool areCanonArgsValid(bool isAdd, const QStringList &args)
 }
 
 }  // namespace
+
+void setManagerTransport(const ManagerTransport &transport) { g_managerTransport = transport; }
+void resetManagerTransport() { g_managerTransport = ManagerTransport(); }
 
 int managerCanonPrinter(const QString &action, const QStringList &args)
 {

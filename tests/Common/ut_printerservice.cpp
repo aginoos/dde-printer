@@ -4,6 +4,13 @@
 
 #include <gtest/gtest.h>
 
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QMetaObject>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QSignalSpy>
 #include <QUrl>
 
 #include <memory>
@@ -137,4 +144,148 @@ TEST(ut_PrinterService, noAddressMeansNoRequest)
         service->searchDriverSolution("Canon", "LBP2900", "MFG:Canon;MDL:LBP2900;"));
     service->m_platformUrl = saved;
     EXPECT_EQ(request, nullptr);   // nothing is sent; the caller carries on with the local drivers
+}
+
+namespace {
+
+class FakeReply : public QNetworkReply
+{
+public:
+    FakeReply(const QNetworkRequest &req, QNetworkAccessManager::Operation op, const QByteArray &body,
+              QNetworkReply::NetworkError err, bool finishNow, QObject *parent)
+        : QNetworkReply(parent), m_data(body)
+    {
+        setRequest(req);
+        setOperation(op);
+        setUrl(req.url());
+        open(ReadOnly | Unbuffered);
+        if (err != NoError)
+            setError(err, QStringLiteral("fake"));
+        if (finishNow)
+            QMetaObject::invokeMethod(this, [this]() { emit finished(); }, Qt::QueuedConnection);
+    }
+    void abort() override {}
+    qint64 bytesAvailable() const override { return m_data.size() - m_pos + QIODevice::bytesAvailable(); }
+
+protected:
+    qint64 readData(char *data, qint64 maxlen) override
+    {
+        const qint64 n = qMin<qint64>(maxlen, m_data.size() - m_pos);
+        if (n <= 0)
+            return -1;
+        memcpy(data, m_data.constData() + m_pos, n);
+        m_pos += n;
+        return n;
+    }
+
+private:
+    QByteArray m_data;
+    qint64 m_pos = 0;
+};
+
+class FakeManager : public QNetworkAccessManager
+{
+public:
+    QByteArray body = "{\"ok\":true}";
+    QNetworkReply::NetworkError error = QNetworkReply::NoError;
+    bool finish = true;
+    QUrl seenUrl;
+    QByteArray seenContentType;
+    QByteArray seenBody;
+    Operation seenOp = UnknownOperation;
+    int calls = 0;
+
+protected:
+    QNetworkReply *createRequest(Operation op, const QNetworkRequest &req, QIODevice *outgoing = nullptr) override
+    {
+        ++calls;
+        seenUrl = req.url();
+        seenContentType = req.header(QNetworkRequest::ContentTypeHeader).toByteArray();
+        seenOp = op;
+        if (outgoing)
+            seenBody = outgoing->readAll();
+        return new FakeReply(req, op, body, error, finish, this);
+    }
+};
+
+struct NetworkScope
+{
+    FakeManager manager;
+    NetworkScope() { PrinterServerInterface::setNetworkManager(&manager); }
+    ~NetworkScope()
+    {
+        PrinterServerInterface::setNetworkManager(nullptr);
+        PrinterServerInterface::setTimeoutMs(10000);
+    }
+};
+
+}  // namespace
+
+TEST(ut_PrinterService, getSendsUrlAndEmitsBody)
+{
+    NetworkScope net;
+    PrinterServerInterface request("https://example.invalid/a?x=1", QJsonObject());
+    QSignalSpy spy(&request, &PrinterServerInterface::signalDone);
+    request.getFromServer();
+    ASSERT_EQ(spy.count(), 1);
+    EXPECT_EQ(spy.at(0).at(0).toInt(), int(QNetworkReply::NoError));
+    EXPECT_EQ(spy.at(0).at(1).toByteArray(), QByteArray("{\"ok\":true}"));
+    EXPECT_EQ(net.manager.seenUrl, QUrl("https://example.invalid/a?x=1"));
+    EXPECT_EQ(net.manager.seenOp, QNetworkAccessManager::GetOperation);
+    EXPECT_EQ(net.manager.seenContentType, QByteArray("application/json"));
+}
+
+TEST(ut_PrinterService, postSendsCompactJsonBody)
+{
+    NetworkScope net;
+    PrinterServerInterface request("https://example.invalid/b", QJsonObject{{"id", 7}});
+    QSignalSpy spy(&request, &PrinterServerInterface::signalDone);
+    request.postToServer();
+    ASSERT_EQ(spy.count(), 1);
+    EXPECT_EQ(net.manager.seenOp, QNetworkAccessManager::PostOperation);
+    EXPECT_EQ(net.manager.seenBody, QByteArray("{\"id\":7}"));
+    EXPECT_EQ(net.manager.seenContentType, QByteArray("application/json"));
+}
+
+TEST(ut_PrinterService, networkErrorIsForwardedInSignal)
+{
+    NetworkScope net;
+    net.manager.error = QNetworkReply::HostNotFoundError;
+    net.manager.body.clear();
+    PrinterServerInterface request("https://example.invalid/c", QJsonObject());
+    QSignalSpy spy(&request, &PrinterServerInterface::signalDone);
+    request.getFromServer();
+    ASSERT_EQ(spy.count(), 1);
+    EXPECT_EQ(spy.at(0).at(0).toInt(), int(QNetworkReply::HostNotFoundError));
+}
+
+TEST(ut_PrinterService, unansweredRequestGivesUpAfterTimeout)
+{
+    NetworkScope net;
+    net.manager.finish = false;
+    PrinterServerInterface::setTimeoutMs(50);
+    PrinterServerInterface request("https://example.invalid/d", QJsonObject());
+    QSignalSpy spy(&request, &PrinterServerInterface::signalDone);
+    request.getFromServer();
+    ASSERT_EQ(spy.count(), 1);   // the caller is released although nothing arrived
+    EXPECT_EQ(net.manager.calls, 1);
+}
+
+TEST(ut_PrinterService, emptyAddressSendsNothing)
+{
+    NetworkScope net;
+    PrinterService *service = PrinterService::getInstance();
+    const QString saved = service->m_platformUrl;
+    service->m_platformUrl.clear();
+    PrinterServerInterface *request = service->searchDriverSolution("HP", "X", "MFG:HP;SN:1;");
+    service->m_platformUrl = saved;
+    EXPECT_EQ(request, nullptr);
+    EXPECT_EQ(net.manager.calls, 0);
+}
+
+TEST(ut_PrinterService, feedbackResultSendsNothingYet)
+{
+    NetworkScope net;
+    EXPECT_EQ(PrinterService::getInstance()->feedbackResult(1, true, "r", "f", 3), nullptr);
+    EXPECT_EQ(net.manager.calls, 0);
 }

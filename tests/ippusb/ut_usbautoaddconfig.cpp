@@ -25,3 +25,9 @@ TEST(ut_UsbAutoAddConfig, keyMatchesMetadata)
 {
     EXPECT_STREQ(UsbAutoAddConfig::kKey, "allow_auto_usb");
 }
+
+TEST(ut_UsbAutoAddConfig, enabledByDefaultWhenNoConfigIsDeployed)
+{
+    // the unit-test environment has no dde-printer DConfig schema installed: default is "on"
+    EXPECT_TRUE(UsbAutoAddConfig::isEnabled());
+}

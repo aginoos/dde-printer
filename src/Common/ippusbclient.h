@@ -6,6 +6,7 @@
 #define IPPUSBCLIENT_H
 
 #include <QDBusMessage>
+#include <functional>
 #include <QString>
 
 /*
@@ -35,6 +36,16 @@ Outcome outcomeFromReply(const QDBusMessage &reply);
 // while polkit may ask for a password.
 Outcome addToBlacklist(const QString &vendorProduct);
 Outcome removeFromBlacklist(const QString &vendorProduct);
+
+// Seam for tests: the two bus interactions behind the calls above. An empty member keeps the real
+// system-bus behaviour (owner check, then the blocking/async method call).
+struct Transport
+{
+    std::function<bool()> isServiceOwnedByRoot;
+    std::function<QDBusMessage(const QString &method, const QString &vendorProduct)> callService;
+};
+void setTransport(const Transport &transport);
+void resetTransport();
 
 }   // namespace IppUsbClient
 

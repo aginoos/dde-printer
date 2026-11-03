@@ -71,13 +71,17 @@ QDBusMessage callService(const QString &method, const QString &vendorProduct)
     return pending.reply();
 }
 
+Transport g_transport;
+
 Outcome call(const QString &method, const QString &vendorProduct)
 {
     if (!isWellFormedId(vendorProduct))
         return Outcome::InvalidArgument;
-    if (!isServiceOwnedByRoot())
+    const bool ownedByRoot = g_transport.isServiceOwnedByRoot ? g_transport.isServiceOwnedByRoot() : isServiceOwnedByRoot();
+    if (!ownedByRoot)
         return Outcome::Unavailable;
-    return outcomeFromReply(callService(method, vendorProduct));
+    return outcomeFromReply(g_transport.callService ? g_transport.callService(method, vendorProduct)
+                                                    : callService(method, vendorProduct));
 }
 
 Outcome outcomeFromError(const QDBusMessage &reply)
@@ -98,6 +102,9 @@ Outcome outcomeFromError(const QDBusMessage &reply)
 }
 
 }
+
+void setTransport(const Transport &transport) { g_transport = transport; }
+void resetTransport() { g_transport = Transport(); }
 
 bool isSuccess(Outcome outcome)
 {

@@ -18,7 +18,17 @@
 #include <QEventLoop>
 #include <DLog>
 
-static QNetworkAccessManager g_networkManager;
+static QNetworkAccessManager g_defaultNetworkManager;
+static QNetworkAccessManager *g_networkOverride = nullptr;
+static int g_requestTimeoutMs = 10000;
+
+static QNetworkAccessManager &networkManager()
+{
+    return g_networkOverride ? *g_networkOverride : g_defaultNetworkManager;
+}
+
+void PrinterServerInterface::setNetworkManager(QNetworkAccessManager *manager) { g_networkOverride = manager; }
+void PrinterServerInterface::setTimeoutMs(int timeoutMs) { g_requestTimeoutMs = timeoutMs; }
 
 DCORE_USE_NAMESPACE
 PrinterServerInterface::PrinterServerInterface(const QString &url, const QJsonObject &obj, QObject *parent)
@@ -38,7 +48,7 @@ void PrinterServerInterface::postToServer()
     QEventLoop loop;
     connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    timer.start(10000);
+    timer.start(g_requestTimeoutMs);
     loop.exec();
 
     if (timer.isActive()) {
@@ -64,7 +74,7 @@ QNetworkReply *PrinterServerInterface::post_request(const QString &path, const Q
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
-    QNetworkReply *reply = g_networkManager.post(request,
+    QNetworkReply *reply = networkManager().post(request,
                                                  QJsonDocument(obj).toJson(QJsonDocument::Compact));
     return reply;
 }
@@ -114,7 +124,7 @@ void PrinterServerInterface::getFromServer()
     QEventLoop loop;
     connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    timer.start(10000);
+    timer.start(g_requestTimeoutMs);
     loop.exec();
 
     if (timer.isActive()) {
@@ -140,7 +150,7 @@ QNetworkReply *PrinterServerInterface::get_request(const QString &path)
    QNetworkRequest request(url);
    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
-   QNetworkReply *reply = g_networkManager.get(request);
+   QNetworkReply *reply = networkManager().get(request);
    return reply;
 }
 

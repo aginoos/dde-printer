@@ -345,6 +345,19 @@ QList<ServiceRecord> browseOn(const QStringList &types, int interfaceIndex, int 
     if (types.isEmpty())
         return records;
 
+    if (g_publishedServices) {
+        for (const ServiceRecord &record : g_publishedServices(types, interfaceIndex, timeoutMs)) {
+            if (!types.contains(record.type))
+                continue;
+            if (interfaceIndex != kIfUnspec && record.interfaceIndex != interfaceIndex)
+                continue;
+            if (filter && !filter(record.name, record.type, stripTrailingDot(record.domain)))
+                continue;
+            records.append(record);
+        }
+        return records;
+    }
+
     PrivateBus session;
     if (!session.isConnected()) {
         qCWarning(COMMONMOUDLE) << "Cannot reach the system bus for avahi";
@@ -443,7 +456,7 @@ QList<IppUsbDevice> parseIppUsbStatus(const QString &output)
 QList<IppUsbDevice> ippUsbDevices()
 {
     QList<IppUsbDevice> devices;
-    const QString program = QStandardPaths::findExecutable(
+    const QString program = !g_ippUsbProgramOverride.isEmpty() ? g_ippUsbProgramOverride : QStandardPaths::findExecutable(
         QStringLiteral("ipp-usb"), {QStringLiteral("/usr/sbin"), QStringLiteral("/sbin"), QStringLiteral("/usr/bin")});
     if (program.isEmpty())
         return devices;

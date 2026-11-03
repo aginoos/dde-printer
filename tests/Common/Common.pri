@@ -11,6 +11,8 @@ for(src, SOURCES) {
 
 SOURCES += $$PWD/ut_common.cpp \
     $$PWD/ut_qtconvert.cpp \
+    $$PWD/ut_smbcredentialdialog.cpp \
+    $$PWD/ut_cupsconnectionfactory.cpp \
     $$PWD/ut_zsettings.cpp \
     $$PWD/ut_zjobmanager.cpp \
     $$PWD/ut_ztroubleshoot.cpp \

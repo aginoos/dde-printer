@@ -37,6 +37,11 @@ public:
     void getFromServer();
     void postToServer();
 
+    // Seam for tests: the manager used for requests (nullptr restores the process-wide default)
+    // and the wait before a request is given up (default 10000 ms).
+    static void setNetworkManager(QNetworkAccessManager *manager);
+    static void setTimeoutMs(int timeoutMs);
+
 signals:
     void signalDone(int, QByteArray);
 

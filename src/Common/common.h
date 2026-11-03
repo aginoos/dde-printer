@@ -6,6 +6,8 @@
 #define COMMON_H
 
 #include <QString>
+#include <functional>
+#include <QDBusMessage>
 #include <QMap>
 #include <QVariant>
 #include <QLoggingCategory>
@@ -94,6 +96,16 @@ int managerCanonPrinter(const QString &action, const QStringList &args);
 bool managerLaunchAutoStart(const QString &configDir);
 // Translated, user-facing text for a CanonManagerResult.
 QString canonManagerErrorText(int code);
+
+// Seam for tests: the two bus interactions behind managerCanonPrinter()/managerLaunchAutoStart().
+// An empty member keeps the real system-bus behaviour (root owner check, asynchronous call).
+struct ManagerTransport
+{
+    std::function<bool()> isOwnedByRoot;
+    std::function<QDBusMessage(const QString &method, const QVariantList &arguments)> call;
+};
+void setManagerTransport(const ManagerTransport &transport);
+void resetManagerTransport();
 
 bool isPackageInstalled(const QString &packageName);
 #endif // COMMON_H

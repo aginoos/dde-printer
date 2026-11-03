@@ -19,6 +19,8 @@ const char kCcpdUnit[] = "ccpd.service";
 // Time added to a unit's runtime limit for systemd-run itself to return.
 constexpr int kWaitSlackMs = 15000;
 
+int g_lockRetryDelayMs = CanonI386Repair::kLockRetryDelayMs;
+
 using Done = std::function<void(int)>;
 using Reader = std::function<void(const CommandResult &)>;
 
@@ -67,7 +69,7 @@ void runPrivileged(QObject *owner, const QString &name, const QStringList &args,
             }
             const bool locked = CanonI386Repair::isLockContention(QString::fromUtf8(result.output));
             if (locked && retriesLeft > 0) {
-                QTimer::singleShot(CanonI386Repair::kLockRetryDelayMs, owner, [=]() {
+                QTimer::singleShot(g_lockRetryDelayMs, owner, [=]() {
                     runPrivileged(owner, name, args, timeoutMs, retriesLeft - 1, done);
                 });
                 return;
@@ -295,6 +297,11 @@ QStringList transientUnitArgs(const QString &tool, const QStringList &args, int 
         QStringLiteral("-E"), QStringLiteral("PATH=/usr/sbin:/usr/bin:/sbin:/bin"),
         tool,
     } + args;
+}
+
+void setLockRetryDelayMs(int ms)
+{
+    g_lockRetryDelayMs = ms < 0 ? kLockRetryDelayMs : ms;
 }
 
 void run(QObject *owner, std::function<void(int)> done)

@@ -4,7 +4,9 @@
 
 #include <gtest/gtest.h>
 
+#include <QFile>
 #include <QString>
+#include <QTemporaryDir>
 
 // The implementation file is included (and left out of the build list, see
 // Common.pri) so that the helpers in its unnamed namespace can be tested too.
@@ -440,3 +442,240 @@ TEST(ut_AvahiTool, resolveDnssdUriServesFreshCacheEntries)
     EXPECT_TRUE(info.isShared);
 }
 
+
+namespace {
+
+ServiceRecord makeRecord(const QString &name, const QString &type, const QString &host, const QString &address,
+                         quint16 port, int ifIndex = 2, const QMap<QString, QString> &txt = {})
+{
+    ServiceRecord r;
+    r.name = name;
+    r.type = type;
+    r.domain = "local";
+    r.host = host;
+    r.address = address;
+    r.port = port;
+    r.interfaceIndex = ifIndex;
+    r.txt = txt;
+    return r;
+}
+
+// Installs a fake set of published services for the duration of a test and clears the cache.
+struct PublishedScope
+{
+    QList<ServiceRecord> records;
+    QList<QStringList> requestedTypes;
+    QList<int> requestedInterfaces;
+    int calls = 0;
+
+    PublishedScope()
+    {
+        g_dnssdCache.clear();
+        g_publishedServices = [this](const QStringList &types, int ifIndex, int) {
+            ++calls;
+            requestedTypes.append(types);
+            requestedInterfaces.append(ifIndex);
+            return records;
+        };
+    }
+    ~PublishedScope()
+    {
+        g_publishedServices = nullptr;
+        g_ippUsbProgramOverride.clear();
+        g_dnssdCache.clear();
+    }
+};
+
+}  // namespace
+
+TEST(ut_AvahiTool, browseServicesKeepsOnlyRequestedTypesAndFilter)
+{
+    PublishedScope fake;
+    fake.records = {makeRecord("A", "_ipp._tcp", "a.local", "10.0.0.1", 631),
+                    makeRecord("B", "_ipp._tcp", "b.local", "10.0.0.2", 631),
+                    makeRecord("C", "_printer._tcp", "c.local", "10.0.0.3", 515)};
+    const QList<ServiceRecord> all = browseServices({"_ipp._tcp"});
+    ASSERT_EQ(all.size(), 2);
+    const QList<ServiceRecord> onlyB = browseServices({"_ipp._tcp"}, 3000, [](const QString &name, const QString &, const QString &) {
+        return name == "B";
+    });
+    ASSERT_EQ(onlyB.size(), 1);
+    EXPECT_EQ(onlyB.first().address, QString("10.0.0.2"));
+    EXPECT_TRUE(browseServices({}).isEmpty());
+    EXPECT_EQ(fake.calls, 2);   // the empty type list never reaches the bus
+}
+
+TEST(ut_AvahiTool, localIppUsbServicesKeepsOnlyUsbBackedLoopbackWithPort)
+{
+    PublishedScope fake;
+    const QNetworkInterface lo = QNetworkInterface::interfaceFromName("lo");
+    const int loIndex = lo.isValid() ? lo.index() : -1;
+    const QMap<QString, QString> usb{{"usb_mfg", "Pantum"}, {"ty", "Pantum P3301DN"}};
+    fake.records = {makeRecord("Pantum P3301DN Series 6076A2 (USB)", "_ipp._tcp", "h", "127.0.0.1", 60000, loIndex, usb),
+                    makeRecord("NoPort", "_ipp._tcp", "h", "127.0.0.1", 0, loIndex, usb),
+                    makeRecord("Network", "_ipp._tcp", "n", "192.168.1.5", 631, loIndex, usb),
+                    makeRecord("Shared", "_ipp._tcp", "h", "127.0.0.1", 631, loIndex, {{"usb_mfg", "x"}, {"printer-type", "0x1"}})};
+    const QList<ServiceRecord> usbOnly = localIppUsbServices();
+    ASSERT_EQ(usbOnly.size(), 1);
+    EXPECT_EQ(usbOnly.first().port, quint16(60000));
+    EXPECT_EQ(localIppUsbModelByPort(60000), QString("Pantum P3301DN"));
+    EXPECT_TRUE(localIppUsbModelByPort(60001).isEmpty());
+    ASSERT_FALSE(fake.requestedTypes.isEmpty());
+    EXPECT_EQ(fake.requestedTypes.first(), QStringList{"_ipp._tcp"});
+}
+
+TEST(ut_AvahiTool, resolveDnssdPrefersNetworkAddressOverLoopback)
+{
+    PublishedScope fake;
+    fake.records = {makeRecord("Office", "_ipp._tcp", "o.local", "127.0.0.1", 631),
+                    makeRecord("Office", "_ipp._tcp", "o.local", "192.168.1.9", 631)};
+    const DnssdInfo info = resolveDnssdUri(buildDnssdUri("Office", "u1"));
+    EXPECT_TRUE(info.found);
+    EXPECT_EQ(info.ip, QString("192.168.1.9"));
+    EXPECT_FALSE(info.isShared);
+}
+
+TEST(ut_AvahiTool, resolveDnssdFallsBackToLoopbackAndFlagsSharedQueues)
+{
+    PublishedScope fake;
+    fake.records = {makeRecord("Q", "_ipp._tcp", "q", "127.0.0.1", 631, 1, {{"printer-type", "0x809046"}})};
+    const DnssdInfo info = resolveDnssdUri(buildDnssdUri("Q", QString()));
+    EXPECT_TRUE(info.found);
+    EXPECT_EQ(info.ip, QString("127.0.0.1"));
+    EXPECT_TRUE(info.isShared);
+}
+
+TEST(ut_AvahiTool, resolveDnssdFoundWithoutAddressHasEmptyIp)
+{
+    PublishedScope fake;
+    fake.records = {makeRecord("NoIp", "_ipp._tcp", "n", QString(), 631)};
+    const DnssdInfo info = resolveDnssdUri(buildDnssdUri("NoIp", QString()));
+    EXPECT_TRUE(info.found);
+    EXPECT_TRUE(info.ip.isEmpty());
+}
+
+TEST(ut_AvahiTool, resolveDnssdIgnoresOtherInstancesAndDomains)
+{
+    PublishedScope fake;
+    fake.records = {makeRecord("Other", "_ipp._tcp", "o", "10.0.0.8", 631)};
+    EXPECT_FALSE(resolveDnssdUri(buildDnssdUri("Wanted", QString())).found);
+    ServiceRecord remote = makeRecord("Wanted", "_ipp._tcp", "w", "10.0.0.9", 631);
+    remote.domain = "corp.example";
+    fake.records = {remote};
+    EXPECT_FALSE(resolveDnssdUri(buildDnssdUri("Wanted", QString())).found);   // .local was asked for
+}
+
+TEST(ut_AvahiTool, resolveDnssdCachesFoundResultOnly)
+{
+    PublishedScope fake;
+    const QString uri = buildDnssdUri("Cache", QString());
+    EXPECT_FALSE(resolveDnssdUri(uri).found);      // nothing published: not cached
+    EXPECT_FALSE(resolveDnssdUri(uri).found);
+    EXPECT_EQ(fake.calls, 2);
+
+    fake.records = {makeRecord("Cache", "_ipp._tcp", "c", "10.1.1.1", 631)};
+    EXPECT_EQ(resolveDnssdUri(uri).ip, QString("10.1.1.1"));
+    const int callsAfterFirst = fake.calls;
+    fake.records.clear();
+    EXPECT_EQ(resolveDnssdUri(uri).ip, QString("10.1.1.1"));   // served from the cache
+    EXPECT_EQ(fake.calls, callsAfterFirst);
+}
+
+TEST(ut_AvahiTool, dnssdUriFromIppUriMatchesByHostPortAndPath)
+{
+    PublishedScope fake;
+    fake.records = {makeRecord("Lab Printer", "_ipp._tcp", "lab.local.", "10.0.0.5", 631, 2,
+                               {{"rp", "ipp/print"}, {"uuid", "abc-123"}})};
+    EXPECT_EQ(dnssdUriFromIppUri("ipp://lab.local/ipp/print"), buildDnssdUri("Lab Printer", "abc-123", "_ipp._tcp"));
+    EXPECT_EQ(dnssdUriFromIppUri("ipp://10.0.0.5:631/ipp/print"), buildDnssdUri("Lab Printer", "abc-123", "_ipp._tcp"));
+    EXPECT_TRUE(dnssdUriFromIppUri("ipp://10.0.0.5:632/ipp/print").isEmpty());    // port differs
+    EXPECT_TRUE(dnssdUriFromIppUri("ipp://10.0.0.5/other").isEmpty());            // queue path differs
+    EXPECT_TRUE(dnssdUriFromIppUri("ipp://10.0.0.6/ipp/print").isEmpty());        // other host
+}
+
+TEST(ut_AvahiTool, dnssdUriFromIppsUriSearchesSecureTypes)
+{
+    PublishedScope fake;
+    fake.records = {makeRecord("Sec", "_ipps._tcp", "s", "10.0.0.7", 443)};
+    EXPECT_EQ(dnssdUriFromIppUri("ipps://10.0.0.7:443/"), buildDnssdUri("Sec", QString(), "_ipps._tcp"));
+    ASSERT_FALSE(fake.requestedTypes.isEmpty());
+    EXPECT_EQ(fake.requestedTypes.first(), (QStringList{"_ipps._tcp", "_ipp-tls._tcp"}));
+}
+
+TEST(ut_AvahiTool, dnssdUriFromIppUriByServiceName)
+{
+    PublishedScope fake;
+    fake.records = {makeRecord("Pantum P3301DN", "_ipp._tcp", "x", "127.0.0.1", 60000, 1),
+                    makeRecord("Pantum", "_ipp._tcp", "y", "127.0.0.1", 60001, 1)};
+    const QString uri = dnssdUriFromIppUri("ipp://Pantum%20P3301DN._ipp._tcp.local/ipp/print");
+    EXPECT_EQ(uri, buildDnssdUri("Pantum P3301DN", QString(), "_ipp._tcp"));
+}
+
+TEST(ut_AvahiTool, browseOnLoopbackInterfaceFiltersByInterfaceIndex)
+{
+    PublishedScope fake;
+    fake.records = {makeRecord("Lo", "_ipp._tcp", "h", "127.0.0.1", 60000, 1),
+                    makeRecord("Eth", "_ipp._tcp", "h", "10.0.0.1", 631, 2)};
+    EXPECT_EQ(browseOn({"_ipp._tcp"}, 1, 100, ServiceFilter()).size(), 1);
+    EXPECT_EQ(browseOn({"_ipp._tcp"}, -1, 100, ServiceFilter()).size(), 2);
+}
+
+TEST(ut_AvahiTool, avahiCallsOnADisconnectedBusFailSoftly)
+{
+    QDBusConnection dead(QStringLiteral("no-such-connection-for-test"));
+    BrowseCollector collector(2);
+    const QStringList paths = startBrowsers(dead, {"_ipp._tcp", "_ipps._tcp"}, -1, collector);
+    EXPECT_TRUE(paths.isEmpty());
+    EXPECT_TRUE(collector.isDone());   // both failures were counted, nobody waits for them
+
+    BrowseCollector::Item item;
+    item.name = "X"; item.type = "_ipp._tcp"; item.domain = "local";
+    ServiceRecord record;
+    EXPECT_FALSE(resolveItem(dead, item, record));
+    freeBrowser(dead, "/Client1/ServiceBrowser1");   // must not crash
+}
+
+TEST(ut_AvahiTool, waitForBrowsersReturnsAtTimeout)
+{
+    BrowseCollector collector(1);
+    QElapsedTimer t;
+    t.start();
+    waitForBrowsers(collector, 50);
+    EXPECT_FALSE(collector.isDone());
+    EXPECT_LT(t.elapsed(), 2000);
+    BrowseCollector finished(0);
+    waitForBrowsers(finished, 5000);   // already done: returns at once
+}
+
+TEST(ut_AvahiTool, ippUsbDevicesParsesFakeProgramOutput)
+{
+    PublishedScope fake;
+    QTemporaryDir dir;
+    ASSERT_TRUE(dir.isValid());
+    const QString script = dir.filePath("ipp-usb");
+    QFile f(script);
+    ASSERT_TRUE(f.open(QIODevice::WriteOnly));
+    f.write("#!/bin/sh\necho '   1. Bus 001 Device 018  232B:0EF5  \"Pantum P3301DN\"'\necho '      status: OK'\n");
+    f.close();
+    f.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
+    g_ippUsbProgramOverride = script;
+    const QList<IppUsbDevice> devices = ippUsbDevices();
+    ASSERT_EQ(devices.size(), 1);
+    EXPECT_EQ(devices.first().vendorId, QString("232b"));
+    EXPECT_TRUE(devices.first().isOk());
+}
+
+TEST(ut_AvahiTool, ippUsbDevicesEmptyWhenProgramFails)
+{
+    PublishedScope fake;
+    QTemporaryDir dir;
+    ASSERT_TRUE(dir.isValid());
+    const QString script = dir.filePath("ipp-usb");
+    QFile f(script);
+    ASSERT_TRUE(f.open(QIODevice::WriteOnly));
+    f.write("#!/bin/sh\necho '1. Bus 001 Device 018 232b:0ef5 \"P\"'\nexit 3\n");
+    f.close();
+    f.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
+    g_ippUsbProgramOverride = script;
+    EXPECT_TRUE(ippUsbDevices().isEmpty());
+}

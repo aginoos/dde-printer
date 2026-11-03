@@ -70,28 +70,101 @@ QList<QByteArray> splitLines(const QByteArray &text)
 
 namespace JobLogReader {
 
+namespace {
+
+int monthNumber(const QString &name)
+{
+    static const QStringList months = {"jan", "feb", "mar", "apr", "may", "jun",
+                                       "jul", "aug", "sep", "oct", "nov", "dec"};
+    if (name.size() < 3)
+        return 0;
+    return months.indexOf(name.left(3).toLower()) + 1;   // 0 when unknown
+}
+
+bool isWeekday(const QString &token)
+{
+    static const QStringList days = {"mon", "tue", "wed", "thu", "fri", "sat", "sun"};
+    return token.size() >= 3 && days.contains(token.left(3).toLower());
+}
+
+// "hh:mm:ss" -> QTime (invalid when malformed)
+QTime parseClock(const QString &token, int meridiem)   // meridiem: 0 none, 1 AM, 2 PM
+{
+    const QStringList parts = token.split(':');
+    if (parts.size() != 3)
+        return QTime();
+    bool okH = false, okM = false, okS = false;
+    int h = parts.at(0).toInt(&okH);
+    const int m = parts.at(1).toInt(&okM);
+    const int sec = parts.at(2).toInt(&okS);
+    if (!okH || !okM || !okS)
+        return QTime();
+    if (meridiem != 0) {
+        if (h < 1 || h > 12)
+            return QTime();
+        h = h % 12 + (meridiem == 2 ? 12 : 0);
+    }
+    return QTime(h, m, sec);
+}
+
+}  // namespace
+
 qint64 submissionTime(const QStringList &dateFields)
 {
-    // "Mon 03 Nov 2026 10:00:00 AM CST": the zone name is dropped, the time is
-    // read as local time, which is the zone cupsd and this service run in.
-    QStringList fields = dateFields;
-    if (fields.size() >= 2) {
-        const QString last = fields.last();
-        const bool isZone = last.size() >= 2 && last.size() <= 5 && last.at(0).isLetter()
-            && last != QLatin1String("AM") && last != QLatin1String("PM");
-        if (isZone)
-            fields.removeLast();
+    // Locale independent: month and weekday names are matched by hand. The
+    // time is read as local time, the zone cupsd and this service run in.
+    // Accepted: "Mon 03 Nov 2026 10:00:00 AM CST", "Mon 03 Nov 2026 22:00:00",
+    // "Mon Nov  3 22:00:00 2026" and "2026-11-03T22:00:00" / "2026-11-03 22:00:00".
+    QStringList t;
+    for (const QString &f : dateFields) {
+        if (!f.isEmpty())
+            t << f;
     }
-    const QString text = fields.join(QLatin1Char(' '));
-    const QLocale c = QLocale::c();
-    for (const QString &format : {QStringLiteral("ddd dd MMM yyyy hh:mm:ss AP"),
-                                  QStringLiteral("ddd dd MMM yyyy HH:mm:ss"),
-                                  QStringLiteral("ddd d MMM yyyy hh:mm:ss AP")}) {
-        const QDateTime time = c.toDateTime(text, format);
-        if (time.isValid())
-            return time.toSecsSinceEpoch();
+    if (!t.isEmpty() && isWeekday(t.first()))
+        t.removeFirst();
+    if (t.isEmpty())
+        return 0;
+
+    QDate date;
+    QTime time;
+    const QString first = t.first();
+    if (first.contains('-') && first.size() >= 10 && first.at(4) == QLatin1Char('-')) {   // ISO
+        QString iso = first;
+        if (iso.size() > 10 && iso.at(10) == QLatin1Char('T')) {
+            time = parseClock(iso.mid(11, 8), 0);
+            iso = iso.left(10);
+        } else if (t.size() >= 2) {
+            time = parseClock(t.at(1), 0);
+        }
+        date = QDate::fromString(iso, Qt::ISODate);
+    } else if (monthNumber(first) > 0) {   // "Nov 3 22:00:00 2026"
+        if (t.size() < 4)
+            return 0;
+        bool okD = false, okY = false;
+        const int day = t.at(1).toInt(&okD);
+        const int year = t.at(3).toInt(&okY);
+        if (okD && okY)
+            date = QDate(year, monthNumber(first), day);
+        time = parseClock(t.at(2), 0);
+    } else {   // "03 Nov 2026 10:00:00 [AM|PM] [zone]"
+        if (t.size() < 4)
+            return 0;
+        bool okD = false, okY = false;
+        const int day = t.at(0).toInt(&okD);
+        const int year = t.at(2).toInt(&okY);
+        const int month = monthNumber(t.at(1));
+        int meridiem = 0;
+        if (t.size() >= 5) {
+            const QString m = t.at(4).toUpper();
+            meridiem = m == QLatin1String("AM") ? 1 : (m == QLatin1String("PM") ? 2 : 0);
+        }
+        if (okD && okY && month > 0)
+            date = QDate(year, month, day);
+        time = parseClock(t.at(3), meridiem);
     }
-    return 0;
+    if (!date.isValid() || !time.isValid())
+        return 0;
+    return QDateTime(date, time).toSecsSinceEpoch();
 }
 
 QList<JobEntry> parseLpstatJobs(const QString &output, const QString &printer)

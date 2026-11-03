@@ -30,6 +30,11 @@
         <source>This driver needs administrator authorization. Please add the printer in the Print Manager.</source>
         <translation>该驱动需要管理员授权，请在打印管理器中添加该打印机。</translation>
     </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>URI can't be empty</source>
+        <translation>URI 不能为空</translation>
+    </message>
 </context>
 <context>
     <name>CheckAttributes</name>
@@ -752,6 +757,11 @@
         <source>Log out and log in again to turn on print notifications</source>
         <translation>注销并重新登录后才会有打印通知</translation>
     </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>Are you sure you want to delete the printer "%1" ?</source>
+        <translation>确定要删除打印机“%1”吗？</translation>
+    </message>
 </context>
 <context>
     <name>DPropertySetDlg</name>
@@ -986,6 +996,11 @@
         <source>Administrator authorization was denied.</source>
         <translation>管理员授权被拒绝。</translation>
     </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>The package %1 is already installed in a higher version (%2) than the driver requires (%3)</source>
+        <translation>软件包 %1 已安装了比驱动所需（%3）更高的版本（%2）</translation>
+    </message>
 </context>
 <context>
     <name>InstallPrinterWindow</name>
@@ -1091,6 +1106,11 @@
     <message>
         <source>Installing printer driver... Please do not disconnect. This may take a few minutes. Thank you for your patience.</source>
         <translation>正在安装打印机驱动...请不要断开连接，可能需要几分钟，感谢您的耐心等待。</translation>
+    </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>You have successfully added the printer.</source>
+        <translation>打印机添加成功。</translation>
     </message>
 </context>
 <context>
@@ -2014,6 +2034,11 @@
         <source>Cancel</source>
         <comment>button</comment>
         <translation>取消</translation>
+    </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>Can't print? Learn how to resolve</source>
+        <translation>无法打印？了解如何解决</translation>
     </message>
 </context>
 <context>

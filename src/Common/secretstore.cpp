@@ -19,6 +19,11 @@
 #include <thread>
 
 namespace {
+SecretStore::Backend g_backend;
+std::atomic<int> g_timeoutMs{8000};
+}
+
+namespace {
 
 const SecretSchema *smbSchema()
 {
@@ -35,12 +40,11 @@ const SecretSchema *smbSchema()
 // The Secret Service blocks while it waits for a keyring that does not exist (no login keyring) or
 // for an unlock prompt nobody answers. Every keyring call gets this deadline: when it passes, the
 // call is cancelled and reported as "keyring not available" instead of hanging the worker thread.
-constexpr int kKeyringTimeoutMs = 8000;
 
 class KeyringDeadline
 {
 public:
-    explicit KeyringDeadline(int timeoutMs = kKeyringTimeoutMs)
+    explicit KeyringDeadline(int timeoutMs = g_timeoutMs.load())
         : m_cancellable(g_cancellable_new())
     {
         m_timer = std::thread([this, timeoutMs]() {
@@ -65,6 +69,11 @@ public:
     KeyringDeadline &operator=(const KeyringDeadline &) = delete;
 
     GCancellable *cancellable() const { return m_cancellable; }
+    SecretStore::CancelProbe probe() const
+    {
+        GCancellable *cancellable = m_cancellable;
+        return [cancellable]() { return g_cancellable_is_cancelled(cancellable) == TRUE; };
+    }
 
 private:
     GCancellable *m_cancellable;
@@ -83,7 +92,57 @@ void reportKeyringError(const char *operation, GError *error)
     g_error_free(error);
 }
 
+SecretStore::KeyringResult libsecretClear(const QByteArray &key, GCancellable *cancellable, const char *operation)
+{
+    GError *error = nullptr;
+    const gboolean cleared = secret_password_clear_sync(smbSchema(), cancellable, &error, "uri", key.constData(), nullptr);
+    SecretStore::KeyringResult result;
+    result.ok = cleared == TRUE;
+    result.cancelled = error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED);
+    reportKeyringError(operation, error);
+    return result;
+}
+
+SecretStore::KeyringResult libsecretStore(const SecretStore::StoreRequest &r, GCancellable *cancellable)
+{
+    GError *error = nullptr;
+    const gboolean stored = secret_password_store_sync(smbSchema(), SECRET_COLLECTION_DEFAULT,
+                                                       r.label.constData(), r.secret.constData(), cancellable, &error,
+                                                       "uri", r.key.constData(),
+                                                       "host", r.host.constData(),
+                                                       "share", r.share.constData(),
+                                                       "user", r.user.constData(),
+                                                       nullptr);
+    SecretStore::KeyringResult result;
+    result.ok = stored == TRUE;
+    reportKeyringError("store", error);
+    return result;
+}
+
+std::optional<QByteArray> libsecretLookup(const QByteArray &key, GCancellable *cancellable)
+{
+    GError *error = nullptr;
+    gchar *secret = secret_password_lookup_sync(smbSchema(), cancellable, &error, "uri", key.constData(), nullptr);
+    reportKeyringError("lookup", error);
+    if (!secret)
+        return std::nullopt;
+    const QByteArray plain(secret);
+    secret_password_free(secret);   // libsecret wipes its own buffer
+    return plain;
+}
+
+SecretStore::KeyringResult runClear(const QByteArray &key, const KeyringDeadline &deadline, const char *operation)
+{
+    if (g_backend.clear)
+        return g_backend.clear(key, deadline.probe());
+    return libsecretClear(key, deadline.cancellable(), operation);
+}
+
 }  // namespace
+
+void SecretStore::setBackend(const Backend &backend) { g_backend = backend; }
+void SecretStore::resetBackend() { g_backend = Backend(); g_timeoutMs = 8000; }
+void SecretStore::setTimeoutMs(int timeoutMs) { g_timeoutMs = timeoutMs; }
 
 QByteArray SecretStore::encode(const SmbCredential &credential)
 {
@@ -119,35 +178,26 @@ bool SecretStore::storeSmb(const QString &uri, const SmbCredential &credential)
         return false;
 
     const SmbUriParts parts = SmbUri::parse(uri);
-    const QByteArray keyUtf8 = key.toUtf8();
-    const QByteArray hostUtf8 = parts.server.toUtf8();
-    const QByteArray shareUtf8 = parts.share.toLower().toUtf8();
-    const QByteArray userUtf8 = credential.user.toUtf8();
-    const QByteArray label = QStringLiteral("Printer share %1/%2").arg(parts.server, parts.share).toUtf8();
-    QByteArray secret = encode(credential);
+    StoreRequest request;
+    request.key = key.toUtf8();
+    request.host = parts.server.toUtf8();
+    request.share = parts.share.toLower().toUtf8();
+    request.user = credential.user.toUtf8();
+    request.label = QStringLiteral("Printer share %1/%2").arg(parts.server, parts.share).toUtf8();
+    request.secret = encode(credential);
 
     // one entry per share: a changed user name must not leave the old entry behind
     KeyringDeadline deadline;
-    GError *error = nullptr;
-    secret_password_clear_sync(smbSchema(), deadline.cancellable(), &error, "uri", keyUtf8.constData(), nullptr);
-    const bool cancelled = error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED);
-    reportKeyringError("clear", error);
-    if (cancelled) {   // no usable keyring: do not wait a second time for the store
-        secret.fill('\0');
+    const KeyringResult cleared = runClear(request.key, deadline, "clear");
+    if (cleared.cancelled) {   // no usable keyring: do not wait a second time for the store
+        request.secret.fill('\0');
         return false;
     }
 
-    error = nullptr;
-    const gboolean stored = secret_password_store_sync(smbSchema(), SECRET_COLLECTION_DEFAULT,
-                                                       label.constData(), secret.constData(), deadline.cancellable(), &error,
-                                                       "uri", keyUtf8.constData(),
-                                                       "host", hostUtf8.constData(),
-                                                       "share", shareUtf8.constData(),
-                                                       "user", userUtf8.constData(),
-                                                       nullptr);
-    secret.fill('\0');
-    reportKeyringError("store", error);
-    return stored == TRUE;
+    const KeyringResult stored = g_backend.store ? g_backend.store(request, deadline.probe())
+                                                 : libsecretStore(request, deadline.cancellable());
+    request.secret.fill('\0');
+    return stored.ok;
 }
 
 std::optional<SmbCredential> SecretStore::lookupSmb(const QString &uri)
@@ -157,16 +207,14 @@ std::optional<SmbCredential> SecretStore::lookupSmb(const QString &uri)
         return std::nullopt;
 
     KeyringDeadline deadline;
-    GError *error = nullptr;
-    gchar *secret = secret_password_lookup_sync(smbSchema(), deadline.cancellable(), &error, "uri", key.toUtf8().constData(), nullptr);
-    reportKeyringError("lookup", error);
-    if (!secret)
+    const QByteArray keyUtf8 = key.toUtf8();
+    std::optional<QByteArray> plain = g_backend.lookup ? g_backend.lookup(keyUtf8, deadline.probe())
+                                                       : libsecretLookup(keyUtf8, deadline.cancellable());
+    if (!plain)
         return std::nullopt;
 
-    QByteArray plain(secret);
-    const std::optional<SmbCredential> credential = decode(plain);
-    plain.fill('\0');   // the copy made for decoding does not linger on the heap
-    secret_password_free(secret);   // libsecret wipes its own buffer
+    const std::optional<SmbCredential> credential = decode(*plain);
+    plain->fill('\0');   // the copy made for decoding does not linger on the heap
     return credential;
 }
 
@@ -177,10 +225,7 @@ bool SecretStore::removeSmb(const QString &uri)
         return false;
 
     KeyringDeadline deadline;
-    GError *error = nullptr;
-    const gboolean removed = secret_password_clear_sync(smbSchema(), deadline.cancellable(), &error, "uri", key.toUtf8().constData(), nullptr);
-    reportKeyringError("remove", error);
-    return removed == TRUE;
+    return runClear(key.toUtf8(), deadline, "remove").ok;
 }
 
 void SecretStore::forgetPrinter(const QString &deviceUri)

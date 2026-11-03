@@ -8,6 +8,7 @@
 #include <QByteArray>
 #include <QString>
 
+#include <functional>
 #include <optional>
 
 struct SmbCredential
@@ -41,6 +42,29 @@ public:
     // A password typed into an smb:// URI (smb://user:password@host/share) is moved into the keyring.
     // Returns the URI without user name and password; other URIs are returned unchanged.
     static QString adoptUriCredentials(const QString &uri);
+
+    // Seam for tests: the three keyring operations behind the calls above. The default backend
+    // talks to libsecret; tests install a fake so that no real keyring is touched.
+    // `isCancelled` turns true when the deadline of the call has passed.
+    struct KeyringResult
+    {
+        bool ok = false;
+        bool cancelled = false;   // the call was aborted by the deadline (no usable keyring)
+    };
+    struct StoreRequest
+    {
+        QByteArray key, host, share, user, label, secret;
+    };
+    using CancelProbe = std::function<bool()>;
+    struct Backend
+    {
+        std::function<KeyringResult(const QByteArray &key, const CancelProbe &isCancelled)> clear;
+        std::function<KeyringResult(const StoreRequest &request, const CancelProbe &isCancelled)> store;
+        std::function<std::optional<QByteArray>(const QByteArray &key, const CancelProbe &isCancelled)> lookup;
+    };
+    static void setBackend(const Backend &backend);   // an empty member keeps the libsecret default
+    static void resetBackend();
+    static void setTimeoutMs(int timeoutMs);          // default 8000
 
 private:
     SecretStore() = delete;

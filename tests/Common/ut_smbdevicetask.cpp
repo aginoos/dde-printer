@@ -7,6 +7,7 @@
 #include <QByteArray>
 #include <QList>
 
+#include <cstddef>
 #include <vector>
 
 // Included (and left out of the build list, see Common.pri) to reach the
@@ -102,7 +103,9 @@ struct FakeSmb
         direntStorage.assign(sizeof(struct smbc_dirent) + item.name.size() + 1, '\0');
         auto *entry = reinterpret_cast<struct smbc_dirent *>(direntStorage.data());
         entry->smbc_type = item.type;
-        std::memcpy(entry->name, item.name.constData(), item.name.size());
+        // name is a trailing flexible array declared as name[1]: write through the storage pointer
+        // so the compiler cannot treat the copy (or the later strlen) as bounded by one byte
+        std::memcpy(direntStorage.data() + offsetof(struct smbc_dirent, name), item.name.constData(), item.name.size());
         entry->comment = const_cast<char *>(item.comment.constData());
         return entry;
     }

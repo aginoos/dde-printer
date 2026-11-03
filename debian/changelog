@@ -1,4 +1,4 @@
-dde-printer (1.0.20-1+agino1) unstable; urgency=medium
+dde-printer (1.0.20+agino1-1) unstable; urgency=medium
 
   * agino fork: Qt6/DTK6 only, privileged work moved to a polkit-guarded service, ipp-usb and Windows share support, HP/Canon repair fixes.
 

@@ -1129,3 +1129,45 @@ TEST(ut_AddPrinterFlow, hplipBackendWithoutADeviceTaskMatchesNothing)
     EXPECT_TRUE(backend.getMatchHplipUri("hp:/usb/x?serial=1").isEmpty());
     EXPECT_TRUE(backend.getErrorString().isEmpty());
 }
+
+namespace {
+
+TDeviceInfo hpDevice(const QString &uri)
+{
+    TDeviceInfo device = deviceWith({uri});
+    return device;
+}
+
+}  // namespace
+
+TEST(ut_AddPrinterFlow, hplipMatchUsesTheSerialOfEachDevice)
+{
+    FixHplipBackend backend;
+    backend.m_deviceTask = new RefreshDevicesByBackendTask();
+    backend.m_deviceTask->m_devices = {hpDevice("hp:/usb/X?serial=AAA"), hpDevice("hp:/usb/X?serial=BBB"),
+                                       hpDevice("hp:/usb/Y")};
+
+    EXPECT_EQ(backend.getMatchHplipUri("usb://HP/X?serial=bbb"), QString("hp:/usb/X?serial=BBB"));   // case-insensitive
+    EXPECT_EQ(backend.getMatchHplipUri("usb://HP/X?serial=AAA&x=1"), QString("hp:/usb/X?serial=AAA"));
+    EXPECT_TRUE(backend.getMatchHplipUri("usb://HP/X?serial=CCC").isEmpty());
+    EXPECT_TRUE(backend.getMatchHplipUri("usb://HP/X").isEmpty());   // the queried device has no serial
+
+    delete backend.m_deviceTask;
+    backend.m_deviceTask = nullptr;
+}
+
+TEST(ut_AddPrinterFlow, installedHplipSwitchesTheTaskToTheMatchingHpUri)
+{
+    StubTask task(deviceWith({"usb://HP/X?serial=BBB", "usb://HP/Y?serial=AAA"}), solutionWith("drv:///hpcups.drv/x.ppd"));
+    task.m_fixHplip = new FixHplipBackend(&task);
+    task.m_fixHplip->m_deviceTask = new RefreshDevicesByBackendTask();
+    task.m_fixHplip->m_deviceTask->m_devices = {hpDevice("hp:/usb/X?serial=AAA"), hpDevice("hp:/usb/X?serial=BBB")};
+    task.m_iStep = AddPrinterTask::STEP_Failed;   // nextStep() then only reports; nothing else runs
+    StatusCapture capture(task);
+    task.slotFixHplipStatus(TStat_Suc);
+    EXPECT_EQ(task.m_uri, QString("hp:/usb/X?serial=BBB"));
+    EXPECT_EQ(capture.seen, QList<int>{TStat_Fail});
+
+    delete task.m_fixHplip->m_deviceTask;
+    task.m_fixHplip->m_deviceTask = nullptr;
+}

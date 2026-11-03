@@ -45,4 +45,8 @@ void run(QObject *owner, const QString &program, const QStringList &args,
 // Resolve a tool in the fixed system directories; empty when not installed.
 QString findTool(const QString &name);
 
+// Replaces the lookup done by findTool() (tests point it at fake tools in a
+// temporary directory). An empty function restores the fixed system directories.
+void setToolResolver(std::function<QString(const QString &)> resolver);
+
 }

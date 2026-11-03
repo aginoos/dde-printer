@@ -1,3 +1,12 @@
+dde-printer (1.0.20+agino2-1) unstable; urgency=medium
+
+  * Canon CAPT: ship agino-ccpd.service (Canon's init script cannot be enabled on Debian 13) and require libstdc++6:i386.
+  * SMB: fix share names truncated to one character when listing printer shares.
+  * Driver search address configurable through DConfig (built-in default kept); one-time notice when the session plugin is not loaded.
+  * Unit-test coverage raised to 91% of the counted logic (1037 tests).
+
+ -- agino Team <admin@aginoos.com>  Tue, 03 Nov 2026 18:00:00 +0800
+
 dde-printer (1.0.20+agino1-1) unstable; urgency=medium
 
   * agino fork: Qt6/DTK6 only, privileged work moved to a polkit-guarded service, ipp-usb and Windows share support, HP/Canon repair fixes.

@@ -12,7 +12,6 @@
 #include "cupsconnection.h"
 #include "qtconvert.h"
 #include "cupsconnectionfactory.h"
-#include "zprintermanager.h"
 
 #include <cups/cups.h>
 #include <QTextStream>

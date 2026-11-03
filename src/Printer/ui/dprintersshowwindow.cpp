@@ -59,7 +59,6 @@
 #include <QUrl>
 #include <QClipboard>
 
-#define FAQDOCUMENT_MESSAGE QObject::tr("Help on adding and using printers")
 
 static bool isCanonCaptPrinter(const QString &printerName)
 {

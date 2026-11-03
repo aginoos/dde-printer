@@ -28,10 +28,7 @@
 
 #define UI_PRINTER_DRIVER_NAVIGATION QObject::tr("Print Driver Download Navigation")
 #define UI_PRINTER_PROBLEM_ENTRANCE QObject::tr("Instructions for Use")
-#define UI_PRINTER_ADD_HELP QObject::tr("Help on adding and using printers")
 #define UI_PRINTER_PROBLEM_GUIDANCE QObject::tr("Can't print? Learn how to resolve")
-
-static const QString faqDocPath = "/usr/share/deepin-manual/manual-assets/application/dde-printer/打印机使用FAQ文档.pdf";
 
 #define REMOVE_CUPS_TEMP "sudo systemctl stop cups\n" \
     "sudo rm -rf /var/spool/cups/temp/*\n" \
@@ -176,7 +173,7 @@ void CustomLabel::initUi()
     m_main->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
     m_main->setFrameShape(QFrame::StyledPanel);
     m_main->setAutoFillBackground(true);
-    m_main->setFixedSize(200, 122);
+    m_main->setFixedWidth(200);
 
     QString tipInfo1 = UI_PRINTER_DRIVER_NAVIGATION;
     m_popupButton = new QPushButton(m_main);
@@ -185,13 +182,6 @@ void CustomLabel::initUi()
     m_popupButton->setFlat(true);
     m_popupButton->setText(UI_PRINTER_DRIVER_NAVIGATION);
     DFontSizeManager::instance()->bind(m_popupButton, DFontSizeManager::T6, QFont::Normal);
-
-    QString tipInfo = UI_PRINTER_ADD_HELP;
-    m_popupButton1 = new QPushButton(m_main);
-    m_popupButton1->setFixedWidth(180);
-    m_popupButton1->setToolTip(UI_PRINTER_ADD_HELP);
-    m_popupButton1->setFlat(true);
-    DFontSizeManager::instance()->bind(m_popupButton1, DFontSizeManager::T6, QFont::Normal);
 
     QString tipInfo2 = UI_PRINTER_PROBLEM_GUIDANCE;
     m_popupButton2 = new QPushButton(UI_PRINTER_PROBLEM_GUIDANCE);
@@ -208,16 +198,14 @@ void CustomLabel::initUi()
 
     geteElidedText(m_popupButton->font(), tipInfo1, m_popupButton->width() - 20);
     m_popupButton->setText(tipInfo1);
-    geteElidedText(m_popupButton1->font(), tipInfo, m_popupButton1->width() - 20);
-    m_popupButton1->setText(tipInfo);
     geteElidedText(m_popupButton2->font(), tipInfo2, m_popupButton2->width() - 20);
     m_popupButton2->setText(tipInfo2);
 
     QVBoxLayout *layout = new QVBoxLayout;
     layout->addWidget(m_popupButton);
-    layout->addWidget(m_popupButton1);
     layout->addWidget(m_popupButton2);
     m_main->setLayout(layout);
+    m_main->setFixedHeight(layout->sizeHint().height());   // two entries: the popup follows its content
 
     QHBoxLayout *hLayout = new QHBoxLayout;
 
@@ -237,7 +225,6 @@ void CustomLabel::initUi()
 void CustomLabel::initConnection()
 {
     connect(DGuiApplicationHelper::instance(), &DGuiApplicationHelper::themeTypeChanged, this, &CustomLabel::updateIcon);
-    connect(m_popupButton1, &QPushButton::clicked, this, &CustomLabel::slotOpenFaqDoc);
     connect(m_popupButton2, &QPushButton::clicked, this, &CustomLabel::slotOpenHelpInfo);
     connect(m_popupButton, &QPushButton::clicked, [this](){
         if (!m_manufacturerWidget) {
@@ -273,13 +260,6 @@ void CustomLabel::initSubUi()
     m_main->show();
 }
 
-void CustomLabel::slotOpenFaqDoc()
-{
-    m_main->hide();
-    QUrl url = QUrl::fromLocalFile(faqDocPath);
-    QDesktopServices::openUrl(url);
-}
-
 void CustomLabel::slotOpenHelpInfo()
 {
     if (!m_pHelpWindow) {
@@ -311,10 +291,6 @@ void CustomLabel::changeEvent(QEvent *event)
         QString tipInfo = UI_PRINTER_DRIVER_NAVIGATION;
         geteElidedText(m_popupButton->font(), tipInfo, m_popupButton->width() - 20);
         m_popupButton->setText(tipInfo);
-
-        QString tipInfo1 = UI_PRINTER_ADD_HELP;
-        geteElidedText(m_popupButton1->font(), tipInfo1, m_popupButton1->width() - 20);
-        m_popupButton1->setText(tipInfo1);
 
         QString tipInfo2 = UI_PRINTER_PROBLEM_GUIDANCE;
         geteElidedText(m_popupButton2->font(), tipInfo2, m_popupButton2->width() - 20);

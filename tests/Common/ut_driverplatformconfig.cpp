@@ -72,14 +72,36 @@ TEST(ut_DriverPlatformConfig, overlongValuesAreRejected)
     EXPECT_EQ(normalize(ok), ok);
 }
 
-TEST(ut_DriverPlatformConfig, interpretOnlyTakesStrings)
+TEST(ut_DriverPlatformConfig, notConfiguredMeansTheBuiltinAddress)
 {
-    EXPECT_EQ(interpret(QVariant()), QString());
-    EXPECT_EQ(interpret(QVariant(true)), QString());
-    EXPECT_EQ(interpret(QVariant(42)), QString());
-    EXPECT_EQ(interpret(QVariant(QStringList{"https://drivers.example.org/x"})), QString());
+    const QString builtin = QString::fromLatin1(DriverPlatformConfig::kBuiltinUrl);
+    EXPECT_FALSE(builtin.isEmpty());
+    EXPECT_EQ(normalize(builtin), builtin);               // the built-in address passes its own validation
+    EXPECT_TRUE(builtin.startsWith("https://"));
+    EXPECT_EQ(interpret(QVariant()), builtin);                    // key missing
+    EXPECT_EQ(interpret(QVariant(true)), builtin);                // not a string
+    EXPECT_EQ(interpret(QVariant(42)), builtin);
+    EXPECT_EQ(interpret(QVariant(QStringList{"https://drivers.example.org/x"})), builtin);
+}
+
+TEST(ut_DriverPlatformConfig, anExplicitEmptyStringTurnsTheSearchOff)
+{
+    EXPECT_EQ(interpret(QVariant(QString())), QString());
+    EXPECT_EQ(interpret(QVariant(QString(""))), QString());
+    EXPECT_EQ(interpret(QVariant(QString("   "))), QString());
+}
+
+TEST(ut_DriverPlatformConfig, aConfiguredAddressWinsOverTheBuiltinOne)
+{
     EXPECT_EQ(interpret(QVariant(QString("https://drivers.example.org/x"))), QString("https://drivers.example.org/x"));
+    EXPECT_EQ(interpret(QVariant(QString("http://127.0.0.1:8765/api/search"))), QString("http://127.0.0.1:8765/api/search"));
+}
+
+TEST(ut_DriverPlatformConfig, anInvalidAddressIsOffAndNeverFallsBackToTheBuiltinOne)
+{
     EXPECT_EQ(interpret(QVariant(QString("junk"))), QString());
+    EXPECT_EQ(interpret(QVariant(QString("http://drivers.example.org/search"))), QString());
+    EXPECT_EQ(interpret(QVariant(QString("https://user:secret@drivers.example.org/x"))), QString());
 }
 
 TEST(ut_DriverPlatformConfig, keyMatchesTheMetadataFile)

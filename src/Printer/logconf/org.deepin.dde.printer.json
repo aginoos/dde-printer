@@ -1,39 +1,45 @@
 {
-    "magic":"dsg.config.meta",
-    "version":"1.0",
-    "contents":{
+    "magic": "dsg.config.meta",
+    "version": "1.0",
+    "contents": {
         "log_rules": {
-              "value": "*dde-printer*.debug=false;*dde-printer*.info=false;*dde-printer*.warning=true",
-              "serial": 0,
-              "flags": ["global"],
-              "name": "log rules",
-              "name[zh_CN]": "日志规则",
-              "description": "log rules",
-              "description[zh_CN]": "日志规则",
-              "permissions": "readwrite",
-              "visibility": "public"
+            "value": "*dde-printer*.debug=false;*dde-printer*.info=false;*dde-printer*.warning=true",
+            "serial": 0,
+            "flags": [
+                "global"
+            ],
+            "name": "log rules",
+            "name[zh_CN]": "日志规则",
+            "description": "log rules",
+            "description[zh_CN]": "日志规则",
+            "permissions": "readwrite",
+            "visibility": "public"
         },
         "driver_platform_url": {
-              "value": "",
-              "serial": 0,
-              "flags": ["global"],
-              "name": "Online driver search address",
-              "name[zh_CN]": "在线驱动搜索地址",
-              "description": "Address of the online driver search service (https://host/path, or http:// for a loopback host). Empty: the online search is not used and nothing is sent.",
-              "description[zh_CN]": "在线驱动搜索服务的地址（https://主机/路径；本机回环地址可用 http://）。留空：不使用在线搜索，也不会向外发送任何信息。",
-              "permissions": "readwrite",
-              "visibility": "public"
+            "value": "https://driver.uniontech.com/api/v1/drive/search",
+            "serial": 0,
+            "flags": [
+                "global"
+            ],
+            "name": "Online driver search address",
+            "name[zh_CN]": "在线驱动搜索地址",
+            "description": "Address of the online driver search service (https://host/path, or http:// for a loopback host). Default: the Uniontech driver platform. Empty: the online search is off and nothing is sent.",
+            "description[zh_CN]": "在线驱动搜索服务的地址（https://主机/路径；本机回环地址可用 http://）。默认是统信驱动平台。留空：关闭在线搜索，不会向外发送任何信息。",
+            "permissions": "readwrite",
+            "visibility": "public"
         },
         "allow_auto_usb": {
-              "value": true,
-              "serial": 0,
-              "flags": ["global"],
-              "name": "USB plug and play",
-              "name[zh_CN]": "USB 即插即用",
-              "description": "Add USB printers automatically when they are plugged in",
-              "description[zh_CN]": "插入 USB 打印机时自动添加",
-              "permissions": "readwrite",
-              "visibility": "public"
+            "value": true,
+            "serial": 0,
+            "flags": [
+                "global"
+            ],
+            "name": "USB plug and play",
+            "name[zh_CN]": "USB 即插即用",
+            "description": "Add USB printers automatically when they are plugged in",
+            "description[zh_CN]": "插入 USB 打印机时自动添加",
+            "permissions": "readwrite",
+            "visibility": "public"
         }
     }
 }

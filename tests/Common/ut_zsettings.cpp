@@ -138,7 +138,7 @@ TEST(ut_zsettingsDriverUrl, environmentOverrideAppliesOnlyWhenAllowedAndValid)
     EXPECT_EQ(zSettings::resolveDriverPlatformUrl("http://evil.example/x", true, configured), configured);
 }
 
-TEST(ut_zsettingsDriverUrl, defaultIsNoService)
+TEST(ut_zsettingsDriverUrl, nothingUsableMeansNoService)
 {
     EXPECT_EQ(zSettings::resolveDriverPlatformUrl(QByteArray(), false, QString()), QString());
     EXPECT_EQ(zSettings::resolveDriverPlatformUrl(QByteArray(), false, "not a url"), QString());

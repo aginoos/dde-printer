@@ -15,6 +15,7 @@ DCORE_USE_NAMESPACE
 namespace DriverPlatformConfig {
 
 const char kKey[] = "driver_platform_url";
+const char kBuiltinUrl[] = "https://driver.uniontech.com/api/v1/drive/search";
 
 namespace {
 
@@ -60,7 +61,7 @@ QString normalize(const QString &value)
 QString interpret(const QVariant &value)
 {
     if (!value.isValid() || value.metaType().id() != QMetaType::QString)
-        return QString();
+        return normalize(QString::fromLatin1(kBuiltinUrl));
     return normalize(value.toString());
 }
 
@@ -68,8 +69,8 @@ QString configuredUrl()
 {
     const std::unique_ptr<DConfig> config(DConfig::create("dde-printer", "org.deepin.dde.printer"));
     if (!config || !config->isValid())
-        return QString();
-    return interpret(config->value(QString::fromLatin1(kKey), QString()));
+        return interpret(QVariant());
+    return interpret(config->value(QString::fromLatin1(kKey), QString::fromLatin1(kBuiltinUrl)));
 }
 
 }   // namespace DriverPlatformConfig

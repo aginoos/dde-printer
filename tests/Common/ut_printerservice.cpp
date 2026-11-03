@@ -99,8 +99,12 @@ TEST(ut_PrinterService, deviceStringsCannotInjectQueryParameters)
     const QString url = urlOf("Evil&arch=x", "Model&system=y #frag", QString());
     EXPECT_TRUE(url.contains("deb_manufacturer=Evil%26arch%3Dx"));
     EXPECT_TRUE(url.contains("Model%26system%3Dy%20%23frag"));
+    // "?arch=" and "&system=" are the platform's own parameters (exactly one
+    // each); the injected "&arch=x" / "&system=y" must not add another.
+    EXPECT_EQ(url.count("?arch="), 1);
+    EXPECT_EQ(url.count("&system="), 1);
     EXPECT_EQ(url.count("&arch="), 0);
-    EXPECT_EQ(url.count("&system="), 0);
+    EXPECT_EQ(url.count("%26system%3Dy"), 1);
 }
 
 TEST(ut_PrinterService, encodeQueryValueEscapesReservedCharacters)

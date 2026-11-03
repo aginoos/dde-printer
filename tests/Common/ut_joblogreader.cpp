@@ -213,3 +213,32 @@ TEST(ut_JobLogReader, LinesWithoutStampAreKept)
     const QByteArray log = "D [Job 4] no timestamp here\n";
     EXPECT_FALSE(JobLogReader::extractJobLines(log, 4, 4000000000LL).isEmpty());
 }
+
+TEST(ut_JobLogReader, SubmissionTimeAcceptsOtherLpstatFormats)
+{
+    const qint64 ref = JobLogReader::submissionTime(QString("Mon 02 Nov 2026 23:59:00 UTC").split(' '));
+    ASSERT_GT(ref, 0);
+    EXPECT_EQ(JobLogReader::submissionTime(QString("Mon Nov  2 23:59:00 2026").split(' ')), ref);
+    EXPECT_EQ(JobLogReader::submissionTime(QString("2026-11-02T23:59:00").split(' ')), ref);
+    EXPECT_EQ(JobLogReader::submissionTime(QString("2026-11-02 23:59:00").split(' ')), ref);
+    EXPECT_EQ(JobLogReader::submissionTime(QString("02 Nov 2026 11:59:00 PM").split(' ')), ref);
+    EXPECT_EQ(JobLogReader::submissionTime(QString("Mon 02 Nov 2026 11:59:00 PM UTC").split(' ')), ref);
+}
+
+TEST(ut_JobLogReader, SubmissionTimeIsZeroForUnreadableDates)
+{
+    EXPECT_EQ(JobLogReader::submissionTime(QString("Mon 02 Foo 2026 11:59:00 PM").split(' ')), 0);
+    EXPECT_EQ(JobLogReader::submissionTime(QString("Mon 32 Nov 2026 11:59:00 PM").split(' ')), 0);
+    EXPECT_EQ(JobLogReader::submissionTime(QString("Mon 02 Nov 2026 25:59:00").split(' ')), 0);
+    EXPECT_EQ(JobLogReader::submissionTime(QString("Mon 02 Nov 2026 13:00:00 PM").split(' ')), 0);
+    EXPECT_EQ(JobLogReader::submissionTime(QString("gestern abend").split(' ')), 0);
+}
+
+TEST(ut_JobLogReader, UnreadableDateKeepsOldBehaviourOfReturningTheLog)
+{
+    const auto jobs = JobLogReader::parseLpstatJobs("Q-12   alice   1024   garbled date here\n", "Q");
+    ASSERT_EQ(jobs.size(), 1);
+    EXPECT_EQ(jobs.at(0).submittedEpoch, 0);
+    const QByteArray log = "I [01/Jan/2000:00:00:00 +0000] [Job 12] old but kept\n";
+    EXPECT_FALSE(JobLogReader::extractJobLines(log, 12, jobs.at(0).submittedEpoch).isEmpty());
+}

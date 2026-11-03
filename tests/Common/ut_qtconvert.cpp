@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <QFont>
+#include <QFontMetrics>
 #include <QString>
 
 #include "qtconvert.h"
@@ -87,3 +89,20 @@ TEST_F(ut_Qtconvert, dumpStdMapValue)
     dumpStdMapValue(mapData);
 }
 
+
+TEST_F(ut_Qtconvert, elidedTextKeepsShortStringsAndElidesLongOnes)
+{
+    const QFont font;
+    const QFontMetrics metrics(font);
+
+    QString shortText = "abc";
+    geteElidedText(font, shortText, metrics.horizontalAdvance(shortText) + 50);
+    EXPECT_EQ(shortText, QString("abc"));
+
+    QString longText = QString("W").repeated(60);
+    const int limit = metrics.horizontalAdvance("W") * 10;
+    geteElidedText(font, longText, limit);
+    EXPECT_LT(longText.size(), 60);
+    EXPECT_LE(metrics.horizontalAdvance(longText), limit);
+    EXPECT_TRUE(longText.endsWith(QChar(0x2026)) || longText.endsWith("..."));
+}

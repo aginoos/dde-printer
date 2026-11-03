@@ -10,6 +10,7 @@
 
 #include <unistd.h>
 
+#include "../service/faketools.h"
 #include "joblogreader.h"
 #include "repairjobs.h"
 
@@ -265,4 +266,109 @@ TEST(ut_JobLogReader, UnreadableDateKeepsOldBehaviourOfReturningTheLog)
     EXPECT_EQ(jobs.at(0).submittedEpoch, 0);
     const QByteArray log = "I [01/Jan/2000:00:00:00 +0000] [Job 12] old but kept\n";
     EXPECT_FALSE(JobLogReader::extractJobLines(log, 12, jobs.at(0).submittedEpoch).isEmpty());
+}
+
+// ------------------------------------------------- readLatestJobLog
+
+namespace {
+
+class ut_JobLogReaderLatest : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        ASSERT_TRUE(m_tools.isValid());
+        ASSERT_TRUE(m_dir.isValid());
+        m_user = JobLogReader::userNameOf(::geteuid());
+        if (m_user.isEmpty())
+            GTEST_SKIP() << "the current uid has no passwd entry";
+        m_logPath = m_dir.filePath("error_log");
+        JobLogReader::setErrorLogPath(m_logPath);
+    }
+    void TearDown() override { JobLogReader::setErrorLogPath(QString()); }
+
+    void writeLog(const QByteArray &text)
+    {
+        QFile file(m_logPath);
+        ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+        file.write(text);
+    }
+
+    QString lpstatJobs(const QString &extra = QString()) const
+    {
+        // the date column is deliberately unreadable: no time filtering
+        return QString("printf '%s\\n' 'P1-3 %1 1024 unknown' 'P1-5 %1 2048 unknown' 'P1-6 nobody-else 10 unknown' '%2'")
+            .arg(m_user, extra);
+    }
+
+    QString latest(const QString &printer = "P1")
+    {
+        QObject owner;
+        const auto waited = waitForResult<QString>([&](std::function<void(QString)> cb) {
+            JobLogReader::readLatestJobLog(&owner, ::geteuid(), printer, [cb](const QString &log) { cb(log); });
+        });
+        EXPECT_EQ(waited.calls, 1) << "done must be called exactly once";
+        return waited.value.value_or(QString("<no answer>"));
+    }
+
+    FakeTools m_tools;
+    QTemporaryDir m_dir;
+    QString m_user;
+    QString m_logPath;
+};
+
+}  // namespace
+
+TEST_F(ut_JobLogReaderLatest, returnsTheLinesOfTheNewestJobOfTheCaller)
+{
+    m_tools.add("lpstat", lpstatJobs());
+    writeLog("I [Job 3] old\nI [Job 5] first line\nI [Job 6] someone else\nI [Job 5] second line\nI no job tag\n");
+    EXPECT_EQ(latest(), QString("I [Job 5] first line\nI [Job 5] second line\n"));
+    EXPECT_EQ(m_tools.callsOf("lpstat"), (QList<QStringList>{{"-W", "all", "-o", "P1"}}));
+}
+
+TEST_F(ut_JobLogReaderLatest, callerWithoutJobsGetsNothing)
+{
+    m_tools.add("lpstat", "printf '%s\\n' 'P1-6 nobody-else 10 unknown'");
+    writeLog("I [Job 6] someone else\n");
+    EXPECT_TRUE(latest().isEmpty());
+}
+
+TEST_F(ut_JobLogReaderLatest, failingLpstatGetsNothing)
+{
+    m_tools.add("lpstat", lpstatJobs() + "; exit 1");
+    writeLog("I [Job 5] line\n");
+    EXPECT_TRUE(latest().isEmpty());
+}
+
+TEST_F(ut_JobLogReaderLatest, missingLpstatRunsNothing)
+{
+    writeLog("I [Job 5] line\n");
+    EXPECT_TRUE(latest().isEmpty());
+    EXPECT_TRUE(m_tools.calls().isEmpty());
+}
+
+TEST_F(ut_JobLogReaderLatest, missingLogFileGetsNothing)
+{
+    m_tools.add("lpstat", lpstatJobs());
+    EXPECT_TRUE(latest().isEmpty());
+}
+
+TEST_F(ut_JobLogReaderLatest, otherPrintersJobsAreIgnored)
+{
+    m_tools.add("lpstat", lpstatJobs());
+    writeLog("I [Job 5] line\n");
+    EXPECT_TRUE(latest("P2").isEmpty());
+}
+
+TEST_F(ut_JobLogReaderLatest, unknownUidGetsNothingAndRunsNoCommand)
+{
+    m_tools.add("lpstat", lpstatJobs());
+    QObject owner;
+    const auto waited = waitForResult<QString>([&](std::function<void(QString)> cb) {
+        JobLogReader::readLatestJobLog(&owner, 4000000000u, "P1", [cb](const QString &log) { cb(log); });
+    });
+    ASSERT_EQ(waited.calls, 1);
+    EXPECT_TRUE(waited.value->isEmpty());
+    EXPECT_TRUE(m_tools.calls().isEmpty());
 }

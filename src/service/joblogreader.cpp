@@ -21,6 +21,17 @@ namespace {
 
 const char kErrorLogPath[] = "/var/log/cups/error_log";
 
+QString &errorLogOverride()
+{
+    static QString path;
+    return path;
+}
+
+QString errorLogPath()
+{
+    return errorLogOverride().isEmpty() ? QString::fromLatin1(kErrorLogPath) : errorLogOverride();
+}
+
 // Id of the job a log line is about, -1 for lines without a "[Job n]" tag.
 int jobIdOfLine(const QByteArray &line)
 {
@@ -252,6 +263,11 @@ QString readJobLog(const QString &path, int jobId, qint64 budgetBytes, qint64 no
     return extractJobLines(collected, jobId, notBeforeEpoch);
 }
 
+void setErrorLogPath(const QString &path)
+{
+    errorLogOverride() = path;
+}
+
 QString userNameOf(uint uid)
 {
     std::vector<char> buffer(4096);
@@ -277,7 +293,7 @@ void readLatestJobLog(QObject *owner, uint uid, const QString &printer,
         const JobEntry job = result.ok()
             ? newestEntryOf(parseLpstatJobs(QString::fromLocal8Bit(result.output), printer), user)
             : JobEntry();
-        done(job.id > 0 ? readJobLog(kErrorLogPath, job.id, kScanBudgetBytes, job.submittedEpoch)
+        done(job.id > 0 ? readJobLog(errorLogPath(), job.id, kScanBudgetBytes, job.submittedEpoch)
                         : QString());
     }, kLpstatTimeoutMs);
 }

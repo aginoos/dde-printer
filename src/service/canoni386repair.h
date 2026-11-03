@@ -58,6 +58,10 @@ QStringList aptUpdateArgs();
 // for it. The unit is killed by systemd after `runtimeSec` seconds.
 QStringList transientUnitArgs(const QString &tool, const QStringList &args, int runtimeSec);
 
+// Delay before a locked apt/dpkg step is tried again (kLockRetryDelayMs unless
+// changed); tests shorten it. A negative value restores the default.
+void setLockRetryDelayMs(int ms);
+
 // Runs the whole repair; `done` gets a RepairCode exactly once.
 void run(QObject *owner, std::function<void(int)> done);
 

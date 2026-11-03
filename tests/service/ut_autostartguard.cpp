@@ -152,3 +152,110 @@ TEST(ut_AutostartGuard, resolveScriptForAllowedDirectoryIsEmptyOrTheScript)
         EXPECT_TRUE(script.isEmpty() || script == dir + "autostart.sh") << dir.toStdString();
     }
 }
+
+// ------------------------------------- resolveScript in a private tree
+
+namespace {
+
+// Points the guard at a temporary vendor directory owned by the test user, so
+// the whole accept/refuse logic of resolveScript() can be checked without root.
+class ut_AutostartGuardTree : public testing::Test
+{
+protected:
+    void SetUp() override
+    {
+        ASSERT_TRUE(m_root.isValid());
+        m_config = m_root.path() + "/config/";
+        ASSERT_TRUE(QDir().mkpath(m_config));
+        ASSERT_TRUE(QFile::setPermissions(m_config, QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner));
+        g_policy.dirs = {m_config};
+        g_policy.owner = ::geteuid();
+        g_policy.chainBase = m_root.path();
+    }
+    void TearDown() override { g_policy = TestPolicy(); }
+
+    QString writeScript(QFile::Permissions permissions)
+    {
+        const QString path = m_config + "autostart.sh";
+        QFile file(path);
+        EXPECT_TRUE(file.open(QIODevice::WriteOnly));
+        file.write("#!/bin/sh\n");
+        file.close();
+        EXPECT_TRUE(QFile::setPermissions(path, permissions));
+        return path;
+    }
+
+    QTemporaryDir m_root;
+    QString m_config;
+};
+
+const QFile::Permissions kExecutable = QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner | QFile::ReadGroup
+    | QFile::ExeGroup | QFile::ReadOther | QFile::ExeOther;
+
+}  // namespace
+
+TEST_F(ut_AutostartGuardTree, trustedExecutableScriptIsReturned)
+{
+    const QString script = writeScript(kExecutable);
+    EXPECT_EQ(AutostartGuard::resolveScript(m_config), script);
+}
+
+TEST_F(ut_AutostartGuardTree, missingScriptIsRefused)
+{
+    EXPECT_TRUE(AutostartGuard::resolveScript(m_config).isEmpty());
+}
+
+TEST_F(ut_AutostartGuardTree, scriptWithoutOwnerExecuteBitIsRefused)
+{
+    writeScript(QFile::ReadOwner | QFile::WriteOwner | QFile::ReadGroup);
+    EXPECT_TRUE(AutostartGuard::resolveScript(m_config).isEmpty());
+}
+
+TEST_F(ut_AutostartGuardTree, groupOrOtherWritableScriptIsRefused)
+{
+    writeScript(kExecutable | QFile::WriteGroup);
+    EXPECT_TRUE(AutostartGuard::resolveScript(m_config).isEmpty());
+    writeScript(kExecutable | QFile::WriteOther);
+    EXPECT_TRUE(AutostartGuard::resolveScript(m_config).isEmpty());
+}
+
+TEST_F(ut_AutostartGuardTree, scriptOwnedByAnotherUserIsRefused)
+{
+    writeScript(kExecutable);
+    g_policy.owner = ::geteuid() + 1;
+    EXPECT_TRUE(AutostartGuard::resolveScript(m_config).isEmpty());
+}
+
+TEST_F(ut_AutostartGuardTree, symbolicLinkScriptIsRefused)
+{
+    QFile real(m_root.path() + "/real.sh");
+    ASSERT_TRUE(real.open(QIODevice::WriteOnly));
+    real.close();
+    ASSERT_TRUE(QFile::setPermissions(real.fileName(), kExecutable));
+    ASSERT_TRUE(QFile::link(real.fileName(), m_config + "autostart.sh"));
+    EXPECT_TRUE(AutostartGuard::resolveScript(m_config).isEmpty());
+}
+
+TEST_F(ut_AutostartGuardTree, writableDirectoryInTheChainIsRefused)
+{
+    writeScript(kExecutable);
+    ASSERT_TRUE(QFile::setPermissions(m_config, QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner
+                                                    | QFile::WriteGroup));
+    EXPECT_TRUE(AutostartGuard::resolveScript(m_config).isEmpty());
+}
+
+TEST_F(ut_AutostartGuardTree, symbolicLinkDirectoryIsRefused)
+{
+    writeScript(kExecutable);
+    const QString link = m_root.path() + "/linked/";
+    ASSERT_TRUE(QFile::link(m_config, m_root.path() + "/linked"));
+    g_policy.dirs = {link};
+    EXPECT_TRUE(AutostartGuard::resolveScript(link).isEmpty());
+}
+
+TEST_F(ut_AutostartGuardTree, directoryOutsideTheConfiguredListIsRefused)
+{
+    writeScript(kExecutable);
+    EXPECT_TRUE(AutostartGuard::resolveScript(m_root.path() + "/").isEmpty());
+    EXPECT_TRUE(AutostartGuard::resolveScript(m_config.chopped(1)).isEmpty());
+}

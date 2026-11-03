@@ -19,6 +19,17 @@ const char kQuirksFile[] = "/usr/share/ipp-usb/quirks/dde-printer-blacklist.conf
 
 namespace {
 
+QString &quirksFileOverride()
+{
+    static QString path;
+    return path;
+}
+
+QString quirksFile()
+{
+    return quirksFileOverride().isEmpty() ? QString::fromLatin1(kQuirksFile) : quirksFileOverride();
+}
+
 constexpr qint64 kMaxQuirksBytes = 1024 * 1024;
 constexpr int kMaxModelLength = 128;
 constexpr int kStatusTimeoutMs = 10000;
@@ -181,6 +192,11 @@ QString withoutEntry(const QString &content, const QString &vendorProduct)
     return joinLines(kept);
 }
 
+void setQuirksFile(const QString &path)
+{
+    quirksFileOverride() = path;
+}
+
 std::optional<QString> readQuirks(const QString &path)
 {
     QFile file(path);
@@ -223,7 +239,7 @@ void restartIppUsb(QObject *owner, Done done)
 // Store the change, then make ipp-usb pick it up.
 void commit(QObject *owner, const QString &content, Done done)
 {
-    if (!writeQuirks(QString::fromLatin1(kQuirksFile), content)) {
+    if (!writeQuirks(quirksFile(), content)) {
         done(kWriteFailed);
         return;
     }
@@ -244,7 +260,7 @@ void addWithModel(QObject *owner, const QString &vendorProduct, const QString &m
 
 void add(QObject *owner, const QString &vendorProduct, Done done)
 {
-    const std::optional<QString> current = readQuirks(QString::fromLatin1(kQuirksFile));
+    const std::optional<QString> current = readQuirks(quirksFile());
     if (!current) {
         done(kFailed);
         return;
@@ -282,7 +298,7 @@ void add(QObject *owner, const QString &vendorProduct, Done done)
 
 void remove(QObject *owner, const QString &vendorProduct, Done done)
 {
-    const std::optional<QString> current = readQuirks(QString::fromLatin1(kQuirksFile));
+    const std::optional<QString> current = readQuirks(quirksFile());
     if (!current) {
         done(kFailed);
         return;

@@ -12,8 +12,20 @@
 
 namespace {
 
+// Knobs for the unit tests (which #include this file). The defaults are the
+// production policy: fixed vendor directories, root as the only trusted owner,
+// every component of the path checked.
+struct TestPolicy {
+    QStringList dirs;       // replaces the vendor directories when not empty
+    uid_t owner = 0;        // the uid that counts as trusted
+    QString chainBase;      // when set, only this path and its children are checked
+};
+TestPolicy g_policy;
+
 const QStringList &allowedDirs()
 {
+    if (!g_policy.dirs.isEmpty())
+        return g_policy.dirs;
     static const QStringList dirs = {
         "/opt/printer-drivers/com.pantum.pantum/config/",
         "/opt/printer-drivers/com.lanxum-ga-series/config/",
@@ -30,7 +42,7 @@ bool isTrusted(const QString &path, mode_t type)
     // lstat: a symbolic link is reported as such and fails the type test
     if (::lstat(QFile::encodeName(path).constData(), &st) != 0)
         return false;
-    return (st.st_mode & S_IFMT) == type && st.st_uid == 0
+    return (st.st_mode & S_IFMT) == type && st.st_uid == g_policy.owner
         && (st.st_mode & (S_IWGRP | S_IWOTH)) == 0;
 }
 
@@ -40,7 +52,9 @@ bool isTrustedDirChain(const QString &dirPath)
     QString current;
     for (const QString &part : parts) {
         current += "/" + part;
-        if (!isTrusted(current, S_IFDIR))
+        const bool inScope = g_policy.chainBase.isEmpty() || current == g_policy.chainBase
+            || current.startsWith(g_policy.chainBase + "/");
+        if (inScope && !isTrusted(current, S_IFDIR))
             return false;
     }
     return !parts.isEmpty();

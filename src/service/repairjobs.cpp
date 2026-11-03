@@ -19,6 +19,8 @@ namespace {
 const char kCupsUnit[] = "cups.service";
 const char kFilterDir[] = "/usr/lib/cups/filter";
 
+QString g_filterDir = QString::fromLatin1(kFilterDir);
+
 using BoolDone = std::function<void(bool)>;
 
 void systemctl(QObject *owner, const QStringList &args, BoolDone done)
@@ -70,7 +72,7 @@ void repairCups(QObject *owner, BoolDone done)
 
 bool repairBrotherFilters()
 {
-    const QDir dir(kFilterDir);
+    const QDir dir(g_filterDir);
     bool allOk = true;
     const QFileInfoList files = dir.entryInfoList({"brother_*"}, QDir::Files | QDir::NoDotAndDotDot);
     for (const QFileInfo &info : files) {
@@ -86,6 +88,11 @@ bool repairBrotherFilters()
 }  // namespace
 
 namespace RepairJobs {
+
+void setFilterDirectory(const QString &path)
+{
+    g_filterDir = path.isEmpty() ? QString::fromLatin1(kFilterDir) : path;
+}
 
 bool isKnownFix(const QString &fixId)
 {

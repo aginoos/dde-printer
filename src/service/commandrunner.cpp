@@ -32,8 +32,25 @@ QProcessEnvironment fixedEnvironment()
 
 namespace CommandRunner {
 
+namespace {
+
+std::function<QString(const QString &)> &toolResolver()
+{
+    static std::function<QString(const QString &)> resolver;
+    return resolver;
+}
+
+}
+
+void setToolResolver(std::function<QString(const QString &)> resolver)
+{
+    toolResolver() = std::move(resolver);
+}
+
 QString findTool(const QString &name)
 {
+    if (toolResolver())
+        return toolResolver()(name);
     static const QStringList dirs = {"/usr/sbin", "/usr/bin", "/sbin", "/bin"};
     for (const QString &dir : dirs) {
         const QFileInfo info(dir + "/" + name);

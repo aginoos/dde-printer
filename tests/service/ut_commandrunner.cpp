@@ -216,3 +216,24 @@ TEST(ut_CommandRunner, childRunsInItsOwnSession)
     if (lines.size() == 2)   // ps may be missing in minimal containers
         EXPECT_EQ(lines.at(0), lines.at(1));
 }
+
+TEST(ut_CommandRunner, toolResolverReplacesTheLookupUntilReset)
+{
+    const QString real = CommandRunner::findTool("sh");
+    ASSERT_FALSE(real.isEmpty());
+
+    CommandRunner::setToolResolver([](const QString &name) { return "/fake/" + name; });
+    EXPECT_EQ(CommandRunner::findTool("anything"), QString("/fake/anything"));
+
+    CommandRunner::setToolResolver({});
+    EXPECT_EQ(CommandRunner::findTool("sh"), real);
+    EXPECT_TRUE(CommandRunner::findTool("no-such-tool-for-dde-printer").isEmpty());
+}
+
+TEST(ut_CommandRunner, emptyProgramCompletesImmediatelyAsNotStarted)
+{
+    const Outcome outcome = runAndWait(QString(), {});
+    ASSERT_EQ(outcome.calls, 1);
+    EXPECT_FALSE(outcome.result.started);
+    EXPECT_FALSE(outcome.result.ok());
+}

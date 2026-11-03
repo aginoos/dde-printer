@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include "printeruihelpers.h"
 #include "printersearchwindow.h"
 #include "zdrivermanager.h"
 #include "cupsattrnames.h"
@@ -908,6 +909,7 @@ QString PrinterSearchWindow::driverDescription(const QMap<QString, QVariant> &dr
 
     //去掉自带的recommended字段
     strDesc.replace("(recommended)", "");
+    strDesc = PrinterUi::driverDisplayName(strDesc, PrinterUi::driverOrigin(driver.value(SD_KEY_from).toInt(), driver.contains(SD_KEY_recommended)));
 
     if (driver.contains(SD_KEY_recommended) && driver[SD_KEY_recommended].toBool()) {
         strDesc += tr(" (recommended)");
@@ -1097,7 +1099,7 @@ void PrinterSearchWindow::applyUriDriver(const QMap<QString, QVariant> &driver)
         const QSignalBlocker blocker(m_pURIDriverCom);
         m_pURIDriverCom->clear();
         if (!driver.isEmpty())
-            m_pURIDriverCom->addItem(driver[CUPS_PPD_MAKE_MODEL].toString(), QVariant::fromValue(driver));
+            m_pURIDriverCom->addItem(driverDescription(driver), QVariant::fromValue(driver));
         m_pURIDriverCom->addItem(UI_PRINTERSEARCH_MANUAL);
     }
     driverChangedSlot(m_pURIDriverCom->currentIndex());

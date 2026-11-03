@@ -57,6 +57,7 @@ private:
     void initConnections();
 
     void setStatus(InstallationStatus status);
+    static QString installingText();
 
     void feedbackPrintTestPage(bool success);
     void showHplipSetupInstruction();

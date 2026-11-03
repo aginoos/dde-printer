@@ -108,7 +108,7 @@ const TextRow kTexts[] = {
      QT_TRANSLATE_NOOP("ModelFixMap", "The Canon LBP2900 print service is running normally."),
      QT_TRANSLATE_NOOP("ModelFixMap", "The Canon LBP2900 print service is not running, or a required library is missing."),
      QT_TRANSLATE_NOOP("ModelFixMap", "The Canon LBP2900 print service has been started."),
-     QT_TRANSLATE_NOOP("ModelFixMap", "The Canon LBP2900 print service could not be repaired.")},
+     QT_TRANSLATE_NOOP("ModelFixMap", "The Canon LBP2900 print service could not be repaired. Please make sure the 32-bit (i386) architecture is enabled on this system and try again.")},
     {"brother_dcp_mfc",
      QT_TRANSLATE_NOOP("ModelFixMap", "The Brother driver files have the correct permissions."),
      QT_TRANSLATE_NOOP("ModelFixMap", "The Brother driver files have unsafe permissions, so CUPS may refuse to print."),

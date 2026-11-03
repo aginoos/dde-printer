@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include "printeruihelpers.h"
 #include "installprinterwindow.h"
 #include "zjobmanager.h"
 #include "addprinter.h"
@@ -72,7 +73,9 @@ void InstallPrinterWindow::initUI()
     m_pStatusImageLabel->setFixedSize(128, 128);
     m_pStatusImageLabel->setAlignment(Qt::AlignCenter);
     m_pStatusImageLabel->setScaledContents(true);
-    m_pStatusLabel = new QLabel(tr("Installing driver..."));
+    m_pStatusLabel = new QLabel(installingText());
+    m_pStatusLabel->setWordWrap(true);
+    m_pStatusLabel->setContentsMargins(20, 0, 20, 0);
     DFontSizeManager::instance()->bind(m_pStatusLabel, DFontSizeManager::T5, QFont::DemiBold);
     m_pStatusLabel->setAlignment(Qt::AlignCenter);
     m_pTipLabel = new QLabel("");
@@ -146,6 +149,12 @@ void InstallPrinterWindow::initConnections()
     connect(m_pPrinterTestPageBtn, &QPushButton::clicked, this, &InstallPrinterWindow::rightBtnClickedSlot);
 }
 
+// USB printers must stay connected while the driver is installed.
+QString InstallPrinterWindow::installingText()
+{
+    return tr("Installing printer driver... Please do not disconnect. This may take a few minutes. Thank you for your patience.");
+}
+
 void InstallPrinterWindow::setStatus(InstallationStatus status)
 {
     if (m_status != status) {
@@ -154,7 +163,7 @@ void InstallPrinterWindow::setStatus(InstallationStatus status)
             m_pSpinner->setVisible(true);
             m_pSpinner->start();
             m_pStatusLabel->setVisible(true);
-            m_pStatusLabel->setText(tr("Installing driver..."));
+            m_pStatusLabel->setText(installingText());
             m_pCancelInstallBtn->setVisible(true);
 
             m_pStatusImageLabel->setVisible(false);
@@ -385,13 +394,17 @@ void InstallPrinterWindow::receiveInstallationStatusSlot(int status)
 
 void InstallPrinterWindow::showHplipSetupInstruction()
 {
-    QString execFile = "/opt/hp/hplip/bin/setup.py";
-    QFile file(execFile);
-    if (m_device.strMakeAndModel.startsWith("hp", Qt::CaseInsensitive) && isPackageInstalled("com.hp.hplip") && file.exists()) {
-        m_pHplipTipLabel->setText(tr("After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window."));
-
-        QTimer::singleShot(1000,  this, [ = ]() {
-            QProcess::startDetached(execFile, QStringList());
-        });
+    if (!m_device.strMakeAndModel.startsWith("hp", Qt::CaseInsensitive)
+        || !isPackageInstalled(QString::fromLatin1(PrinterUi::kHplipPackage))) {
+        return;
     }
+    const QString setupProgram = PrinterUi::hplipSetupProgram();
+    if (setupProgram.isEmpty()) {
+        return;
+    }
+
+    m_pHplipTipLabel->setText(tr("After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window."));
+    QTimer::singleShot(1000, this, [setupProgram]() {
+        QProcess::startDetached(setupProgram, QStringList());
+    });
 }

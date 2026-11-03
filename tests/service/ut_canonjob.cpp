@@ -151,3 +151,17 @@ TEST(ut_CanonJobDevice, queueExistsDetectsAnyBackend)
     EXPECT_TRUE(isCcpQueue(listing, "Canon1"));
     EXPECT_FALSE(isCcpQueue(listing, "Office"));
 }
+
+// -------------------------------------------------------------- lpadminArgs
+
+TEST(ut_CanonJob, lpadminArgsKeepTheQueuePrivate)
+{
+    CanonInstallRequest req;
+    req.printerName = "LBP2900";
+    req.deviceUri = "ccp://localhost:59687";
+    req.ppdPath = "/usr/share/cups/model/CNCUPSLBP2900CAPTK.ppd";
+    const QStringList args = lpadminArgs(req);
+    EXPECT_EQ(args.mid(0, 2), strings({"-p", "LBP2900"}));
+    EXPECT_TRUE(args.contains("-E"));
+    EXPECT_EQ(args.mid(args.size() - 2), strings({"-o", "printer-is-shared=false"}));
+}

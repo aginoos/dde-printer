@@ -4,6 +4,7 @@
 
 #include "printerhelpwindow.h"
 #include "qtconvert.h"
+#include "printeruihelpers.h"
 
 #include <DTitlebar>
 #include <DFrame>
@@ -16,6 +17,10 @@
 #include <QPushButton>
 #include <QClipboard>
 #include <QScrollArea>
+#include <QPainter>
+#include <QGuiApplication>
+#include <QGridLayout>
+#include <QCoreApplication>
 #include <QDesktopServices>
 #include <QUrl>
 #include <QMouseEvent>
@@ -25,21 +30,6 @@
 #define UI_PRINTER_PROBLEM_ENTRANCE QObject::tr("Instructions for Use")
 #define UI_PRINTER_ADD_HELP QObject::tr("Help on adding and using printers")
 #define UI_PRINTER_PROBLEM_GUIDANCE QObject::tr("Can't print? Learn how to resolve")
-
-#define UNIONTECH_TIPINFO QObject::tr("UOS Ecology")
-#define UNIONTECH_WEBSITE "http://ecology.chinauos.com/"
-#define CANON_TIPINFO QObject::tr("Canon")
-#define CANON_WEBSITE "http://www.canon.com.cn/supports/download/sims/search/index"
-#define FUJIFILM_TIPINFO QObject::tr("Fuji Xerox")
-#define FUJIFILM_WEBSITE "http://support-fb.fujifilm.com/setupSupport.do?cid=3&ctry_code=CN&lang_code=zh_CN"
-#define BROTHER_TIPINFO QObject::tr("Brother")
-#define BROTHER_WEBSITE "https://www.brother.cn/project/DomesticOS/"
-#define DASCOM_TIPINFO QObject::tr("Dascom")
-#define DASCOM_WEBSITE "http://www.dascom.cn/front/web/site.down2"
-#define TOSHIBA_TIPINFO QObject::tr("Toshiba")
-#define TOSHIBA_WEBSITE "http://www.toshiba-tec.com.cn/Service/driver-download.aspx"
-#define LENOVOIMAGE_TIPINFO QObject::tr("Lenovo")
-#define LENOVOIMAGE_WEBSITE "http://www.lenovoimage.com/index.php/services/servers_drivers"
 
 static const QString faqDocPath = "/usr/share/deepin-manual/manual-assets/application/dde-printer/打印机使用FAQ文档.pdf";
 
@@ -214,6 +204,7 @@ void CustomLabel::initUi()
     m_main->setMouseTracking(true);
     m_main->setContentsMargins(0, 0, 0, 0);
     m_main->setAttribute(Qt::WA_Hover, true);
+    primePopupForWayland();
 
     geteElidedText(m_popupButton->font(), tipInfo1, m_popupButton->width() - 20);
     m_popupButton->setText(tipInfo1);
@@ -254,6 +245,23 @@ void CustomLabel::initConnection()
             m_manufacturerWidget = new PrinterManufacturerWidget(qobject_cast<DMainWindow *>(window()));
         }
         m_manufacturerWidget->show();
+        m_main->hide();
+    });
+}
+
+// A Wayland compositor places the first mapping of a window by itself and ignores move(),
+// so the popup would appear in the middle of the screen on the first hover. One hidden
+// show/hide far off screen lets the compositor map the surface before the user hovers.
+// X11 honours move() from the start and is left alone.
+void CustomLabel::primePopupForWayland()
+{
+    if (!QGuiApplication::platformName().startsWith(QLatin1String("wayland"), Qt::CaseInsensitive))
+        return;
+    QTimer::singleShot(0, this, [this]() {
+        if (m_main->isVisible())
+            return;
+        m_main->move(QPoint(-1000, -1000));
+        m_main->show();
         m_main->hide();
     });
 }
@@ -341,7 +349,7 @@ bool CustomLabel::eventFilter(QObject *watched, QEvent *event)
 void CustomLabel::updateIcon()
 {
     QIcon icon(QIcon::fromTheme("icon_tips"));
-    m_imageLabel->setPixmap(icon.pixmap(QSize(20, 20)));
+    m_imageLabel->setPixmap(icon.pixmap(QSize(24, 24)));
 }
 
 PrinterManufacturerWidget::PrinterManufacturerWidget(DMainWindow *parent) : DMainWindow(parent)
@@ -364,59 +372,41 @@ PrinterManufacturerWidget::PrinterManufacturerWidget(DMainWindow *parent) : DMai
     pWidget->setFrameShape(DFrame::Shape::NoFrame);
     pWidget->setAutoFillBackground(true);
 
-    QVBoxLayout *pVLayout = new QVBoxLayout();
-
-    PrinterManufacturerItem *itemUniontech = new PrinterManufacturerItem(this);
-    itemUniontech->setMfgText(UNIONTECH_TIPINFO);
-    itemUniontech->setLinkText(UNIONTECH_WEBSITE);
-    itemUniontech->setItemIcon(":/images/logo_uniontech.svg");
-
-    PrinterManufacturerItem *itemCanon = new PrinterManufacturerItem(this);
-    itemCanon->setMfgText(CANON_TIPINFO);
-    itemCanon->setLinkText(CANON_WEBSITE);
-    itemCanon->setItemIcon(":/images/logo_canon.svg");
-
-    PrinterManufacturerItem *itemFujiXerox = new PrinterManufacturerItem(this);
-    itemFujiXerox->setMfgText(FUJIFILM_TIPINFO);
-    itemFujiXerox->setLinkText(FUJIFILM_WEBSITE);
-    itemFujiXerox->setItemIcon(":/images/logo_fujixerox.svg");
-
-    PrinterManufacturerItem *itemBrother = new PrinterManufacturerItem(this);
-    itemBrother->setMfgText(BROTHER_TIPINFO);
-    itemBrother->setLinkText(BROTHER_WEBSITE);
-    itemBrother->setItemIcon(":/images/logo_brother.svg");
-
-    PrinterManufacturerItem *itemDascom = new PrinterManufacturerItem(this);
-    itemDascom->setMfgText(DASCOM_TIPINFO);
-    itemDascom->setLinkText(DASCOM_WEBSITE);
-    itemDascom->setItemIcon(":/images/logo_dascom.svg");
-
-    PrinterManufacturerItem *itemToshiba = new PrinterManufacturerItem(this);
-    itemToshiba->setMfgText(TOSHIBA_TIPINFO);
-    itemToshiba->setLinkText(TOSHIBA_WEBSITE);
-    itemToshiba->setItemIcon(":/images/logo_toshiba.svg");
-
-    PrinterManufacturerItem *itemLenovo = new PrinterManufacturerItem(this);
-    itemLenovo->setMfgText(LENOVOIMAGE_TIPINFO);
-    itemLenovo->setLinkText(LENOVOIMAGE_WEBSITE);
-    itemLenovo->setItemIcon(":/images/logo_lenovo.svg");
-
     QGridLayout *pItemGLayout = new QGridLayout();
     pItemGLayout->setVerticalSpacing(10);
-    pItemGLayout->addWidget(itemUniontech, 0, 0);
-    pItemGLayout->addWidget(itemCanon, 0, 1);
-    pItemGLayout->addWidget(itemFujiXerox, 1, 0);
-    pItemGLayout->addWidget(itemBrother, 1, 1);
-    pItemGLayout->addWidget(itemDascom, 2, 0);
-    pItemGLayout->addWidget(itemToshiba, 2, 1);
-    pItemGLayout->addWidget(itemLenovo, 3, 0);
+    pItemGLayout->setContentsMargins(0, 0, 0, 0);
+    int index = 0;
+    for (const PrinterUi::VendorEntry &vendor : PrinterUi::driverVendors()) {
+        const QString name = QCoreApplication::translate("QObject", vendor.name);
+        PrinterManufacturerItem *item = new PrinterManufacturerItem(this);
+        item->setMfgText(name);
+        item->setLinkText(QString::fromLatin1(vendor.website));
+        if (vendor.logo[0] != '\0')
+            item->setItemIcon(QString::fromLatin1(vendor.logo));
+        else
+            item->setItemBadge(name);
+        pItemGLayout->addWidget(item, index / 2, index % 2);
+        ++index;
+    }
 
     QWidget *itemWidget = new QWidget(this);
     itemWidget->setLayout(pItemGLayout);
 
+    // Nineteen vendors do not fit the fixed window height: the list scrolls.
+    QScrollArea *scrollArea = new QScrollArea(this);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea->setWidget(itemWidget);
+    QPalette scrollPalette = scrollArea->palette();
+    scrollPalette.setBrush(QPalette::Window, Qt::transparent);
+    scrollArea->setPalette(scrollPalette);
+    itemWidget->setAutoFillBackground(false);
+
+    QVBoxLayout *pVLayout = new QVBoxLayout();
     pVLayout->addWidget(titlelabel);
-    pVLayout->addWidget(itemWidget);
-    pVLayout->addSpacing(18);
+    pVLayout->addWidget(scrollArea);
+    pVLayout->addSpacing(10);
 
     pWidget->setLayout(pVLayout);
 
@@ -489,6 +479,30 @@ void PrinterManufacturerItem::setMfgText(const QString &text)
 void PrinterManufacturerItem::setItemIcon(const QString &iconPath)
 {
     m_manufacturerIcon->setPixmap(QPixmap(iconPath));
+}
+
+// A vendor without a shipped logo gets its initial on a coloured disc.
+void PrinterManufacturerItem::setItemBadge(const QString &vendorName)
+{
+    const qreal ratio = devicePixelRatioF();
+    QPixmap pixmap(QSize(48, 48) * ratio);
+    pixmap.setDevicePixelRatio(ratio);
+    pixmap.fill(Qt::transparent);
+
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor::fromRgb(PrinterUi::badgeRgb(vendorName)));
+    painter.drawEllipse(QRect(0, 0, 48, 48));
+    painter.setPen(Qt::white);
+    QFont font = painter.font();
+    font.setPixelSize(22);
+    font.setBold(true);
+    painter.setFont(font);
+    painter.drawText(QRect(0, 0, 48, 48), Qt::AlignCenter, PrinterUi::badgeLetter(vendorName));
+    painter.end();
+
+    m_manufacturerIcon->setPixmap(pixmap);
 }
 
 void PrinterManufacturerItem::setLinkText(const QString &text)

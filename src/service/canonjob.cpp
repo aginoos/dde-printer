@@ -97,9 +97,16 @@ void registerWithDaemon(const ContextPtr &ctx, const CanonInstallRequest &req)
                        });
 }
 
+// The new queue is not shared; the user can switch sharing on later.
+QStringList lpadminArgs(const CanonInstallRequest &req)
+{
+    return {"-p", req.printerName, "-v", req.deviceUri, "-P", req.ppdPath, "-E",
+            "-o", "printer-is-shared=false"};
+}
+
 void addQueue(const ContextPtr &ctx, const CanonInstallRequest &req)
 {
-    const QStringList args = {"-p", req.printerName, "-v", req.deviceUri, "-P", req.ppdPath, "-E"};
+    const QStringList args = lpadminArgs(req);
     CommandRunner::run(ctx->owner, ctx->tools.lpadmin, args, [ctx, req](const CommandResult &res) {
         if (!res.ok()) {
             finish(ctx, CanonJob::kFailed);

@@ -20,6 +20,7 @@ bool isKnownSwitch(const QString &name)
         QStringLiteral(CUPS_SERVER_REMOTE_ANY),
         QStringLiteral(CUPS_SERVER_USER_CANCEL_ANY),
         QStringLiteral(CUPS_SERVER_DEBUG_LOGGING),
+        QStringLiteral("printer-discovery-enabled"),
     };
     return known.contains(name);
 }

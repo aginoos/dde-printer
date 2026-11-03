@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include "usbqueueid.h"
 #include "dprintersshowwindow.h"
 #include "zdrivermanager.h"
 #include "dpropertysetdlg.h"
@@ -836,6 +837,9 @@ void DPrintersShowWindow::serverSettingsSlot()
     }
     m_pSettingsDialog->m_pCheckRemote->setChecked(m_pPrinterManager->isRemoteAdminEnabled());
     m_pSettingsDialog->m_pCheckSaveDebugInfo->setChecked(m_pPrinterManager->isDebugLoggingEnabled());
+    const bool discoverySupported = m_pPrinterManager->hasDiscoverySupported();
+    m_pSettingsDialog->m_pFrameDiscovery->setVisible(discoverySupported);
+    m_pSettingsDialog->m_pCheckEnableDiscovery->setChecked(discoverySupported && m_pPrinterManager->isDiscoveryEnabled());
     m_pSettingsDialog->exec();
     /*找出变化的选项进行设置*/
     map<string, string> options;
@@ -850,6 +854,9 @@ void DPrintersShowWindow::serverSettingsSlot()
     }
     if (m_pPrinterManager->isDebugLoggingEnabled() != m_pSettingsDialog->m_pCheckSaveDebugInfo->isChecked()) {
         options.insert({CUPS_SERVER_DEBUG_LOGGING, m_pSettingsDialog->m_pCheckSaveDebugInfo->isChecked() ? "1" : "0"});
+    }
+    if (discoverySupported && m_pPrinterManager->isDiscoveryEnabled() != m_pSettingsDialog->m_pCheckEnableDiscovery->isChecked()) {
+        options.insert({DDE_PRINTER_ENABLE_PRINTER_DISCOVER, m_pSettingsDialog->m_pCheckEnableDiscovery->isChecked() ? "1" : "0"});
     }
 
     if (options.size() > 0)
@@ -1047,6 +1054,8 @@ void DPrintersShowWindow::deletePrinterClickSlot()
             bool suc = m_pPrinterManager->deletePrinterByName(printerName);
             if (suc) {
                 SecretStore::forgetPrinter(deviceUri);
+                // A USB printer that was moved off ipp-usb goes back on it; a failure here never blocks the deletion.
+                (void)UsbQueueId::releaseFromBlacklist(deviceUri);
                 // 刷新打印机列表
                 m_CurPrinterName = "";
                 refreshPrinterListView(m_CurPrinterName);

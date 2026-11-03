@@ -73,6 +73,7 @@ protected slots:
 
 private:
     void initSubUi();
+    void primePopupForWayland();
     void updateWidthForText();
     void hideMainIfPointerAway();
 
@@ -102,6 +103,7 @@ public:
     void setMfgText(const QString &text);
     void setLinkText(const QString &text);
     void setItemIcon(const QString &iconPath);
+    void setItemBadge(const QString &vendorName);
 
 protected:
     bool eventFilter(QObject *watched, QEvent *event) override;

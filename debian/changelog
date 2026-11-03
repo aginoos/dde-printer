@@ -1,3 +1,9 @@
+dde-printer (1.0.20-1+agino1) unstable; urgency=medium
+
+  * agino fork: Qt6/DTK6 only, privileged work moved to a polkit-guarded service, ipp-usb and Windows share support, HP/Canon repair fixes.
+
+ -- agino Team <admin@aginoos.com>  Tue, 03 Nov 2026 12:00:00 +0800
+
 dde-printer (1.0.20-1+1060) unstable; urgency=medium
 
   * update version

@@ -174,7 +174,8 @@ QString modelFromUsbUri(const QString &uri)
 bool isUsbBackendUriFor(const QString &uri, const QString &serial)
 {
     const bool backend = uri.startsWith(QLatin1String("usb:"), Qt::CaseInsensitive)
-            || uri.startsWith(QLatin1String("hp:"), Qt::CaseInsensitive);
+            || uri.startsWith(QLatin1String("hp:"), Qt::CaseInsensitive)
+            || uri.startsWith(QLatin1String("ccp:"), Qt::CaseInsensitive);   // Canon CAPT queues carry the serial too
     return backend && !serial.isEmpty() && uri.contains(serial, Qt::CaseInsensitive);
 }
 

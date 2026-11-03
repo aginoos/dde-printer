@@ -12,6 +12,12 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+
 namespace {
 
 const SecretSchema *smbSchema()
@@ -24,6 +30,49 @@ const SecretSchema *smbSchema()
                                                           nullptr);
     return schema;
 }
+
+
+// The Secret Service blocks while it waits for a keyring that does not exist (no login keyring) or
+// for an unlock prompt nobody answers. Every keyring call gets this deadline: when it passes, the
+// call is cancelled and reported as "keyring not available" instead of hanging the worker thread.
+constexpr int kKeyringTimeoutMs = 8000;
+
+class KeyringDeadline
+{
+public:
+    explicit KeyringDeadline(int timeoutMs = kKeyringTimeoutMs)
+        : m_cancellable(g_cancellable_new())
+    {
+        m_timer = std::thread([this, timeoutMs]() {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            if (!m_cv.wait_for(lock, std::chrono::milliseconds(timeoutMs), [this]() { return m_done; }))
+                g_cancellable_cancel(m_cancellable);
+        });
+    }
+
+    ~KeyringDeadline()
+    {
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_done = true;
+        }
+        m_cv.notify_all();
+        m_timer.join();
+        g_object_unref(m_cancellable);
+    }
+
+    KeyringDeadline(const KeyringDeadline &) = delete;
+    KeyringDeadline &operator=(const KeyringDeadline &) = delete;
+
+    GCancellable *cancellable() const { return m_cancellable; }
+
+private:
+    GCancellable *m_cancellable;
+    std::thread m_timer;
+    std::mutex m_mutex;
+    std::condition_variable m_cv;
+    bool m_done = false;
+};
 
 // Logs the failure without any secret and releases the error.
 void reportKeyringError(const char *operation, GError *error)
@@ -78,13 +127,19 @@ bool SecretStore::storeSmb(const QString &uri, const SmbCredential &credential)
     QByteArray secret = encode(credential);
 
     // one entry per share: a changed user name must not leave the old entry behind
+    KeyringDeadline deadline;
     GError *error = nullptr;
-    secret_password_clear_sync(smbSchema(), nullptr, &error, "uri", keyUtf8.constData(), nullptr);
+    secret_password_clear_sync(smbSchema(), deadline.cancellable(), &error, "uri", keyUtf8.constData(), nullptr);
+    const bool cancelled = error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED);
     reportKeyringError("clear", error);
+    if (cancelled) {   // no usable keyring: do not wait a second time for the store
+        secret.fill('\0');
+        return false;
+    }
 
     error = nullptr;
     const gboolean stored = secret_password_store_sync(smbSchema(), SECRET_COLLECTION_DEFAULT,
-                                                       label.constData(), secret.constData(), nullptr, &error,
+                                                       label.constData(), secret.constData(), deadline.cancellable(), &error,
                                                        "uri", keyUtf8.constData(),
                                                        "host", hostUtf8.constData(),
                                                        "share", shareUtf8.constData(),
@@ -101,8 +156,9 @@ std::optional<SmbCredential> SecretStore::lookupSmb(const QString &uri)
     if (key.isEmpty())
         return std::nullopt;
 
+    KeyringDeadline deadline;
     GError *error = nullptr;
-    gchar *secret = secret_password_lookup_sync(smbSchema(), nullptr, &error, "uri", key.toUtf8().constData(), nullptr);
+    gchar *secret = secret_password_lookup_sync(smbSchema(), deadline.cancellable(), &error, "uri", key.toUtf8().constData(), nullptr);
     reportKeyringError("lookup", error);
     if (!secret)
         return std::nullopt;
@@ -120,8 +176,9 @@ bool SecretStore::removeSmb(const QString &uri)
     if (key.isEmpty())
         return false;
 
+    KeyringDeadline deadline;
     GError *error = nullptr;
-    const gboolean removed = secret_password_clear_sync(smbSchema(), nullptr, &error, "uri", key.toUtf8().constData(), nullptr);
+    const gboolean removed = secret_password_clear_sync(smbSchema(), deadline.cancellable(), &error, "uri", key.toUtf8().constData(), nullptr);
     reportKeyringError("remove", error);
     return removed == TRUE;
 }

@@ -58,6 +58,10 @@ std::optional<QString> readQuirks(const QString &path);
 // Atomic replace (temp file in the same directory, then rename), mode 0644.
 bool writeQuirks(const QString &path, const QString &content);
 
+// Quirks file used by add()/remove() (kQuirksFile unless changed); tests use a
+// temporary file. Empty restores the default.
+void setQuirksFile(const QString &path);
+
 // ---- asynchronous operations (run as root inside the service) ----
 
 void add(QObject *owner, const QString &vendorProduct, Done done);

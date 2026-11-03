@@ -48,12 +48,11 @@ Outcome outcomeForCode(int code)
 LogResult readJobErrorLog(const QString &printerName)
 {
     LogResult result;
-    QDBusInterface iface(kService, kPath, kService, QDBusConnection::systemBus());
-    if (!iface.isValid())
-        return result;
-
-    iface.setTimeout(kLogTimeoutMs);
-    const QDBusReply<QString> reply = iface.call("ReadJobErrorLog", printerName);
+    // Not a QDBusInterface: it checks that the name has an owner first, and the service is
+    // started by D-Bus on demand (and exits when idle), so it would be reported as unavailable.
+    QDBusMessage request = QDBusMessage::createMethodCall(kService, kPath, kService, "ReadJobErrorLog");
+    request << printerName;
+    const QDBusReply<QString> reply = QDBusConnection::systemBus().call(request, QDBus::Block, kLogTimeoutMs);
     if (!reply.isValid())
         return result;
 

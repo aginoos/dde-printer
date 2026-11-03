@@ -375,6 +375,10 @@ TEST(ut_TroubleShoot, specificModelIsHiddenForUnknownPrinters)
 // ===========================================================================
 
 #include <QCoreApplication>
+#include <QHostAddress>
+#include <QNetworkInterface>
+#include <QNetworkProxy>
+#include <QTcpServer>
 #include <QDBusMessage>
 #include <QSet>
 #include <QTemporaryDir>
@@ -1357,4 +1361,26 @@ TEST(ut_TroubleShoot, stoppingASynchronousTestPageEndsTheWait)
         EXPECT_TRUE(job.m_bQuit);
     }
     flushDeletes();
+}
+
+TEST(ut_TroubleShoot, theConnectionCheckIgnoresTheDesktopProxy)
+{
+    // Qt never proxies the loopback address: connect to a real address of this host
+    QString host;
+    for (const QHostAddress &address : QNetworkInterface::allAddresses()) {
+        if (address.protocol() == QAbstractSocket::IPv4Protocol && !address.isLoopback()) {
+            host = address.toString();
+            break;
+        }
+    }
+    if (host.isEmpty())
+        GTEST_SKIP() << "no non-loopback address on this host";
+
+    QTcpServer server;   // before the proxy is set: a server would listen through it as well
+    ASSERT_TRUE(server.listen(QHostAddress::Any));
+    const QNetworkProxy saved = QNetworkProxy::applicationProxy();
+    QNetworkProxy::setApplicationProxy(QNetworkProxy(QNetworkProxy::Socks5Proxy, "127.0.0.1", 1));
+    const QString error = defaultTroubleShootEnv().tcpProbe(host, server.serverPort(), 3000);
+    QNetworkProxy::setApplicationProxy(saved);
+    EXPECT_TRUE(error.isEmpty()) << qPrintable(error);
 }

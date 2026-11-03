@@ -21,6 +21,7 @@
 #include "troubleshootservice.h"
 #include "ztroubleshoot_env.h"
 
+#include <QNetworkProxy>
 #include <QTcpSocket>
 #include <QUrl>
 #include <QDebug>
@@ -116,6 +117,7 @@ TroubleShootEnv defaultTroubleShootEnv()
     env.resolveHost = [](const QString &host) { return reslovedHost(host); };
     env.tcpProbe = [](const QString &host, quint16 port, int timeoutMs) {
         QTcpSocket socket;
+        socket.setProxy(QNetworkProxy::NoProxy);   // the printer is on the local network, never behind the desktop proxy
         socket.connectToHost(host, port);
         if (socket.waitForConnected(timeoutMs))
             return QString();
@@ -587,7 +589,7 @@ void PrinterTestJob::stop()
 {
     TroubleShootJob::stop();
     QDBusConnection::sessionBus().disconnect(SERVICE_INTERFACE_NAME, SERVICE_INTERFACE_PATH, SERVICE_INTERFACE_NAME,
-                                             "signalJobStateChanged", this, SLOT(slotJobStateChanged(int id, int state, const QString & message)));
+                                             "signalJobStateChanged", this, SLOT(slotJobStateChanged(QDBusMessage)));
     if (m_eventLoop)
         m_eventLoop->exit(0);
 }

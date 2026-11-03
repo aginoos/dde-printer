@@ -14,6 +14,7 @@
 #include <QProcess>
 #include <QRegularExpression>
 #include <QStringList>
+#include <QNetworkProxy>
 #include <QTcpSocket>
 #include <QUrl>
 
@@ -434,6 +435,7 @@ int RefreshDevicesByHostTask::probe_jetdirect(const QString &strHost)
 {
     qCDebug(COMMONMOUDLE) << "probe_jetdirect" << strHost;
     QTcpSocket socket;
+    socket.setProxy(QNetworkProxy::NoProxy);   // a printer is on the local network, never behind the desktop proxy
     socket.connectToHost(strHost, g_jetdirectPort);
     if (socket.waitForConnected(SOCKET_Timeout)) {
         TDeviceInfo info;
@@ -593,6 +595,7 @@ int RefreshDevicesByHostTask::probe_lpd(const QString &strHost)
 {
     qCDebug(COMMONMOUDLE) << "probe_lpd" << strHost;
     QTcpSocket socket;
+    socket.setProxy(QNetworkProxy::NoProxy);
     socket.connectToHost(strHost, g_lpdPort);
     if (socket.waitForConnected(SOCKET_Timeout)) {
         TDeviceInfo info;

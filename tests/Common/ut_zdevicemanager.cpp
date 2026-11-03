@@ -383,6 +383,9 @@ TEST(ut_ZDeviceManager, mergeDeviceSamsungBackendKeepsNonIppUri)
 // ======================================================================
 
 #include <QDir>
+#include <QHostAddress>
+#include <QNetworkInterface>
+#include <QNetworkProxy>
 #include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
@@ -404,7 +407,7 @@ namespace {
 class TcpStub
 {
 public:
-    explicit TcpStub(const QByteArray &reply = QByteArray())
+    explicit TcpStub(const QByteArray &reply = QByteArray(), bool anyAddress = false)
     {
         m_fd = ::socket(AF_INET, SOCK_STREAM, 0);
         int one = 1;
@@ -412,7 +415,7 @@ public:
         sockaddr_in addr;
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        addr.sin_addr.s_addr = htonl(anyAddress ? INADDR_ANY : INADDR_LOOPBACK);
         addr.sin_port = 0;
         if (::bind(m_fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) != 0 || ::listen(m_fd, 4) != 0) {
             return;
@@ -864,6 +867,61 @@ TEST(ut_ZDeviceManager, jetdirectProbeFailsWhenNothingListens)
     RefreshDevicesByHostTask task("127.0.0.1");
     EXPECT_EQ(task.probe_jetdirect("127.0.0.1"), -1);
     EXPECT_TRUE(task.getResult().isEmpty());
+}
+
+// A desktop with a proxy configured (the all_proxy variable, a system setting) must not
+// send the probes of a local printer through it. Qt never proxies the loopback address, so
+// the tests connect to a real address of this host.
+namespace {
+class DeadApplicationProxy
+{
+public:
+    DeadApplicationProxy() : m_saved(QNetworkProxy::applicationProxy())
+    {
+        QNetworkProxy::setApplicationProxy(QNetworkProxy(QNetworkProxy::Socks5Proxy, "127.0.0.1", closedPort()));
+    }
+    ~DeadApplicationProxy() { QNetworkProxy::setApplicationProxy(m_saved); }
+
+private:
+    QNetworkProxy m_saved;
+};
+
+QString hostAddressBeyondLoopback()
+{
+    for (const QHostAddress &address : QNetworkInterface::allAddresses()) {
+        if (address.protocol() == QAbstractSocket::IPv4Protocol && !address.isLoopback())
+            return address.toString();
+    }
+    return QString();
+}
+}  // namespace
+
+TEST(ut_ZDeviceManager, jetdirectProbeIgnoresTheDesktopProxy)
+{
+    const QString host = hostAddressBeyondLoopback();
+    if (host.isEmpty())
+        GTEST_SKIP() << "no non-loopback address on this host";
+    DeviceSeams seams;
+    TcpStub printer("@PJL INFO ID\r\n\"Acme Rocket 5\"\r\n\f", true);
+    g_jetdirectPort = printer.port();
+    DeadApplicationProxy proxy;
+    RefreshDevicesByHostTask task(host);
+    EXPECT_EQ(task.probe_jetdirect(host), 0);
+    EXPECT_EQ(task.getResult().size(), 1);
+}
+
+TEST(ut_ZDeviceManager, lpdProbeIgnoresTheDesktopProxy)
+{
+    const QString host = hostAddressBeyondLoopback();
+    if (host.isEmpty())
+        GTEST_SKIP() << "no non-loopback address on this host";
+    DeviceSeams seams;
+    TcpStub daemon(QByteArray(), true);
+    g_lpdPort = daemon.port();
+    DeadApplicationProxy proxy;
+    RefreshDevicesByHostTask task(host);
+    EXPECT_EQ(task.probe_lpd(host), 0);
+    EXPECT_EQ(task.getResult().size(), 1);
 }
 
 TEST(ut_ZDeviceManager, lpdProbeFindsAListeningDaemon)

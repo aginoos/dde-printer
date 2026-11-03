@@ -26,6 +26,10 @@
         <source> not found</source>
         <translation>찾을 수 없음</translation>
     </message>
+    <message>
+        <source>This driver needs administrator authorization. Please add the printer in the Print Manager.</source>
+        <translation>이 드라이버에는 관리자 권한이 필요합니다. 인쇄 관리자에서 프린터를 추가하십시오.</translation>
+    </message>
 </context>
 <context>
     <name>CheckAttributes</name>
@@ -107,6 +111,14 @@
         <source>The connection is valid</source>
         <translation>연결이 유효합니다</translation>
     </message>
+    <message>
+        <source>The USB port is used by ipp-usb. Add the printer again with the driverless (network) option.</source>
+        <translation>USB 포트를 ipp-usb에서 사용 중입니다. 드라이버 없는(네트워크) 옵션으로 프린터를 다시 추가하십시오.</translation>
+    </message>
+    <message>
+        <source>ipp-usb reports a problem with this printer: %1</source>
+        <translation>ipp-usb에서 이 프린터의 문제를 보고했습니다: %1</translation>
+    </message>
 </context>
 <context>
     <name>CheckCupsServer</name>
@@ -179,7 +191,7 @@
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="166"/>
         <source>Low level</source>
-        <translation type="unfinished"/>
+        <translation>잉크/토너 부족</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="196"/>
@@ -204,7 +216,7 @@
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="312"/>
         <source>The amounts are estimated, last updated at %1</source>
-        <translation type="unfinished"/>
+        <translation>용량은 추정값이며, 마지막 업데이트: %1</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="325"/>
@@ -546,7 +558,7 @@
     <message>
         <location filename="../ui/dprintersshowwindow.cpp" line="142"/>
         <source>Rename</source>
-        <translation type="unfinished"/>
+        <translation>이름 바꾸기</translation>
     </message>
     <message>
         <location filename="../ui/dprintersshowwindow.cpp" line="143"/>
@@ -686,6 +698,46 @@
         <location filename="../ui/dprintersshowwindow.cpp" line="868"/>
         <source>Install Driver</source>
         <translation>드라이버 설치</translation>
+    </message>
+    <message>
+        <source>Advanced sharing options</source>
+        <translation>고급 공유 옵션</translation>
+    </message>
+    <message>
+        <source>Applying settings, please wait...</source>
+        <translation>설정을 적용하는 중입니다. 잠시 기다려 주십시오...</translation>
+    </message>
+    <message>
+        <source>Canon capt printer does not support name modification.</source>
+        <translation>Canon CAPT 프린터는 이름 변경을 지원하지 않습니다.</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>복사</translation>
+    </message>
+    <message>
+        <source>Default printer</source>
+        <translation>기본 프린터</translation>
+    </message>
+    <message>
+        <source>Failed to change the server settings. Please authenticate as an administrator and try again.</source>
+        <translation>서버 설정을 변경하지 못했습니다. 관리자로 인증한 후 다시 시도하십시오.</translation>
+    </message>
+    <message>
+        <source>Log out and log in again to turn on print notifications</source>
+        <translation>인쇄 알림을 켜려면 로그아웃한 후 다시 로그인하십시오</translation>
+    </message>
+    <message>
+        <source>Management Tools</source>
+        <translation>관리 도구</translation>
+    </message>
+    <message>
+        <source>Shared address:</source>
+        <translation>공유 주소:</translation>
+    </message>
+    <message>
+        <source>Shared printer</source>
+        <translation>공유 프린터</translation>
     </message>
 </context>
 <context>
@@ -893,6 +945,38 @@
         <source>Failed to install %1</source>
         <translation>%1을 설치하지 못했습니다</translation>
     </message>
+    <message>
+        <source>Administrator authorization was denied.</source>
+        <translation>관리자 권한 부여가 거부되었습니다.</translation>
+    </message>
+    <message>
+        <source>No package installer is available on this system.</source>
+        <translation>이 시스템에서 사용할 수 있는 패키지 설치 프로그램이 없습니다.</translation>
+    </message>
+    <message>
+        <source>The driver installation was cancelled.</source>
+        <translation>드라이버 설치가 취소되었습니다.</translation>
+    </message>
+    <message>
+        <source>The driver package %1 is not available from the software sources.</source>
+        <translation>드라이버 패키지 %1을(를) 소프트웨어 소스에서 사용할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>The driver package information is invalid.</source>
+        <translation>드라이버 패키지 정보가 올바르지 않습니다.</translation>
+    </message>
+    <message>
+        <source>The package %1 is already installed in a higher version (%2) than the driver requires (%3)</source>
+        <translation>패키지 %1이(가) 드라이버에서 요구하는 버전(%3)보다 높은 버전(%2)으로 이미 설치되어 있습니다</translation>
+    </message>
+    <message>
+        <source>The package %1 is already installed in a higher version (%2) than the driver requires (%3); installing the driver would downgrade it.</source>
+        <translation>패키지 %1이(가) 드라이버에서 요구하는 버전(%3)보다 높은 버전(%2)으로 이미 설치되어 있습니다. 드라이버를 설치하면 버전이 낮아집니다.</translation>
+    </message>
+    <message>
+        <source>The package %1 is not an accepted printer driver package.</source>
+        <translation>패키지 %1은(는) 허용되는 프린터 드라이버 패키지가 아닙니다.</translation>
+    </message>
 </context>
 <context>
     <name>InstallPrinterWindow</name>
@@ -989,6 +1073,18 @@
         <location filename="../ui/installprinterwindow.cpp" line="244"/>
         <source>Installation failed</source>
         <translation>설치 실패</translation>
+    </message>
+    <message>
+        <source>After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window.</source>
+        <translation>드라이버를 설치한 후에는 프린터를 구성해야 합니다. 안내 창에서 구성하십시오.</translation>
+    </message>
+    <message>
+        <source>Installing printer driver... Please do not disconnect. This may take a few minutes. Thank you for your patience.</source>
+        <translation>프린터 드라이버를 설치하는 중입니다. 연결을 끊지 마십시오. 몇 분 정도 걸릴 수 있습니다. 기다려 주셔서 감사합니다.</translation>
+    </message>
+    <message>
+        <source>You have successfully added the printer.</source>
+        <translation>프린터를 추가했습니다.</translation>
     </message>
 </context>
 <context>
@@ -1210,7 +1306,7 @@
         <location filename="../ui/printersearchwindow.cpp" line="155"/>
         <location filename="../ui/printersearchwindow.cpp" line="268"/>
         <source>No printers found</source>
-        <translation type="unfinished"/>
+        <translation>프린터를 찾을 수 없습니다</translation>
     </message>
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="202"/>
@@ -1261,28 +1357,52 @@
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="794"/>
         <source>The driver was found</source>
-        <translation type="unfinished"/>
+        <translation>드라이버를 찾았습니다</translation>
     </message>
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="795"/>
         <source>Connect to the network and try again</source>
-        <translation type="unfinished"/>
+        <translation>네트워크에 연결한 후 다시 시도하십시오</translation>
     </message>
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="797"/>
         <source>Cannot find the driver</source>
-        <translation type="unfinished"/>
+        <translation>드라이버를 찾을 수 없습니다</translation>
     </message>
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="798"/>
         <source>Please try to install it manually or search its official website</source>
-        <translation type="unfinished"/>
+        <translation>수동으로 설치하거나 공식 웹사이트에서 검색해 보십시오</translation>
     </message>
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="808"/>
         <source>OK</source>
         <comment>button</comment>
         <translation>확인</translation>
+    </message>
+    <message>
+        <source>%1 shared</source>
+        <translation>%1 공유됨</translation>
+    </message>
+    <message>
+        <source>(use %1 protocol)</source>
+        <translation>(%1 프로토콜 사용)</translation>
+    </message>
+    <message>
+        <source>Auto Select</source>
+        <translation>자동 선택</translation>
+    </message>
+    <message>
+        <source>Please enter an IP address or hostname</source>
+        <translation>IP 주소 또는 호스트 이름을 입력하십시오</translation>
+    </message>
+    <message>
+        <source>Protocol</source>
+        <translation>프로토콜</translation>
+    </message>
+    <message>
+        <source>Windows Share</source>
+        <translation>Windows 공유</translation>
     </message>
 </context>
 <context>
@@ -1531,7 +1651,7 @@
     <message>
         <location filename="../ui/uisourcestring.h" line="43"/>
         <source>For more drivers, please refer to our official website: </source>
-        <translation type="unfinished"/>
+        <translation>더 많은 드라이버는 공식 웹사이트를 참조하십시오: </translation>
     </message>
     <message>
         <location filename="../util/ddestination.cpp" line="201"/>
@@ -1556,12 +1676,172 @@
     <message>
         <location filename="../ui/dprinterpropertytemplate.h" line="33"/>
         <source>Preferences</source>
-        <translation type="unfinished"/>
+        <translation>기본 설정</translation>
     </message>
     <message>
         <location filename="../../Common/common.cpp" line="154"/>
         <source>%1 not found, please ask the administrator for help, or enter the printer IP address in URI of Properties.</source>
-        <translation type="unfinished"/>
+        <translation>%1을(를) 찾을 수 없습니다. 관리자에게 도움을 요청하거나 속성의 URI에 프린터 IP 주소를 입력하십시오.</translation>
+    </message>
+    <message>
+        <source> not found, please ask the administrator for help</source>
+        <translation>을(를) 찾을 수 없습니다. 관리자에게 도움을 요청하십시오</translation>
+    </message>
+    <message>
+        <source>1. Check printer connection</source>
+        <translation>1. 프린터 연결 확인</translation>
+    </message>
+    <message>
+        <source>10. Reinstall the printer</source>
+        <translation>10. 프린터 다시 설치</translation>
+    </message>
+    <message>
+        <source>11. Check antivirus software</source>
+        <translation>11. 바이러스 백신 소프트웨어 확인</translation>
+    </message>
+    <message>
+        <source>12. Check for hardware failure</source>
+        <translation>12. 하드웨어 고장 여부 확인</translation>
+    </message>
+    <message>
+        <source>2. Check the printer status</source>
+        <translation>2. 프린터 상태 확인</translation>
+    </message>
+    <message>
+        <source>3. Check the printer driver</source>
+        <translation>3. 프린터 드라이버 확인</translation>
+    </message>
+    <message>
+        <source>4. Restart the print service</source>
+        <translation>4. 인쇄 서비스 다시 시작</translation>
+    </message>
+    <message>
+        <source>5. Check the print queue</source>
+        <translation>5. 인쇄 대기열 확인</translation>
+    </message>
+    <message>
+        <source>6. Run troubleshooting</source>
+        <translation>6. 문제 해결 실행</translation>
+    </message>
+    <message>
+        <source>7. Check the default printer settings</source>
+        <translation>7. 기본 프린터 설정 확인</translation>
+    </message>
+    <message>
+        <source>8. Clean up temporary printer files</source>
+        <translation>8. 프린터 임시 파일 정리</translation>
+    </message>
+    <message>
+        <source>9. Update your print manager or operating system</source>
+        <translation>9. 인쇄 관리자 또는 운영 체제 업데이트</translation>
+    </message>
+    <message>
+        <source>After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window.</source>
+        <translation>드라이버를 설치한 후에는 프린터를 구성해야 합니다. 안내 창에서 구성하십시오.</translation>
+    </message>
+    <message>
+        <source>Brother</source>
+        <translation>Brother</translation>
+    </message>
+    <message>
+        <source>Can&apos;t print? Learn how to resolve</source>
+        <translation>인쇄할 수 없나요? 해결 방법 알아보기</translation>
+    </message>
+    <message>
+        <source>Canon</source>
+        <translation>Canon</translation>
+    </message>
+    <message>
+        <source>Dascom</source>
+        <translation>Dascom</translation>
+    </message>
+    <message>
+        <source>Fuji Xerox</source>
+        <translation>Fuji Xerox</translation>
+    </message>
+    <message>
+        <source>Help on adding and using printers</source>
+        <translation>프린터 추가 및 사용 도움말</translation>
+    </message>
+    <message>
+        <source>If none of the above steps solve the problem, you need to consider whether the printer has a hardware failure. It is recommended to try connecting to another computer to test, or contact the manufacturer&apos;s technical support.</source>
+        <translation>위 단계로 문제가 해결되지 않으면 프린터 하드웨어 고장 여부를 확인해야 합니다. 다른 컴퓨터에 연결하여 테스트하거나 제조업체의 기술 지원팀에 문의하십시오.</translation>
+    </message>
+    <message>
+        <source>In Print Manager, find the printer you are using and confirm whether it is set as default.</source>
+        <translation>인쇄 관리자에서 사용 중인 프린터를 찾아 기본 프린터로 설정되어 있는지 확인하십시오.</translation>
+    </message>
+    <message>
+        <source>In Print Manager, select the printer you are using, click the &quot;Minus&quot; button to remove it, and then try to reinstall the printer.</source>
+        <translation>인쇄 관리자에서 사용 중인 프린터를 선택하고 &quot;빼기&quot; 버튼을 클릭하여 제거한 다음 프린터를 다시 설치해 보십시오.</translation>
+    </message>
+    <message>
+        <source>In the print manager, find the printer in use and click the &quot;Print Queue&quot; icon button. Check for any pending print tasks, delete any pending tasks, and then try printing again.</source>
+        <translation>인쇄 관리자에서 사용 중인 프린터를 찾아 &quot;인쇄 대기열&quot; 아이콘 버튼을 클릭하십시오. 대기 중인 인쇄 작업이 있는지 확인하고 삭제한 다음 다시 인쇄해 보십시오.</translation>
+    </message>
+    <message>
+        <source>In the print manager, find the printer in use, click the &quot;Troubleshooting&quot; icon button, run it and find solutions based on the detection results.</source>
+        <translation>인쇄 관리자에서 사용 중인 프린터를 찾아 &quot;문제 해결&quot; 아이콘 버튼을 클릭하고 실행한 다음 검사 결과에 따라 해결 방법을 찾으십시오.</translation>
+    </message>
+    <message>
+        <source>Instructions for Use</source>
+        <translation>사용 설명서</translation>
+    </message>
+    <message>
+        <source>Lenovo</source>
+        <translation>Lenovo</translation>
+    </message>
+    <message>
+        <source>Make sure the printer driver is installed correctly. If the driver does not match the printer, it is recommended to try updating the driver or download the latest version of the driver from the printer manufacturer&apos;s official website.</source>
+        <translation>프린터 드라이버가 올바르게 설치되었는지 확인하십시오. 드라이버가 프린터와 일치하지 않으면 드라이버를 업데이트하거나 프린터 제조업체의 공식 웹사이트에서 최신 드라이버를 다운로드해 보십시오.</translation>
+    </message>
+    <message>
+        <source>Make sure your print manager or operating system is up to date. You can install the latest version of Print Manager through the App Store, and install the latest version of UOS through the Control Center-Update Module.</source>
+        <translation>인쇄 관리자와 운영 체제가 최신 상태인지 확인하십시오. 앱 스토어에서 최신 인쇄 관리자를 설치하고, 제어 센터의 업데이트 모듈에서 최신 UOS를 설치할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Open System Monitor, switch to System Services, search for &quot;cups&quot; and try to restart the service.</source>
+        <translation>시스템 모니터를 열고 시스템 서비스로 전환한 다음 &quot;cups&quot;를 검색하여 서비스를 다시 시작해 보십시오.</translation>
+    </message>
+    <message>
+        <source>Open the terminal and enter the following commands in sequence and press Enter. This will stop the print service, delete the printer&apos;s temporary files, and finally restart the print service.</source>
+        <translation>터미널을 열고 다음 명령을 순서대로 입력한 후 Enter 키를 누르십시오. 인쇄 서비스가 중지되고 프린터 임시 파일이 삭제된 다음 인쇄 서비스가 다시 시작됩니다.</translation>
+    </message>
+    <message>
+        <source>Please make sure that the printer is working normally, for example, there are no paper jams, ink cartridge exhaustion, etc.</source>
+        <translation>용지 걸림이나 잉크 카트리지 소진 등이 없는지 프린터가 정상적으로 작동하는지 확인하십시오.</translation>
+    </message>
+    <message>
+        <source>Please make sure the printer is turned on and properly connected to this computer. Please check if the printer power, USB or network connection is normal.</source>
+        <translation>프린터가 켜져 있고 이 컴퓨터에 올바르게 연결되어 있는지 확인하십시오. 프린터 전원, USB 또는 네트워크 연결이 정상인지 확인하십시오.</translation>
+    </message>
+    <message>
+        <source>Print Driver Download Navigation</source>
+        <translation>프린터 드라이버 다운로드 안내</translation>
+    </message>
+    <message>
+        <source>Printer problem help: </source>
+        <translation>프린터 문제 도움말: </translation>
+    </message>
+    <message>
+        <source>Some antivirus software may block printing operations. Try turning off your antivirus software and retesting the printing functionality.</source>
+        <translation>일부 바이러스 백신 소프트웨어가 인쇄 작업을 차단할 수 있습니다. 바이러스 백신 소프트웨어를 끈 후 인쇄 기능을 다시 테스트해 보십시오.</translation>
+    </message>
+    <message>
+        <source>The Canon capt printer has been added and is not allowed to be added again.</source>
+        <translation>Canon CAPT 프린터가 이미 추가되었으며 다시 추가할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Toshiba</source>
+        <translation>Toshiba</translation>
+    </message>
+    <message>
+        <source>UOS Ecology</source>
+        <translation>UOS 생태계</translation>
+    </message>
+    <message>
+        <source>Unable to connect to printer. Please check the IP address or hostname and try again. Make sure the printer is turned on and the IP address or hostname is correct.</source>
+        <translation>프린터에 연결할 수 없습니다. IP 주소 또는 호스트 이름을 확인하고 다시 시도하십시오. 프린터가 켜져 있고 IP 주소 또는 호스트 이름이 올바른지 확인하십시오.</translation>
     </message>
 </context>
 <context>
@@ -1624,6 +1904,10 @@
         <source>Save debugging information for troubleshooting</source>
         <translation>문제 해결을 위해 디버깅 정보 저장</translation>
     </message>
+    <message>
+        <source>To share your printer, turn on these settings</source>
+        <translation>프린터를 공유하려면 다음 설정을 켜십시오</translation>
+    </message>
 </context>
 <context>
     <name>TroubleShootDialog</name>
@@ -1643,6 +1927,508 @@
         <source>OK</source>
         <comment>button</comment>
         <translation>확인</translation>
+    </message>
+    <message>
+        <source>Can&apos;t print? Learn how to resolve</source>
+        <translation>인쇄할 수 없나요? 해결 방법 알아보기</translation>
+    </message>
+    <message>
+        <source>Copied</source>
+        <translation>복사됨</translation>
+    </message>
+    <message>
+        <source>The repair service is not available.</source>
+        <translation>복구 서비스를 사용할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>There is no information to copy.</source>
+        <translation>복사할 정보가 없습니다.</translation>
+    </message>
+</context>
+<context>
+    <name>AddCanonCAPTPrinter</name>
+    <message>
+        <source>Canon capt install fail.</source>
+        <translation>Canon CAPT 설치에 실패했습니다.</translation>
+    </message>
+    <message>
+        <source>The Canon driver needs administrator authorization. Please add the printer in the Print Manager.</source>
+        <translation>Canon 드라이버에는 관리자 권한이 필요합니다. 인쇄 관리자에서 프린터를 추가하십시오.</translation>
+    </message>
+</context>
+<context>
+    <name>CanonI386</name>
+    <message>
+        <source>32-bit support required</source>
+        <translation>32비트 지원 필요</translation>
+    </message>
+    <message>
+        <source>Another program is using the package manager. Please try again in a few minutes.</source>
+        <translation>다른 프로그램이 패키지 관리자를 사용 중입니다. 몇 분 후에 다시 시도하십시오.</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>취소</translation>
+    </message>
+    <message>
+        <source>Could not enable 32-bit (i386) support.</source>
+        <translation>32비트(i386) 지원을 사용하도록 설정할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Could not install the 32-bit libraries needed by the Canon driver.</source>
+        <translation>Canon 드라이버에 필요한 32비트 라이브러리를 설치할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Could not update the package lists. Please check the network connection and try again.</source>
+        <translation>패키지 목록을 업데이트할 수 없습니다. 네트워크 연결을 확인하고 다시 시도하십시오.</translation>
+    </message>
+    <message>
+        <source>Enable and Install</source>
+        <translation>사용 설정 및 설치</translation>
+    </message>
+    <message>
+        <source>The Canon CAPT driver needs 32-bit (i386) runtime libraries. 32-bit support will be enabled and the required libraries installed. This needs the administrator password.</source>
+        <translation>Canon CAPT 드라이버에는 32비트(i386) 런타임 라이브러리가 필요합니다. 32비트 지원을 사용하도록 설정하고 필요한 라이브러리를 설치합니다. 관리자 암호가 필요합니다.</translation>
+    </message>
+    <message>
+        <source>The Canon printer was not added because the 32-bit (i386) support it needs was not enabled.</source>
+        <translation>필요한 32비트(i386) 지원이 사용 설정되지 않아 Canon 프린터가 추가되지 않았습니다.</translation>
+    </message>
+</context>
+<context>
+    <name>CanonI386Prompt</name>
+    <message>
+        <source>The 32-bit support could not be set up.</source>
+        <translation>32비트 지원을 설정할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>The repair service is not available.</source>
+        <translation>복구 서비스를 사용할 수 없습니다.</translation>
+    </message>
+</context>
+<context>
+    <name>CheckCupsErrorLog</name>
+    <message>
+        <source>Check CUPS error log</source>
+        <translation>CUPS 오류 로그 확인</translation>
+    </message>
+    <message>
+        <source>Checking CUPS error log...</source>
+        <translation>CUPS 오류 로그를 확인하는 중...</translation>
+    </message>
+    <message>
+        <source>Copy info</source>
+        <translation>정보 복사</translation>
+    </message>
+    <message>
+        <source>No CUPS error found</source>
+        <translation>CUPS 오류가 발견되지 않았습니다</translation>
+    </message>
+    <message>
+        <source>One-click fix</source>
+        <translation>원클릭 수정</translation>
+    </message>
+    <message>
+        <source>Possible cause: %1</source>
+        <translation>가능한 원인: %1</translation>
+    </message>
+    <message>
+        <source>Recommended action: %1</source>
+        <translation>권장 조치: %1</translation>
+    </message>
+    <message>
+        <source>The CUPS error log could not be checked</source>
+        <translation>CUPS 오류 로그를 확인할 수 없습니다</translation>
+    </message>
+    <message>
+        <source>The print service could not be repaired.</source>
+        <translation>인쇄 서비스를 복구할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>The print service has been repaired.</source>
+        <translation>인쇄 서비스가 복구되었습니다.</translation>
+    </message>
+    <message>
+        <source>View log</source>
+        <translation>로그 보기</translation>
+    </message>
+</context>
+<context>
+    <name>CheckSpecificModel</name>
+    <message>
+        <source>Check model-specific issues</source>
+        <translation>모델별 문제 확인</translation>
+    </message>
+    <message>
+        <source>Checking model-specific issues...</source>
+        <translation>모델별 문제를 확인하는 중...</translation>
+    </message>
+    <message>
+        <source>Model-specific issues were found</source>
+        <translation>모델별 문제가 발견되었습니다</translation>
+    </message>
+    <message>
+        <source>No model-specific issue found</source>
+        <translation>모델별 문제가 발견되지 않았습니다</translation>
+    </message>
+    <message>
+        <source>One-click fix</source>
+        <translation>원클릭 수정</translation>
+    </message>
+</context>
+<context>
+    <name>Common</name>
+    <message>
+        <source>Administrator authorization was denied.</source>
+        <translation>관리자 권한 부여가 거부되었습니다.</translation>
+    </message>
+    <message>
+        <source>The Canon capt printer has been added and is not allowed to be added again.</source>
+        <translation>Canon CAPT 프린터가 이미 추가되었으며 다시 추가할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>The Canon driver could not be configured.</source>
+        <translation>Canon 드라이버를 구성할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>The printer management service did not respond in time.</source>
+        <translation>프린터 관리 서비스가 제때 응답하지 않았습니다.</translation>
+    </message>
+    <message>
+        <source>The printer management service is not available.</source>
+        <translation>프린터 관리 서비스를 사용할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>The printer name, driver or device information is not valid for the Canon driver.</source>
+        <translation>프린터 이름, 드라이버 또는 장치 정보가 Canon 드라이버에 유효하지 않습니다.</translation>
+    </message>
+    <message>
+        <source>The printer service is busy. Please try again later.</source>
+        <translation>프린터 서비스가 사용 중입니다. 나중에 다시 시도하십시오.</translation>
+    </message>
+</context>
+<context>
+    <name>CupsErrorMap</name>
+    <message>
+        <source>CUPS reported an error</source>
+        <translation>CUPS에서 오류가 보고되었습니다</translation>
+    </message>
+    <message>
+        <source>Copy the information and contact support.</source>
+        <translation>정보를 복사하여 지원팀에 문의하십시오.</translation>
+    </message>
+    <message>
+        <source>The print service logged an error for the last job.</source>
+        <translation>인쇄 서비스에 마지막 작업의 오류가 기록되었습니다.</translation>
+    </message>
+</context>
+<context>
+    <name>CustomPageDialog</name>
+    <message>
+        <source>Bottom</source>
+        <translation>아래쪽</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <comment>button</comment>
+        <translation>취소</translation>
+    </message>
+    <message>
+        <source>Custom Paper</source>
+        <translation>사용자 지정 용지</translation>
+    </message>
+    <message>
+        <source>Custom paper %1</source>
+        <translation>사용자 지정 용지 %1</translation>
+    </message>
+    <message>
+        <source>Failed to save the custom paper sizes</source>
+        <translation>사용자 지정 용지 크기를 저장하지 못했습니다</translation>
+    </message>
+    <message>
+        <source>Height</source>
+        <translation>높이</translation>
+    </message>
+    <message>
+        <source>Inches</source>
+        <translation>인치</translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation>왼쪽</translation>
+    </message>
+    <message>
+        <source>Margins</source>
+        <translation>여백</translation>
+    </message>
+    <message>
+        <source>Margins cannot be negative</source>
+        <translation>여백은 음수일 수 없습니다</translation>
+    </message>
+    <message>
+        <source>Millimeters</source>
+        <translation>밀리미터</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <comment>button</comment>
+        <translation>확인</translation>
+    </message>
+    <message>
+        <source>Paper Name</source>
+        <translation>용지 이름</translation>
+    </message>
+    <message>
+        <source>Please enter a paper name</source>
+        <translation>용지 이름을 입력하십시오</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation>오른쪽</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <comment>button</comment>
+        <translation>저장</translation>
+    </message>
+    <message>
+        <source>The margins are larger than the paper</source>
+        <translation>여백이 용지보다 큽니다</translation>
+    </message>
+    <message>
+        <source>The paper height is outside the range supported by the printer</source>
+        <translation>용지 높이가 프린터에서 지원하는 범위를 벗어났습니다</translation>
+    </message>
+    <message>
+        <source>The paper name contains characters that are not allowed</source>
+        <translation>용지 이름에 허용되지 않는 문자가 포함되어 있습니다</translation>
+    </message>
+    <message>
+        <source>The paper name is too long</source>
+        <translation>용지 이름이 너무 깁니다</translation>
+    </message>
+    <message>
+        <source>The paper width is outside the range supported by the printer</source>
+        <translation>용지 너비가 프린터에서 지원하는 범위를 벗어났습니다</translation>
+    </message>
+    <message>
+        <source>Top</source>
+        <translation>상단</translation>
+    </message>
+    <message>
+        <source>Unit</source>
+        <translation>단위</translation>
+    </message>
+    <message>
+        <source>Width</source>
+        <translation>너비</translation>
+    </message>
+</context>
+<context>
+    <name>DriverInstallConfirm</name>
+    <message>
+        <source>Cancel</source>
+        <translation>취소</translation>
+    </message>
+    <message>
+        <source>Install</source>
+        <translation>설치</translation>
+    </message>
+    <message>
+        <source>Install the following driver packages?</source>
+        <translation>다음 드라이버 패키지를 설치하시겠습니까?</translation>
+    </message>
+</context>
+<context>
+    <name>IppUsbSwitch</name>
+    <message>
+        <source>Failed to add the printer to ipp-usb blacklist.</source>
+        <translation>ipp-usb 차단 목록에 프린터를 추가하지 못했습니다.</translation>
+    </message>
+    <message>
+        <source>The USB address of the printer did not appear after switching off ipp-usb.</source>
+        <translation>ipp-usb를 끈 후에도 프린터의 USB 주소가 나타나지 않았습니다.</translation>
+    </message>
+    <message>
+        <source>The ipp-usb printer is not published on the network, so it cannot be added with the driverless solution.</source>
+        <translation>ipp-usb 프린터가 네트워크에 게시되지 않아 드라이버 없는 방식으로 추가할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>ipp-usb does not list this printer.</source>
+        <translation>ipp-usb 목록에 이 프린터가 없습니다.</translation>
+    </message>
+</context>
+<context>
+    <name>ManagementToolWidget</name>
+    <message>
+        <source>Management Tools</source>
+        <translation>관리 도구</translation>
+    </message>
+</context>
+<context>
+    <name>ModelFixMap</name>
+    <message>
+        <source>The Canon LBP2900 print service could not be repaired. Please try again.</source>
+        <translation>Canon LBP2900 인쇄 서비스를 복구할 수 없습니다. 다시 시도하십시오.</translation>
+    </message>
+</context>
+<context>
+    <name>PrinterHelpWindow</name>
+    <message>
+        <source>Copy</source>
+        <translation>복사</translation>
+    </message>
+    <message>
+        <source>Learn how to fix issues with not being able to print</source>
+        <translation>인쇄할 수 없는 문제를 해결하는 방법 알아보기</translation>
+    </message>
+</context>
+<context>
+    <name>PrinterUi</name>
+    <message>
+        <source>Local Match</source>
+        <translation>로컬 일치</translation>
+    </message>
+    <message>
+        <source>Online Match</source>
+        <translation>온라인 일치</translation>
+    </message>
+    <message>
+        <source>Use Driverless Solution</source>
+        <translation>드라이버 없는 방식 사용</translation>
+    </message>
+</context>
+<context>
+    <name>RefreshDevicesSmbTask</name>
+    <message>
+        <source>Failed to access %1. Please check if the username or password is correct, and ensure the Windows sharing service is configured correctly.</source>
+        <translation>%1에 액세스하지 못했습니다. 사용자 이름과 암호가 올바른지 확인하고, Windows 공유 서비스가 올바르게 구성되어 있는지 확인하십시오.</translation>
+    </message>
+    <message>
+        <source>Please enter a valid IP address or hostname</source>
+        <translation>올바른 IP 주소 또는 호스트 이름을 입력하십시오</translation>
+    </message>
+    <message>
+        <source>Windows sharing support (libsmbclient) is not available</source>
+        <translation>Windows 공유 지원(libsmbclient)을 사용할 수 없습니다</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Authentication Required for %1</source>
+        <translation>%1에 인증 필요</translation>
+    </message>
+    <message>
+        <source>Authentication required to connect to printer &quot;%1&quot;</source>
+        <translation>프린터 &quot;%1&quot;에 연결하려면 인증이 필요합니다</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>취소</translation>
+    </message>
+    <message>
+        <source>Connect</source>
+        <translation>연결하기</translation>
+    </message>
+    <message>
+        <source>Connection Identity</source>
+        <translation>연결 ID</translation>
+    </message>
+    <message>
+        <source>Domain</source>
+        <translation>도메인</translation>
+    </message>
+    <message>
+        <source>Guest</source>
+        <translation>게스트</translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation>비밀번호</translation>
+    </message>
+    <message>
+        <source>Registered User</source>
+        <translation>등록된 사용자</translation>
+    </message>
+    <message>
+        <source>Remember Password</source>
+        <translation>암호 기억</translation>
+    </message>
+    <message>
+        <source>Username</source>
+        <translation>사용자 이름</translation>
+    </message>
+</context>
+<context>
+    <name>SmbPrinterPage</name>
+    <message>
+        <source>Authentication Completed</source>
+        <translation>인증 완료</translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <comment>button</comment>
+        <translation>찾아보기</translation>
+    </message>
+    <message>
+        <source>Enter IP Address</source>
+        <translation>IP 주소 입력</translation>
+    </message>
+    <message>
+        <source>Enter IP, then Browse</source>
+        <translation>IP를 입력한 후 찾아보기</translation>
+    </message>
+    <message>
+        <source>Find Windows Shared Printer</source>
+        <translation>Windows 공유 프린터 찾기</translation>
+    </message>
+    <message>
+        <source>No printers found</source>
+        <translation>프린터를 찾을 수 없습니다</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>확인</translation>
+    </message>
+    <message>
+        <source>Please enter a valid IP address or hostname</source>
+        <translation>올바른 IP 주소 또는 호스트 이름을 입력하십시오</translation>
+    </message>
+    <message>
+        <source>Select Printer</source>
+        <translation>프린터 선택</translation>
+    </message>
+</context>
+<context>
+    <name>TroubleShootItem</name>
+    <message>
+        <source>Can&apos;t print? Learn how to resolve</source>
+        <translation>인쇄할 수 없나요? 해결 방법 알아보기</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <comment>button</comment>
+        <translation>취소</translation>
+    </message>
+    <message>
+        <source>Expand more</source>
+        <translation>더 보기</translation>
+    </message>
+    <message>
+        <source>Troubleshoot: </source>
+        <translation>문제 해결</translation>
+    </message>
+</context>
+<context>
+    <name>TroubleShootJob</name>
+    <message>
+        <source>The repair did not succeed.</source>
+        <translation>복구에 실패했습니다.</translation>
+    </message>
+    <message>
+        <source>The repair has been completed.</source>
+        <translation>복구가 완료되었습니다.</translation>
     </message>
 </context>
 </TS>

@@ -219,12 +219,16 @@
     <message>
         <location filename="../dbus/zcupsmonitor.cpp" line="383"/>
         <source>%1 has been sent to the printer, please take away the paper in time!</source>
-        <translation type="unfinished"/>
+        <translation>%1이(가) 프린터로 전송되었습니다. 용지를 바로 가져가 주십시오!</translation>
     </message>
     <message>
         <location filename="../dbus/zcupsmonitor.cpp" line="385"/>
         <source>%1 %2, reason: %3</source>
         <translation>%1 %2, 이유: %3</translation>
+    </message>
+    <message>
+        <source>%1 printed successfully, please take away the paper in time!</source>
+        <translation>%1 인쇄가 완료되었습니다. 용지를 바로 가져가 주십시오!</translation>
     </message>
 </context>
 <context>
@@ -302,7 +306,11 @@
     <message>
         <location filename="../../Common/common.cpp" line="154"/>
         <source>%1 not found, please ask the administrator for help, or enter the printer IP address in URI of Properties.</source>
-        <translation type="unfinished"/>
+        <translation>%1을(를) 찾을 수 없습니다. 관리자에게 도움을 요청하거나 속성의 URI에 프린터 IP 주소를 입력하십시오.</translation>
+    </message>
+    <message>
+        <source> not found, please ask the administrator for help</source>
+        <translation>을(를) 찾을 수 없습니다. 관리자에게 도움을 요청하십시오</translation>
     </message>
 </context>
 <context>
@@ -310,17 +318,64 @@
     <message>
         <location filename="../usbprinter/usbthread.cpp" line="260"/>
         <source>Configuring the printer %1 ...</source>
-        <translation type="unfinished"/>
+        <translation>프린터 %1 구성 중...</translation>
     </message>
     <message>
         <location filename="../usbprinter/usbthread.cpp" line="306"/>
         <source>Configuration successful. Click to view %1.</source>
-        <translation type="unfinished"/>
+        <translation>구성이 완료되었습니다. 클릭하여 %1을(를) 확인하십시오.</translation>
     </message>
     <message>
         <location filename="../usbprinter/usbthread.cpp" line="310"/>
         <source>Configuration failed. Click to add the printer %1.</source>
-        <translation type="unfinished"/>
+        <translation>구성에 실패했습니다. 클릭하여 프린터 %1을(를) 추가하십시오.</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Authentication Required for %1</source>
+        <translation>%1에 인증 필요</translation>
+    </message>
+    <message>
+        <source>Authentication required to connect to printer &quot;%1&quot;</source>
+        <translation>프린터 &quot;%1&quot;에 연결하려면 인증이 필요합니다</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>취소</translation>
+    </message>
+    <message>
+        <source>Connect</source>
+        <translation>연결하기</translation>
+    </message>
+    <message>
+        <source>Connection Identity</source>
+        <translation>연결 ID</translation>
+    </message>
+    <message>
+        <source>Domain</source>
+        <translation>도메인</translation>
+    </message>
+    <message>
+        <source>Guest</source>
+        <translation>게스트</translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation>비밀번호</translation>
+    </message>
+    <message>
+        <source>Registered User</source>
+        <translation>등록된 사용자</translation>
+    </message>
+    <message>
+        <source>Remember Password</source>
+        <translation>암호 기억</translation>
+    </message>
+    <message>
+        <source>Username</source>
+        <translation>사용자 이름</translation>
     </message>
 </context>
 </TS>

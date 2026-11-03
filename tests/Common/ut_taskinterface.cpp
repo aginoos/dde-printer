@@ -15,11 +15,9 @@
 
 #include <DConfig>
 
-// MLogger keeps its DConfig in a private member; the test emits its
-// valueChanged signal to reach the watcher.
-#define private public
+// MLogger keeps its DConfig in a private member; the test (built with
+// -fno-access-control) emits its valueChanged signal to reach the watcher.
 #include "reviselogger.h"
-#undef private
 #include "ztaskinterface.h"
 
 namespace {

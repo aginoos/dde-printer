@@ -337,3 +337,72 @@ TEST(ut_AddPrinter, lpadminArgsPickTheDriverOption)
     EXPECT_EQ(file.at(file.indexOf("-L") + 1), QString("room 3"));
     EXPECT_TRUE(file.contains("printer-is-shared=false"));
 }
+
+namespace {
+// Replaces the CUPS calls of DefaultAddPrinter with in-memory state.
+class FakeCupsAddPrinter : public DefaultAddPrinter
+{
+public:
+    FakeCupsAddPrinter(const TDeviceInfo &printer, const QStringList &before, const QStringList &after)
+        : DefaultAddPrinter(printer, solutionWith("generic.ppd"), QString()), m_before(before), m_after(after)
+    {
+    }
+    void simulateFailedRun()
+    {
+        m_calls = 0;
+        rememberExistingQueue();
+        rollbackFailedQueue();
+    }
+    QStringList removed;
+    bool removeResult = true;
+
+protected:
+    QStringList existingQueueNames() override { return m_calls++ == 0 ? m_before : m_after; }
+    bool removeQueue(const QString &name) override
+    {
+        removed << name;
+        return removeResult;
+    }
+
+private:
+    QStringList m_before;
+    QStringList m_after;
+    int m_calls = 0;
+};
+}   // namespace
+
+TEST(ut_AddPrinter, rollbackOnlyForQueuesCreatedByTheTask)
+{
+    EXPECT_TRUE(shouldRollbackQueue(false, true));
+    EXPECT_FALSE(shouldRollbackQueue(true, true));
+    EXPECT_FALSE(shouldRollbackQueue(false, false));
+    EXPECT_FALSE(shouldRollbackQueue(true, false));
+}
+
+TEST(ut_AddPrinter, failedAddRemovesTheLeftoverQueue)
+{
+    TDeviceInfo printer = deviceWith({"ipp://h/printers/x"});
+    printer.strName = "vtest-1";
+    FakeCupsAddPrinter task(printer, {"Other"}, {"Other", "vtest-1"});
+    task.simulateFailedRun();
+    EXPECT_EQ(task.removed, QStringList{"vtest-1"});
+}
+
+TEST(ut_AddPrinter, failedAddKeepsAPreExistingQueue)
+{
+    TDeviceInfo printer = deviceWith({"ipp://h/printers/x"});
+    printer.strName = "vtest-1";
+    FakeCupsAddPrinter task(printer, {"vtest-1"}, {"vtest-1"});
+    task.simulateFailedRun();
+    EXPECT_TRUE(task.removed.isEmpty());
+}
+
+TEST(ut_AddPrinter, failedRollbackIsOnlyLogged)
+{
+    TDeviceInfo printer = deviceWith({"ipp://h/printers/x"});
+    printer.strName = "vtest-1";
+    FakeCupsAddPrinter task(printer, {}, {"vtest-1"});
+    task.removeResult = false;
+    EXPECT_NO_THROW(task.simulateFailedRun());
+    EXPECT_EQ(task.removed.size(), 1);
+}

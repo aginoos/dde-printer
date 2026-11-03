@@ -12,6 +12,7 @@
 #include "cupsconnection.h"
 #include "qtconvert.h"
 #include "cupsconnectionfactory.h"
+#include "zprintermanager.h"
 
 #include <QTextStream>
 #include <QRegularExpression>
@@ -422,10 +423,44 @@ int DefaultAddPrinter::addPrinter()
     const QStringList args = buildLpadminArgs(m_printer, m_uri, m_solution[SD_KEY_from].toInt(),
                                               m_solution[CUPS_PPD_NAME].toString());
 
+    rememberExistingQueue();
     qCDebug(COMMONMOUDLE) << args;
     m_proc.start("/usr/sbin/lpadmin", args);
 
     return 1;
+}
+
+// A failed lpadmin run can still leave a half-configured queue in CUPS (for
+// example when -m everywhere is not supported by the target). Only a queue
+// created by this very task, i.e. one that did not exist before, may be removed.
+bool shouldRollbackQueue(bool existedBefore, bool existsNow)
+{
+    return !existedBefore && existsNow;
+}
+
+QStringList GetSystemPrinterNames();
+
+QStringList DefaultAddPrinter::existingQueueNames()
+{
+    return GetSystemPrinterNames();
+}
+
+bool DefaultAddPrinter::removeQueue(const QString &name)
+{
+    return RemoveSystemPrinter(name) == 0;
+}
+
+void DefaultAddPrinter::rememberExistingQueue()
+{
+    m_queueExistedBefore = existingQueueNames().contains(m_printer.strName);
+}
+
+void DefaultAddPrinter::rollbackFailedQueue()
+{
+    if (!shouldRollbackQueue(m_queueExistedBefore, existingQueueNames().contains(m_printer.strName)))
+        return;
+    if (!removeQueue(m_printer.strName))
+        qCWarning(COMMONMOUDLE) << "Could not remove the leftover queue" << m_printer.strName;
 }
 
 void DefaultAddPrinter::slotProcessFinished(int iCode, QProcess::ExitStatus exitStatus)
@@ -439,6 +474,7 @@ void DefaultAddPrinter::slotProcessFinished(int iCode, QProcess::ExitStatus exit
             m_strErr = m_strErr.mid(index);
 
         m_iStep = STEP_Failed;
+        rollbackFailedQueue();
     }
 
     nextStep();

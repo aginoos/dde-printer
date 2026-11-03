@@ -255,6 +255,31 @@ TEST(CustomPagePpd, NonAsciiNameUsesTranslationLine)
     EXPECT_EQ(parseSizes(out, QStringLiteral("de")).at(0).displayName, QStringLiteral("105.8x141.1mm"));
 }
 
+TEST(CustomPagePpd, AsciiNameStaysOnMainLinesOnly)
+{
+    const QStringList out = insertSizes(samplePpd(), {sample(QStringLiteral("ddeprint2"), QStringLiteral("  Test00 50  "))},
+                                        QStringLiteral("zh_CN"));
+    const QString text = out.join(QLatin1Char('\n'));
+    EXPECT_TRUE(text.contains(QStringLiteral("*PageSize ddeprint2/Test00 50:")));
+    EXPECT_TRUE(text.contains(QStringLiteral("*PageRegion ddeprint2/Test00 50:")));
+    EXPECT_FALSE(text.contains(QStringLiteral("zh_CN.PageSize")));
+    EXPECT_FALSE(text.contains(QStringLiteral("zh_CN.PageRegion")));
+
+    const QList<PageSize> parsed = parseSizes(out, QStringLiteral("zh_CN"));
+    ASSERT_EQ(parsed.size(), 1);
+    EXPECT_EQ(parsed.at(0).displayName, QStringLiteral("Test00 50"));
+}
+
+TEST(CustomPageValidate, NameLengthBoundaryAndPadding)
+{
+    PageSize ok = sample(QStringLiteral("ddeprint1"), QString(kMaxNameLength, QLatin1Char('a')));
+    EXPECT_EQ(validate(ok, Scope()), Problem::None);
+    ok.displayName = QString(kMaxNameLength + 1, QLatin1Char('a'));
+    EXPECT_EQ(validate(ok, Scope()), Problem::NameTooLong);
+    ok.displayName = QStringLiteral("   ") + QString(kMaxNameLength, QLatin1Char('a')) + QStringLiteral("   ");
+    EXPECT_EQ(validate(ok, Scope()), Problem::None);
+}
+
 TEST(CustomPagePpd, StripRemovesOnlyOwnEntries)
 {
     const QString name = QString::fromUtf8("\xe4\xbf\x9d");

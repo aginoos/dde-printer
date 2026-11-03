@@ -219,12 +219,16 @@
     <message>
         <location filename="../dbus/zcupsmonitor.cpp" line="383"/>
         <source>%1 has been sent to the printer, please take away the paper in time!</source>
-        <translation type="unfinished"/>
+        <translation>تم إرسال %1 إلى الطابعة، يرجى أخذ الورق في الوقت المناسب!</translation>
     </message>
     <message>
         <location filename="../dbus/zcupsmonitor.cpp" line="385"/>
         <source>%1 %2, reason: %3</source>
         <translation>%1 %2، السبب: 3%</translation>
+    </message>
+    <message>
+        <source>%1 printed successfully, please take away the paper in time!</source>
+        <translation>تمت طباعة %1 بنجاح، يرجى أخذ الورق في الوقت المناسب!</translation>
     </message>
 </context>
 <context>
@@ -302,7 +306,11 @@
     <message>
         <location filename="../../Common/common.cpp" line="154"/>
         <source>%1 not found, please ask the administrator for help, or enter the printer IP address in URI of Properties.</source>
-        <translation type="unfinished"/>
+        <translation>لم يتم العثور على %1، يرجى طلب المساعدة من مسؤول النظام، أو إدخال عنوان IP الخاص بالطابعة في حقل URI ضمن الخصائص.</translation>
+    </message>
+    <message>
+        <source> not found, please ask the administrator for help</source>
+        <translation> غير موجود، يرجى طلب المساعدة من مسؤول النظام</translation>
     </message>
 </context>
 <context>
@@ -310,17 +318,64 @@
     <message>
         <location filename="../usbprinter/usbthread.cpp" line="260"/>
         <source>Configuring the printer %1 ...</source>
-        <translation type="unfinished"/>
+        <translation>جارٍ ضبط الطابعة %1 ...</translation>
     </message>
     <message>
         <location filename="../usbprinter/usbthread.cpp" line="306"/>
         <source>Configuration successful. Click to view %1.</source>
-        <translation type="unfinished"/>
+        <translation>تم الضبط بنجاح. انقر لعرض %1.</translation>
     </message>
     <message>
         <location filename="../usbprinter/usbthread.cpp" line="310"/>
         <source>Configuration failed. Click to add the printer %1.</source>
-        <translation type="unfinished"/>
+        <translation>فشل الضبط. انقر لإضافة الطابعة %1.</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Username</source>
+        <translation>اسم المستخدم</translation>
+    </message>
+    <message>
+        <source>Domain</source>
+        <translation>النطاق</translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation>كلمة المرور</translation>
+    </message>
+    <message>
+        <source>Remember Password</source>
+        <translation>تذكّر كلمة المرور</translation>
+    </message>
+    <message>
+        <source>Connection Identity</source>
+        <translation>هوية الاتصال</translation>
+    </message>
+    <message>
+        <source>Guest</source>
+        <translation>ضيف</translation>
+    </message>
+    <message>
+        <source>Registered User</source>
+        <translation>مستخدم مسجّل</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>إلغاء</translation>
+    </message>
+    <message>
+        <source>Connect</source>
+        <translation>اتصال</translation>
+    </message>
+    <message>
+        <source>Authentication Required for %1</source>
+        <translation>المصادقة مطلوبة لـ %1</translation>
+    </message>
+    <message>
+        <source>Authentication required to connect to printer &quot;%1&quot;</source>
+        <translation>المصادقة مطلوبة للاتصال بالطابعة &quot;%1&quot;</translation>
     </message>
 </context>
 </TS>

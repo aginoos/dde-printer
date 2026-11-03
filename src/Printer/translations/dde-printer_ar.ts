@@ -26,6 +26,10 @@
         <source> not found</source>
         <translation>غير موجود</translation>
     </message>
+    <message>
+        <source>This driver needs administrator authorization. Please add the printer in the Print Manager.</source>
+        <translation>يحتاج هذا المشغّل إلى تفويض من مسؤول النظام. يرجى إضافة الطابعة من مدير الطباعة.</translation>
+    </message>
 </context>
 <context>
     <name>CheckAttributes</name>
@@ -107,6 +111,14 @@
         <source>The connection is valid</source>
         <translation>الإتصال مقبول</translation>
     </message>
+    <message>
+        <source>The USB port is used by ipp-usb. Add the printer again with the driverless (network) option.</source>
+        <translation>منفذ USB مستخدم من قِبل ipp-usb. أضف الطابعة مرة أخرى باستخدام خيار بدون مشغّل (الشبكة).</translation>
+    </message>
+    <message>
+        <source>ipp-usb reports a problem with this printer: %1</source>
+        <translation>أبلغ ipp-usb عن مشكلة في هذه الطابعة: %1</translation>
+    </message>
 </context>
 <context>
     <name>CheckCupsServer</name>
@@ -179,7 +191,7 @@
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="166"/>
         <source>Low level</source>
-        <translation type="unfinished"/>
+        <translation>مستوى منخفض</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="196"/>
@@ -189,22 +201,22 @@
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="261"/>
         <source>Ink/Toner Status</source>
-        <translation type="unfinished"/>
+        <translation>حالة الحبر/المسحوق</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="268"/>
         <source>Unknown amount</source>
-        <translation type="unfinished"/>
+        <translation>الكمية غير معروفة</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="276"/>
         <source>Unable to get the remaining amount</source>
-        <translation type="unfinished"/>
+        <translation>تعذّر الحصول على الكمية المتبقية</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="312"/>
         <source>The amounts are estimated, last updated at %1</source>
-        <translation type="unfinished"/>
+        <translation>الكميات تقديرية، آخر تحديث في %1</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="325"/>
@@ -253,7 +265,7 @@
         <location filename="../util/dprintertanslator.cpp" line="44"/>
         <location filename="../util/dprintertanslator.cpp" line="47"/>
         <source>Print Quality</source>
-        <translation type="unfinished"/>
+        <translation>جودة الطباعة</translation>
     </message>
     <message>
         <location filename="../util/dprintertanslator.cpp" line="48"/>
@@ -436,7 +448,7 @@
         <location filename="../util/dprintertanslator.cpp" line="106"/>
         <location filename="../util/dprintertanslator.cpp" line="110"/>
         <source>Binding Edge</source>
-        <translation type="unfinished"/>
+        <translation>حافة التجليد</translation>
     </message>
     <message>
         <location filename="../util/dprintertanslator.cpp" line="108"/>
@@ -482,7 +494,7 @@
         <location filename="../util/dprintertanslator.cpp" line="124"/>
         <location filename="../util/dprintertanslator.cpp" line="125"/>
         <source>Staple Location</source>
-        <translation type="unfinished"/>
+        <translation>موضع التدبيس</translation>
     </message>
     <message>
         <location filename="../util/dprintertanslator.cpp" line="127"/>
@@ -546,7 +558,7 @@
     <message>
         <location filename="../ui/dprintersshowwindow.cpp" line="142"/>
         <source>Rename</source>
-        <translation type="unfinished"/>
+        <translation>إعادة تسمية</translation>
     </message>
     <message>
         <location filename="../ui/dprintersshowwindow.cpp" line="143"/>
@@ -608,7 +620,7 @@
     <message>
         <location filename="../ui/dprintersshowwindow.cpp" line="274"/>
         <source>Supplies</source>
-        <translation type="unfinished"/>
+        <translation>المستلزمات</translation>
     </message>
     <message>
         <location filename="../ui/dprintersshowwindow.cpp" line="310"/>
@@ -686,6 +698,46 @@
         <location filename="../ui/dprintersshowwindow.cpp" line="868"/>
         <source>Install Driver</source>
         <translation>تثبيت محرك الأقراص</translation>
+    </message>
+    <message>
+        <source>Default printer</source>
+        <translation>الطابعة الافتراضية</translation>
+    </message>
+    <message>
+        <source>Shared printer</source>
+        <translation>طابعة مشتركة</translation>
+    </message>
+    <message>
+        <source>Advanced sharing options</source>
+        <translation>خيارات المشاركة المتقدمة</translation>
+    </message>
+    <message>
+        <source>Shared address:</source>
+        <translation>عنوان المشاركة:</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>نسخ</translation>
+    </message>
+    <message>
+        <source>Management Tools</source>
+        <translation>أدوات الإدارة</translation>
+    </message>
+    <message>
+        <source>Canon capt printer does not support name modification.</source>
+        <translation>طابعة Canon CAPT لا تدعم تغيير الاسم.</translation>
+    </message>
+    <message>
+        <source>Applying settings, please wait...</source>
+        <translation>جارٍ تطبيق الإعدادات، يرجى الانتظار...</translation>
+    </message>
+    <message>
+        <source>Failed to change the server settings. Please authenticate as an administrator and try again.</source>
+        <translation>فشل تغيير إعدادات الخادم. يرجى المصادقة بصفتك مسؤولًا ثم إعادة المحاولة.</translation>
+    </message>
+    <message>
+        <source>Log out and log in again to turn on print notifications</source>
+        <translation>سجّل الخروج ثم سجّل الدخول مجددًا لتفعيل إشعارات الطباعة</translation>
     </message>
 </context>
 <context>
@@ -834,7 +886,7 @@
     <message>
         <location filename="../ui/installdriverwindow.cpp" line="244"/>
         <source>Enter a complete vendor and model (Only letters, numbers and whitespaces)</source>
-        <translation type="unfinished"/>
+        <translation>أدخل اسم الشركة المصنّعة والطراز كاملين (أحرف وأرقام ومسافات فقط)</translation>
     </message>
     <message>
         <location filename="../ui/installdriverwindow.cpp" line="247"/>
@@ -892,6 +944,38 @@
         <location filename="../../Common/vendor/addprinter.cpp" line="325"/>
         <source>Failed to install %1</source>
         <translation>فشل في تثبيت ٪ 1</translation>
+    </message>
+    <message>
+        <source>The driver package information is invalid.</source>
+        <translation>معلومات حزمة المشغّل غير صالحة.</translation>
+    </message>
+    <message>
+        <source>The package %1 is not an accepted printer driver package.</source>
+        <translation>الحزمة %1 ليست حزمة مشغّل طابعة مقبولة.</translation>
+    </message>
+    <message>
+        <source>The package %1 is already installed in a higher version (%2) than the driver requires (%3); installing the driver would downgrade it.</source>
+        <translation>الحزمة %1 مثبّتة بالفعل بإصدار أحدث (%2) من الذي يتطلبه المشغّل (%3)؛ وتثبيت المشغّل سيؤدي إلى خفض إصدارها.</translation>
+    </message>
+    <message>
+        <source>The driver package %1 is not available from the software sources.</source>
+        <translation>حزمة المشغّل %1 غير متوفرة في مصادر البرامج.</translation>
+    </message>
+    <message>
+        <source>No package installer is available on this system.</source>
+        <translation>لا يتوفر مثبّت حزم في هذا النظام.</translation>
+    </message>
+    <message>
+        <source>The driver installation was cancelled.</source>
+        <translation>تم إلغاء تثبيت المشغّل.</translation>
+    </message>
+    <message>
+        <source>Administrator authorization was denied.</source>
+        <translation>تم رفض تفويض مسؤول النظام.</translation>
+    </message>
+    <message>
+        <source>The package %1 is already installed in a higher version (%2) than the driver requires (%3)</source>
+        <translation>الحزمة %1 مثبّتة بالفعل بإصدار أحدث (%2) من الذي يتطلبه المشغّل (%3)</translation>
     </message>
 </context>
 <context>
@@ -989,6 +1073,18 @@
         <location filename="../ui/installprinterwindow.cpp" line="244"/>
         <source>Installation failed</source>
         <translation>التثبيت لم يتم</translation>
+    </message>
+    <message>
+        <source>After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window.</source>
+        <translation>بعد نجاح تثبيت المشغّل، عليك ضبط إعدادات الطابعة. يرجى القيام بذلك في نافذة التنقل.</translation>
+    </message>
+    <message>
+        <source>Installing printer driver... Please do not disconnect. This may take a few minutes. Thank you for your patience.</source>
+        <translation>جارٍ تثبيت مشغّل الطابعة... يرجى عدم فصل الجهاز. قد يستغرق ذلك بضع دقائق. شكرًا لصبرك.</translation>
+    </message>
+    <message>
+        <source>You have successfully added the printer.</source>
+        <translation>تمت إضافة الطابعة بنجاح.</translation>
     </message>
 </context>
 <context>
@@ -1210,7 +1306,7 @@
         <location filename="../ui/printersearchwindow.cpp" line="155"/>
         <location filename="../ui/printersearchwindow.cpp" line="268"/>
         <source>No printers found</source>
-        <translation type="unfinished"/>
+        <translation>لم يتم العثور على طابعات</translation>
     </message>
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="202"/>
@@ -1261,28 +1357,52 @@
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="794"/>
         <source>The driver was found</source>
-        <translation type="unfinished"/>
+        <translation>تم العثور على المشغّل</translation>
     </message>
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="795"/>
         <source>Connect to the network and try again</source>
-        <translation type="unfinished"/>
+        <translation>اتصل بالشبكة ثم أعد المحاولة</translation>
     </message>
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="797"/>
         <source>Cannot find the driver</source>
-        <translation type="unfinished"/>
+        <translation>تعذّر العثور على المشغّل</translation>
     </message>
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="798"/>
         <source>Please try to install it manually or search its official website</source>
-        <translation type="unfinished"/>
+        <translation>يرجى تثبيته يدويًا أو البحث عنه في الموقع الرسمي</translation>
     </message>
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="808"/>
         <source>OK</source>
         <comment>button</comment>
         <translation>جيد</translation>
+    </message>
+    <message>
+        <source>Please enter an IP address or hostname</source>
+        <translation>يرجى إدخال عنوان IP أو اسم مضيف</translation>
+    </message>
+    <message>
+        <source>Windows Share</source>
+        <translation>مشاركة Windows</translation>
+    </message>
+    <message>
+        <source>Protocol</source>
+        <translation>البروتوكول</translation>
+    </message>
+    <message>
+        <source>Auto Select</source>
+        <translation>اختيار تلقائي</translation>
+    </message>
+    <message>
+        <source>%1 shared</source>
+        <translation>%1 مشتركة</translation>
+    </message>
+    <message>
+        <source>(use %1 protocol)</source>
+        <translation>(استخدام بروتوكول %1)</translation>
     </message>
 </context>
 <context>
@@ -1311,132 +1431,132 @@
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="226"/>
         <source>Black</source>
-        <translation type="unfinished"/>
+        <translation>أسود</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="227"/>
         <source>Blue</source>
-        <translation type="unfinished"/>
+        <translation>أزرق</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="228"/>
         <source>Brown</source>
-        <translation type="unfinished"/>
+        <translation>بني</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="229"/>
         <source>Cyan</source>
-        <translation type="unfinished"/>
+        <translation>سماوي</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="230"/>
         <source>Dark-gray</source>
-        <translation type="unfinished"/>
+        <translation>رمادي داكن</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="231"/>
         <source>Dark gray</source>
-        <translation type="unfinished"/>
+        <translation>رمادي داكن</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="232"/>
         <source>Dark-yellow</source>
-        <translation type="unfinished"/>
+        <translation>أصفر داكن</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="233"/>
         <source>Dark yellow</source>
-        <translation type="unfinished"/>
+        <translation>أصفر داكن</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="234"/>
         <source>Gold</source>
-        <translation type="unfinished"/>
+        <translation>ذهبي</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="235"/>
         <source>Gray</source>
-        <translation type="unfinished"/>
+        <translation>رمادي</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="236"/>
         <source>Green</source>
-        <translation type="unfinished"/>
+        <translation>أخضر</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="237"/>
         <source>Light-black</source>
-        <translation type="unfinished"/>
+        <translation>أسود فاتح</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="238"/>
         <source>Light black</source>
-        <translation type="unfinished"/>
+        <translation>أسود فاتح</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="239"/>
         <source>Light-cyan</source>
-        <translation type="unfinished"/>
+        <translation>سماوي فاتح</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="240"/>
         <source>Light cyan</source>
-        <translation type="unfinished"/>
+        <translation>سماوي فاتح</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="241"/>
         <source>Light-gray</source>
-        <translation type="unfinished"/>
+        <translation>رمادي فاتح</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="242"/>
         <source>Light gray</source>
-        <translation type="unfinished"/>
+        <translation>رمادي فاتح</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="243"/>
         <source>Light-magenta</source>
-        <translation type="unfinished"/>
+        <translation>أرجواني فاتح</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="244"/>
         <source>Light magenta</source>
-        <translation type="unfinished"/>
+        <translation>أرجواني فاتح</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="245"/>
         <source>Magenta</source>
-        <translation type="unfinished"/>
+        <translation>أرجواني</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="246"/>
         <source>Orange</source>
-        <translation type="unfinished"/>
+        <translation>برتقالي</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="247"/>
         <source>Red</source>
-        <translation type="unfinished"/>
+        <translation>أحمر</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="248"/>
         <source>Silver</source>
-        <translation type="unfinished"/>
+        <translation>فضي</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="249"/>
         <source>White</source>
-        <translation type="unfinished"/>
+        <translation>أبيض</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="250"/>
         <source>Yellow</source>
-        <translation type="unfinished"/>
+        <translation>أصفر</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="251"/>
         <source>Waste</source>
-        <translation type="unfinished"/>
+        <translation>النفايات</translation>
     </message>
     <message>
         <location filename="../ui/jobmanagerwindow.cpp" line="108"/>
@@ -1531,7 +1651,7 @@
     <message>
         <location filename="../ui/uisourcestring.h" line="43"/>
         <source>For more drivers, please refer to our official website: </source>
-        <translation type="unfinished"/>
+        <translation>لمزيد من المشغّلات، يرجى مراجعة موقعنا الرسمي: </translation>
     </message>
     <message>
         <location filename="../util/ddestination.cpp" line="201"/>
@@ -1556,12 +1676,172 @@
     <message>
         <location filename="../ui/dprinterpropertytemplate.h" line="33"/>
         <source>Preferences</source>
-        <translation type="unfinished"/>
+        <translation>التفضيلات</translation>
     </message>
     <message>
         <location filename="../../Common/common.cpp" line="154"/>
         <source>%1 not found, please ask the administrator for help, or enter the printer IP address in URI of Properties.</source>
-        <translation type="unfinished"/>
+        <translation>لم يتم العثور على %1، يرجى طلب المساعدة من مسؤول النظام، أو إدخال عنوان IP الخاص بالطابعة في حقل URI ضمن الخصائص.</translation>
+    </message>
+    <message>
+        <source> not found, please ask the administrator for help</source>
+        <translation> غير موجود، يرجى طلب المساعدة من مسؤول النظام</translation>
+    </message>
+    <message>
+        <source>Printer problem help: </source>
+        <translation>مساعدة مشكلات الطابعة: </translation>
+    </message>
+    <message>
+        <source>After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window.</source>
+        <translation>بعد نجاح تثبيت المشغّل، عليك ضبط إعدادات الطابعة. يرجى القيام بذلك في نافذة التنقل.</translation>
+    </message>
+    <message>
+        <source>Unable to connect to printer. Please check the IP address or hostname and try again. Make sure the printer is turned on and the IP address or hostname is correct.</source>
+        <translation>تعذّر الاتصال بالطابعة. يرجى التحقق من عنوان IP أو اسم المضيف ثم إعادة المحاولة. تأكد من تشغيل الطابعة ومن صحة عنوان IP أو اسم المضيف.</translation>
+    </message>
+    <message>
+        <source>The Canon capt printer has been added and is not allowed to be added again.</source>
+        <translation>تمت إضافة طابعة Canon CAPT ولا يُسمح بإضافتها مرة أخرى.</translation>
+    </message>
+    <message>
+        <source>Help on adding and using printers</source>
+        <translation>مساعدة حول إضافة الطابعات واستخدامها</translation>
+    </message>
+    <message>
+        <source>Print Driver Download Navigation</source>
+        <translation>دليل تنزيل مشغّلات الطباعة</translation>
+    </message>
+    <message>
+        <source>Instructions for Use</source>
+        <translation>تعليمات الاستخدام</translation>
+    </message>
+    <message>
+        <source>Can&apos;t print? Learn how to resolve</source>
+        <translation>تعذّرت الطباعة؟ تعرّف على كيفية الحل</translation>
+    </message>
+    <message>
+        <source>UOS Ecology</source>
+        <translation>منظومة UOS</translation>
+    </message>
+    <message>
+        <source>Canon</source>
+        <translation>Canon</translation>
+    </message>
+    <message>
+        <source>Fuji Xerox</source>
+        <translation>Fuji Xerox</translation>
+    </message>
+    <message>
+        <source>Brother</source>
+        <translation>Brother</translation>
+    </message>
+    <message>
+        <source>Dascom</source>
+        <translation>Dascom</translation>
+    </message>
+    <message>
+        <source>Toshiba</source>
+        <translation>Toshiba</translation>
+    </message>
+    <message>
+        <source>Lenovo</source>
+        <translation>Lenovo</translation>
+    </message>
+    <message>
+        <source>1. Check printer connection</source>
+        <translation>1. تحقق من اتصال الطابعة</translation>
+    </message>
+    <message>
+        <source>Please make sure the printer is turned on and properly connected to this computer. Please check if the printer power, USB or network connection is normal.</source>
+        <translation>يرجى التأكد من أن الطابعة قيد التشغيل ومتصلة بهذا الحاسوب بشكل صحيح. تحقق من سلامة طاقة الطابعة واتصال USB أو الشبكة.</translation>
+    </message>
+    <message>
+        <source>2. Check the printer status</source>
+        <translation>2. تحقق من حالة الطابعة</translation>
+    </message>
+    <message>
+        <source>Please make sure that the printer is working normally, for example, there are no paper jams, ink cartridge exhaustion, etc.</source>
+        <translation>يرجى التأكد من أن الطابعة تعمل بشكل طبيعي، مثل عدم وجود انحشار للورق أو نفاد خراطيش الحبر وما شابه.</translation>
+    </message>
+    <message>
+        <source>3. Check the printer driver</source>
+        <translation>3. تحقق من مشغّل الطابعة</translation>
+    </message>
+    <message>
+        <source>Make sure the printer driver is installed correctly. If the driver does not match the printer, it is recommended to try updating the driver or download the latest version of the driver from the printer manufacturer&apos;s official website.</source>
+        <translation>تأكد من تثبيت مشغّل الطابعة بشكل صحيح. إذا كان المشغّل لا يتوافق مع الطابعة، يُنصح بتحديثه أو تنزيل أحدث إصدار منه من الموقع الرسمي للشركة المصنّعة للطابعة.</translation>
+    </message>
+    <message>
+        <source>4. Restart the print service</source>
+        <translation>4. أعد تشغيل خدمة الطباعة</translation>
+    </message>
+    <message>
+        <source>Open System Monitor, switch to System Services, search for &quot;cups&quot; and try to restart the service.</source>
+        <translation>افتح مراقب النظام، وانتقل إلى خدمات النظام، وابحث عن &quot;cups&quot; ثم حاول إعادة تشغيل الخدمة.</translation>
+    </message>
+    <message>
+        <source>5. Check the print queue</source>
+        <translation>5. تحقق من قائمة انتظار الطباعة</translation>
+    </message>
+    <message>
+        <source>In the print manager, find the printer in use and click the &quot;Print Queue&quot; icon button. Check for any pending print tasks, delete any pending tasks, and then try printing again.</source>
+        <translation>في مدير الطباعة، ابحث عن الطابعة المستخدمة وانقر على زر أيقونة &quot;قائمة انتظار الطباعة&quot;. تحقق من وجود مهام طباعة معلّقة، واحذفها، ثم حاول الطباعة مرة أخرى.</translation>
+    </message>
+    <message>
+        <source>6. Run troubleshooting</source>
+        <translation>6. شغّل استكشاف الأخطاء وإصلاحها</translation>
+    </message>
+    <message>
+        <source>In the print manager, find the printer in use, click the &quot;Troubleshooting&quot; icon button, run it and find solutions based on the detection results.</source>
+        <translation>في مدير الطباعة، ابحث عن الطابعة المستخدمة، وانقر على زر أيقونة &quot;استكشاف الأخطاء وإصلاحها&quot;، وشغّله ثم ابحث عن الحلول بناءً على نتائج الفحص.</translation>
+    </message>
+    <message>
+        <source>7. Check the default printer settings</source>
+        <translation>7. تحقق من إعدادات الطابعة الافتراضية</translation>
+    </message>
+    <message>
+        <source>In Print Manager, find the printer you are using and confirm whether it is set as default.</source>
+        <translation>في مدير الطباعة، ابحث عن الطابعة التي تستخدمها وتأكد من أنها معيّنة كطابعة افتراضية.</translation>
+    </message>
+    <message>
+        <source>8. Clean up temporary printer files</source>
+        <translation>8. نظّف الملفات المؤقتة للطابعة</translation>
+    </message>
+    <message>
+        <source>Open the terminal and enter the following commands in sequence and press Enter. This will stop the print service, delete the printer&apos;s temporary files, and finally restart the print service.</source>
+        <translation>افتح الطرفية وأدخل الأوامر التالية بالترتيب مع الضغط على Enter بعد كل أمر. سيؤدي ذلك إلى إيقاف خدمة الطباعة، وحذف الملفات المؤقتة للطابعة، ثم إعادة تشغيل خدمة الطباعة.</translation>
+    </message>
+    <message>
+        <source>9. Update your print manager or operating system</source>
+        <translation>9. حدّث مدير الطباعة أو نظام التشغيل</translation>
+    </message>
+    <message>
+        <source>Make sure your print manager or operating system is up to date. You can install the latest version of Print Manager through the App Store, and install the latest version of UOS through the Control Center-Update Module.</source>
+        <translation>تأكد من أن مدير الطباعة أو نظام التشغيل محدّث. يمكنك تثبيت أحدث إصدار من مدير الطباعة عبر متجر التطبيقات، وتثبيت أحدث إصدار من UOS عبر مركز التحكم - وحدة التحديث.</translation>
+    </message>
+    <message>
+        <source>10. Reinstall the printer</source>
+        <translation>10. أعد تثبيت الطابعة</translation>
+    </message>
+    <message>
+        <source>In Print Manager, select the printer you are using, click the &quot;Minus&quot; button to remove it, and then try to reinstall the printer.</source>
+        <translation>في مدير الطباعة، حدّد الطابعة التي تستخدمها، وانقر على زر &quot;ناقص&quot; لإزالتها، ثم حاول إعادة تثبيتها.</translation>
+    </message>
+    <message>
+        <source>11. Check antivirus software</source>
+        <translation>11. تحقق من برنامج مكافحة الفيروسات</translation>
+    </message>
+    <message>
+        <source>Some antivirus software may block printing operations. Try turning off your antivirus software and retesting the printing functionality.</source>
+        <translation>قد تحظر بعض برامج مكافحة الفيروسات عمليات الطباعة. جرّب إيقاف تشغيل برنامج مكافحة الفيروسات ثم أعد اختبار الطباعة.</translation>
+    </message>
+    <message>
+        <source>12. Check for hardware failure</source>
+        <translation>12. تحقق من وجود عطل في العتاد</translation>
+    </message>
+    <message>
+        <source>If none of the above steps solve the problem, you need to consider whether the printer has a hardware failure. It is recommended to try connecting to another computer to test, or contact the manufacturer&apos;s technical support.</source>
+        <translation>إذا لم تحل أي من الخطوات أعلاه المشكلة، فعليك التفكير في احتمال وجود عطل في عتاد الطابعة. يُنصح بتجربة توصيلها بحاسوب آخر للاختبار، أو التواصل مع الدعم الفني للشركة المصنّعة.</translation>
     </message>
 </context>
 <context>
@@ -1624,6 +1904,10 @@
         <source>Save debugging information for troubleshooting</source>
         <translation>حفظ معلومات التصحيح لاستكشاف الأخطاء وإصلاحها</translation>
     </message>
+    <message>
+        <source>To share your printer, turn on these settings</source>
+        <translation>لمشاركة طابعتك، فعّل هذه الإعدادات</translation>
+    </message>
 </context>
 <context>
     <name>TroubleShootDialog</name>
@@ -1643,6 +1927,508 @@
         <source>OK</source>
         <comment>button</comment>
         <translation>جيد</translation>
+    </message>
+    <message>
+        <source>Can&apos;t print? Learn how to resolve</source>
+        <translation>تعذّرت الطباعة؟ تعرّف على كيفية الحل</translation>
+    </message>
+    <message>
+        <source>There is no information to copy.</source>
+        <translation>لا توجد معلومات للنسخ.</translation>
+    </message>
+    <message>
+        <source>Copied</source>
+        <translation>تم النسخ</translation>
+    </message>
+    <message>
+        <source>The repair service is not available.</source>
+        <translation>خدمة الإصلاح غير متوفرة.</translation>
+    </message>
+</context>
+<context>
+    <name>ManagementToolWidget</name>
+    <message>
+        <source>Management Tools</source>
+        <translation>أدوات الإدارة</translation>
+    </message>
+</context>
+<context>
+    <name>PrinterHelpWindow</name>
+    <message>
+        <source>Learn how to fix issues with not being able to print</source>
+        <translation>تعرّف على كيفية حل مشكلات تعذّر الطباعة</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>نسخ</translation>
+    </message>
+</context>
+<context>
+    <name>TroubleShootItem</name>
+    <message>
+        <source>Expand more</source>
+        <translation>عرض المزيد</translation>
+    </message>
+    <message>
+        <source>Troubleshoot: </source>
+        <translation>استكشاف الأخطاء: </translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <comment>button</comment>
+        <translation>إلغاء</translation>
+    </message>
+    <message>
+        <source>Can&apos;t print? Learn how to resolve</source>
+        <translation>تعذّرت الطباعة؟ تعرّف على كيفية الحل</translation>
+    </message>
+</context>
+<context>
+    <name>CustomPageDialog</name>
+    <message>
+        <source>Custom Paper</source>
+        <translation>ورق مخصص</translation>
+    </message>
+    <message>
+        <source>Millimeters</source>
+        <translation>مليمترات</translation>
+    </message>
+    <message>
+        <source>Inches</source>
+        <translation>بوصات</translation>
+    </message>
+    <message>
+        <source>Paper Name</source>
+        <translation>اسم الورق</translation>
+    </message>
+    <message>
+        <source>Unit</source>
+        <translation>الوحدة</translation>
+    </message>
+    <message>
+        <source>Width</source>
+        <translation>العرض</translation>
+    </message>
+    <message>
+        <source>Height</source>
+        <translation>الارتفاع</translation>
+    </message>
+    <message>
+        <source>Margins</source>
+        <translation>الهوامش</translation>
+    </message>
+    <message>
+        <source>Top</source>
+        <translation>أعلى</translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation>يسار</translation>
+    </message>
+    <message>
+        <source>Bottom</source>
+        <translation>أسفل</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation>يمين</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <comment>button</comment>
+        <translation>إلغاء</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <comment>button</comment>
+        <translation>حفظ</translation>
+    </message>
+    <message>
+        <source>Custom paper %1</source>
+        <translation>ورق مخصص %1</translation>
+    </message>
+    <message>
+        <source>Please enter a paper name</source>
+        <translation>يرجى إدخال اسم الورق</translation>
+    </message>
+    <message>
+        <source>The paper name is too long</source>
+        <translation>اسم الورق طويل جدًا</translation>
+    </message>
+    <message>
+        <source>The paper name contains characters that are not allowed</source>
+        <translation>يحتوي اسم الورق على أحرف غير مسموح بها</translation>
+    </message>
+    <message>
+        <source>The paper width is outside the range supported by the printer</source>
+        <translation>عرض الورق خارج النطاق الذي تدعمه الطابعة</translation>
+    </message>
+    <message>
+        <source>The paper height is outside the range supported by the printer</source>
+        <translation>ارتفاع الورق خارج النطاق الذي تدعمه الطابعة</translation>
+    </message>
+    <message>
+        <source>Margins cannot be negative</source>
+        <translation>لا يمكن أن تكون الهوامش سالبة</translation>
+    </message>
+    <message>
+        <source>The margins are larger than the paper</source>
+        <translation>الهوامش أكبر من الورقة</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <comment>button</comment>
+        <translation>موافق</translation>
+    </message>
+    <message>
+        <source>Failed to save the custom paper sizes</source>
+        <translation>فشل حفظ أحجام الورق المخصصة</translation>
+    </message>
+</context>
+<context>
+    <name>SmbPrinterPage</name>
+    <message>
+        <source>Find Windows Shared Printer</source>
+        <translation>البحث عن طابعة مشتركة في Windows</translation>
+    </message>
+    <message>
+        <source>Enter IP Address</source>
+        <translation>أدخل عنوان IP</translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <comment>button</comment>
+        <translation>استعراض</translation>
+    </message>
+    <message>
+        <source>No printers found</source>
+        <translation>لم يتم العثور على طابعات</translation>
+    </message>
+    <message>
+        <source>Enter IP, then Browse</source>
+        <translation>أدخل عنوان IP ثم انقر على استعراض</translation>
+    </message>
+    <message>
+        <source>Authentication Completed</source>
+        <translation>اكتملت المصادقة</translation>
+    </message>
+    <message>
+        <source>Select Printer</source>
+        <translation>اختيار طابعة</translation>
+    </message>
+    <message>
+        <source>Please enter a valid IP address or hostname</source>
+        <translation>يرجى إدخال عنوان IP أو اسم مضيف صالح</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>موافق</translation>
+    </message>
+</context>
+<context>
+    <name>IppUsbSwitch</name>
+    <message>
+        <source>The ipp-usb printer is not published on the network, so it cannot be added with the driverless solution.</source>
+        <translation>طابعة ipp-usb غير منشورة على الشبكة، لذا لا يمكن إضافتها بحل بدون مشغّل.</translation>
+    </message>
+    <message>
+        <source>ipp-usb does not list this printer.</source>
+        <translation>لا يدرج ipp-usb هذه الطابعة.</translation>
+    </message>
+    <message>
+        <source>Failed to add the printer to ipp-usb blacklist.</source>
+        <translation>فشلت إضافة الطابعة إلى القائمة السوداء لـ ipp-usb.</translation>
+    </message>
+    <message>
+        <source>The USB address of the printer did not appear after switching off ipp-usb.</source>
+        <translation>لم يظهر عنوان USB الخاص بالطابعة بعد إيقاف ipp-usb.</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Username</source>
+        <translation>اسم المستخدم</translation>
+    </message>
+    <message>
+        <source>Domain</source>
+        <translation>النطاق</translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation>كلمة المرور</translation>
+    </message>
+    <message>
+        <source>Remember Password</source>
+        <translation>تذكّر كلمة المرور</translation>
+    </message>
+    <message>
+        <source>Connection Identity</source>
+        <translation>هوية الاتصال</translation>
+    </message>
+    <message>
+        <source>Guest</source>
+        <translation>ضيف</translation>
+    </message>
+    <message>
+        <source>Registered User</source>
+        <translation>مستخدم مسجّل</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>إلغاء</translation>
+    </message>
+    <message>
+        <source>Connect</source>
+        <translation>اتصال</translation>
+    </message>
+    <message>
+        <source>Authentication Required for %1</source>
+        <translation>المصادقة مطلوبة لـ %1</translation>
+    </message>
+    <message>
+        <source>Authentication required to connect to printer &quot;%1&quot;</source>
+        <translation>المصادقة مطلوبة للاتصال بالطابعة &quot;%1&quot;</translation>
+    </message>
+</context>
+<context>
+    <name>RefreshDevicesSmbTask</name>
+    <message>
+        <source>Please enter a valid IP address or hostname</source>
+        <translation>يرجى إدخال عنوان IP أو اسم مضيف صالح</translation>
+    </message>
+    <message>
+        <source>Windows sharing support (libsmbclient) is not available</source>
+        <translation>دعم المشاركة في Windows (libsmbclient) غير متوفر</translation>
+    </message>
+    <message>
+        <source>Failed to access %1. Please check if the username or password is correct, and ensure the Windows sharing service is configured correctly.</source>
+        <translation>فشل الوصول إلى %1. يرجى التحقق من صحة اسم المستخدم وكلمة المرور، والتأكد من ضبط خدمة المشاركة في Windows بشكل صحيح.</translation>
+    </message>
+</context>
+<context>
+    <name>AddCanonCAPTPrinter</name>
+    <message>
+        <source>The Canon driver needs administrator authorization. Please add the printer in the Print Manager.</source>
+        <translation>يحتاج مشغّل Canon إلى تفويض من مسؤول النظام. يرجى إضافة الطابعة من مدير الطباعة.</translation>
+    </message>
+    <message>
+        <source>Canon capt install fail.</source>
+        <translation>فشل تثبيت Canon CAPT.</translation>
+    </message>
+</context>
+<context>
+    <name>TroubleShootJob</name>
+    <message>
+        <source>The repair has been completed.</source>
+        <translation>اكتمل الإصلاح.</translation>
+    </message>
+    <message>
+        <source>The repair did not succeed.</source>
+        <translation>لم ينجح الإصلاح.</translation>
+    </message>
+</context>
+<context>
+    <name>CheckCupsErrorLog</name>
+    <message>
+        <source>Check CUPS error log</source>
+        <translation>فحص سجل أخطاء CUPS</translation>
+    </message>
+    <message>
+        <source>View log</source>
+        <translation>عرض السجل</translation>
+    </message>
+    <message>
+        <source>Copy info</source>
+        <translation>نسخ المعلومات</translation>
+    </message>
+    <message>
+        <source>One-click fix</source>
+        <translation>إصلاح بنقرة واحدة</translation>
+    </message>
+    <message>
+        <source>Possible cause: %1</source>
+        <translation>السبب المحتمل: %1</translation>
+    </message>
+    <message>
+        <source>Recommended action: %1</source>
+        <translation>الإجراء الموصى به: %1</translation>
+    </message>
+    <message>
+        <source>The print service has been repaired.</source>
+        <translation>تم إصلاح خدمة الطباعة.</translation>
+    </message>
+    <message>
+        <source>The print service could not be repaired.</source>
+        <translation>تعذّر إصلاح خدمة الطباعة.</translation>
+    </message>
+    <message>
+        <source>Checking CUPS error log...</source>
+        <translation>جارٍ فحص سجل أخطاء CUPS...</translation>
+    </message>
+    <message>
+        <source>The CUPS error log could not be checked</source>
+        <translation>تعذّر فحص سجل أخطاء CUPS</translation>
+    </message>
+    <message>
+        <source>No CUPS error found</source>
+        <translation>لم يتم العثور على أخطاء في CUPS</translation>
+    </message>
+</context>
+<context>
+    <name>CheckSpecificModel</name>
+    <message>
+        <source>Check model-specific issues</source>
+        <translation>فحص المشكلات الخاصة بالطراز</translation>
+    </message>
+    <message>
+        <source>One-click fix</source>
+        <translation>إصلاح بنقرة واحدة</translation>
+    </message>
+    <message>
+        <source>Checking model-specific issues...</source>
+        <translation>جارٍ فحص المشكلات الخاصة بالطراز...</translation>
+    </message>
+    <message>
+        <source>No model-specific issue found</source>
+        <translation>لم يتم العثور على مشكلات خاصة بالطراز</translation>
+    </message>
+    <message>
+        <source>Model-specific issues were found</source>
+        <translation>تم العثور على مشكلات خاصة بالطراز</translation>
+    </message>
+</context>
+<context>
+    <name>CanonI386</name>
+    <message>
+        <source>32-bit support required</source>
+        <translation>مطلوب دعم 32 بت</translation>
+    </message>
+    <message>
+        <source>The Canon CAPT driver needs 32-bit (i386) runtime libraries. 32-bit support will be enabled and the required libraries installed. This needs the administrator password.</source>
+        <translation>يحتاج مشغّل Canon CAPT إلى مكتبات التشغيل بنظام 32 بت (i386). سيتم تفعيل دعم 32 بت وتثبيت المكتبات المطلوبة. يتطلب ذلك كلمة مرور مسؤول النظام.</translation>
+    </message>
+    <message>
+        <source>Enable and Install</source>
+        <translation>تفعيل وتثبيت</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>إلغاء</translation>
+    </message>
+    <message>
+        <source>The Canon printer was not added because the 32-bit (i386) support it needs was not enabled.</source>
+        <translation>لم تتم إضافة طابعة Canon لأن دعم 32 بت (i386) الذي تحتاجه لم يتم تفعيله.</translation>
+    </message>
+    <message>
+        <source>Could not enable 32-bit (i386) support.</source>
+        <translation>تعذّر تفعيل دعم 32 بت (i386).</translation>
+    </message>
+    <message>
+        <source>Could not update the package lists. Please check the network connection and try again.</source>
+        <translation>تعذّر تحديث قوائم الحزم. يرجى التحقق من اتصال الشبكة ثم إعادة المحاولة.</translation>
+    </message>
+    <message>
+        <source>Could not install the 32-bit libraries needed by the Canon driver.</source>
+        <translation>تعذّر تثبيت مكتبات 32 بت التي يحتاجها مشغّل Canon.</translation>
+    </message>
+    <message>
+        <source>Another program is using the package manager. Please try again in a few minutes.</source>
+        <translation>هناك برنامج آخر يستخدم مدير الحزم. يرجى إعادة المحاولة بعد بضع دقائق.</translation>
+    </message>
+</context>
+<context>
+    <name>CanonI386Prompt</name>
+    <message>
+        <source>The repair service is not available.</source>
+        <translation>خدمة الإصلاح غير متوفرة.</translation>
+    </message>
+    <message>
+        <source>The 32-bit support could not be set up.</source>
+        <translation>تعذّر إعداد دعم 32 بت.</translation>
+    </message>
+</context>
+<context>
+    <name>ModelFixMap</name>
+    <message>
+        <source>The Canon LBP2900 print service could not be repaired. Please try again.</source>
+        <translation>تعذّر إصلاح خدمة الطباعة لطابعة Canon LBP2900. يرجى إعادة المحاولة.</translation>
+    </message>
+</context>
+<context>
+    <name>Common</name>
+    <message>
+        <source>Administrator authorization was denied.</source>
+        <translation>تم رفض تفويض مسؤول النظام.</translation>
+    </message>
+    <message>
+        <source>The Canon capt printer has been added and is not allowed to be added again.</source>
+        <translation>تمت إضافة طابعة Canon CAPT ولا يُسمح بإضافتها مرة أخرى.</translation>
+    </message>
+    <message>
+        <source>The Canon driver could not be configured.</source>
+        <translation>تعذّر ضبط مشغّل Canon.</translation>
+    </message>
+    <message>
+        <source>The printer management service did not respond in time.</source>
+        <translation>لم تستجب خدمة إدارة الطابعات في الوقت المناسب.</translation>
+    </message>
+    <message>
+        <source>The printer management service is not available.</source>
+        <translation>خدمة إدارة الطابعات غير متوفرة.</translation>
+    </message>
+    <message>
+        <source>The printer name, driver or device information is not valid for the Canon driver.</source>
+        <translation>اسم الطابعة أو المشغّل أو معلومات الجهاز غير صالحة لمشغّل Canon.</translation>
+    </message>
+    <message>
+        <source>The printer service is busy. Please try again later.</source>
+        <translation>خدمة الطابعات مشغولة. يرجى إعادة المحاولة لاحقًا.</translation>
+    </message>
+</context>
+<context>
+    <name>CupsErrorMap</name>
+    <message>
+        <source>CUPS reported an error</source>
+        <translation>أبلغ CUPS عن خطأ</translation>
+    </message>
+    <message>
+        <source>Copy the information and contact support.</source>
+        <translation>انسخ المعلومات وتواصل مع الدعم.</translation>
+    </message>
+    <message>
+        <source>The print service logged an error for the last job.</source>
+        <translation>سجّلت خدمة الطباعة خطأً في آخر مهمة.</translation>
+    </message>
+</context>
+<context>
+    <name>DriverInstallConfirm</name>
+    <message>
+        <source>Cancel</source>
+        <translation>إلغاء</translation>
+    </message>
+    <message>
+        <source>Install</source>
+        <translation>تثبيت</translation>
+    </message>
+    <message>
+        <source>Install the following driver packages?</source>
+        <translation>هل تريد تثبيت حزم المشغّلات التالية؟</translation>
+    </message>
+</context>
+<context>
+    <name>PrinterUi</name>
+    <message>
+        <source>Local Match</source>
+        <translation>مطابقة محلية</translation>
+    </message>
+    <message>
+        <source>Online Match</source>
+        <translation>مطابقة عبر الإنترنت</translation>
+    </message>
+    <message>
+        <source>Use Driverless Solution</source>
+        <translation>استخدام حل بدون مشغّل</translation>
     </message>
 </context>
 </TS>

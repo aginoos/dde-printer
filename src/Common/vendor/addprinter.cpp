@@ -210,7 +210,7 @@ QString FixHplipBackend::getMatchHplipUri(const QString &strUri)
 
             for (int i = 0; i < devices.count(); i++) {
                 QRegularExpressionMatch devMatch = re.match(devices[i].uriList[0]);
-                QString devSerial = devMatch.hasMatch() ? match.captured(1).toLower() : "";
+                QString devSerial = devMatch.hasMatch() ? devMatch.captured(1).toLower() : "";
 
                 if (!devSerial.isEmpty() && devSerial == serial) {
                     qCDebug(COMMONMOUDLE) << "getMatchHplipUri";

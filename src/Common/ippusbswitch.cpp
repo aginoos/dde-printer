@@ -30,6 +30,12 @@ namespace {
 constexpr int kBackendAttempts = 25;
 constexpr unsigned long kBackendPauseMs = 1000;
 
+Environment &env()
+{
+    static Environment instance;
+    return instance;
+}
+
 QString tr(const char *text)
 {
     return QCoreApplication::translate("IppUsbSwitch", text);
@@ -61,32 +67,42 @@ auto offGuiThread(Work work) -> decltype(work())
     return watcher.result();
 }
 
-QString findUsbBackendUri(const QString &model)
+QStringList listUsbBackendUris()
 {
+    QStringList uris;
     try {
         const auto connection = CupsConnectionFactory::createConnectionBySettings();
         if (!connection)
-            return QString();
+            return uris;
         const std::vector<std::string> included{"usb", "hp"};
         const std::vector<std::string> excluded;
         for (const auto &entry : connection->getDevices(&excluded, &included, 0, CUPS_TIMEOUT_DEFAULT)) {
-            const QString uri = QString::fromStdString(entry.first);
-            if (IppUsbPolicy::modelsMatch(IppUsbPolicy::modelFromUsbUri(uri), model))
-                return uri;
+            uris << QString::fromStdString(entry.first);
         }
     } catch (const std::exception &ex) {
         qCWarning(COMMONMOUDLE) << "cannot list the usb backend devices:" << QString::fromUtf8(ex.what());
+    }
+    return uris;
+}
+
+QString findUsbBackendUri(const QString &model)
+{
+    const QStringList uris = env().usbBackendUris ? env().usbBackendUris() : listUsbBackendUris();
+    for (const QString &uri : uris) {
+        if (IppUsbPolicy::modelsMatch(IppUsbPolicy::modelFromUsbUri(uri), model))
+            return uri;
     }
     return QString();
 }
 
 QString waitForUsbBackendUri(const QString &model)
 {
-    for (int i = 0; i < kBackendAttempts; ++i) {
+    const int attempts = env().attempts > 0 ? env().attempts : kBackendAttempts;
+    for (int i = 0; i < attempts; ++i) {
         const QString uri = findUsbBackendUri(model);
         if (!uri.isEmpty())
             return uri;
-        QThread::msleep(kBackendPauseMs);
+        QThread::msleep(env().attempts > 0 ? env().pauseMs : kBackendPauseMs);
     }
     return QString();
 }
@@ -94,7 +110,7 @@ QString waitForUsbBackendUri(const QString &model)
 // vendor:product of the ipp-usb device that carries this model, empty if none.
 QString vendorProductOf(const QString &model)
 {
-    const QList<AvahiTool::IppUsbDevice> devices = AvahiTool::ippUsbDevices();
+    const QList<AvahiTool::IppUsbDevice> devices = env().ippUsbDevices ? env().ippUsbDevices() : AvahiTool::ippUsbDevices();
     for (const AvahiTool::IppUsbDevice &device : devices) {
         if (IppUsbPolicy::modelsMatch(device.model, model))
             return QStringLiteral("%1:%2").arg(device.vendorId, device.productId);
@@ -104,9 +120,21 @@ QString vendorProductOf(const QString &model)
 
 }
 
+void setEnvironment(const Environment &environment)
+{
+    env() = environment;
+}
+
+void resetEnvironment()
+{
+    env() = Environment();
+}
+
 Result driverlessUri(const QString &ippUsbUri)
 {
-    const QString dnssd = offGuiThread([ippUsbUri]() { return AvahiTool::dnssdUriFromIppUri(ippUsbUri); });
+    const QString dnssd = offGuiThread([ippUsbUri]() {
+        return env().dnssdUri ? env().dnssdUri(ippUsbUri) : AvahiTool::dnssdUriFromIppUri(ippUsbUri);
+    });
     if (dnssd.isEmpty())
         return failure(tr("The ipp-usb printer is not published on the network, so it cannot be added with the driverless solution."));
 
@@ -122,7 +150,8 @@ Result usbBackendUri(const QString &model)
     if (vendorProduct.isEmpty())
         return failure(tr("ipp-usb does not list this printer."));
 
-    const IppUsbClient::Outcome outcome = IppUsbClient::addToBlacklist(vendorProduct);
+    const IppUsbClient::Outcome outcome = env().addToBlacklist ? env().addToBlacklist(vendorProduct)
+                                                              : IppUsbClient::addToBlacklist(vendorProduct);
     if (!IppUsbClient::isSuccess(outcome)) {
         qCWarning(COMMONMOUDLE) << "blacklisting" << vendorProduct << "failed, outcome" << static_cast<int>(outcome);
         return failure(tr("Failed to add the printer to ipp-usb blacklist."));

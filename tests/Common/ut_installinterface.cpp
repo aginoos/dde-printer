@@ -4,6 +4,13 @@
 
 #include <gtest/gtest.h>
 
+#include <QCoreApplication>
+#include <QDBusError>
+#include <QDBusObjectPath>
+#include <QDBusPendingCall>
+#include <QElapsedTimer>
+#include <QFile>
+#include <QTemporaryDir>
 #include <QDBusError>
 #include <QDBusMessage>
 #include <QProcess>
@@ -329,4 +336,539 @@ TEST(ut_InstallInterface, aptFallbackNeedsTheUsersConfirmation)
     EXPECT_EQ(asked, (QStringList{"printer-driver-ut-missing-zz (1.2-3)", "hplip"}));
     EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
     EXPECT_EQ(installer.m_aptProc, nullptr);
+}
+
+
+// ============================================================ injected backend
+
+namespace {
+
+const char kLastore[] = "org.deepin.dde.Lastore1";
+const char kDriverPkg[] = "printer-driver-ut-fake-zz";
+
+struct BackendGuard
+{
+    ~BackendGuard()
+    {
+        InstallBackend::reset();
+        DriverInstallConfirm::setHandler(nullptr);
+    }
+};
+
+template<typename Condition>
+bool pumpUntil(Condition done, int timeoutMs = 5000)
+{
+    QElapsedTimer timer;
+    timer.start();
+    while (!done() && timer.elapsed() < timeoutMs)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 20);
+    return done();
+}
+
+QDBusMessage requestMessage()
+{
+    return QDBusMessage::createMethodCall(kLastore, "/p", "i", "m");
+}
+
+QDBusPendingCall jobReply(const QString &path)
+{
+    return QDBusPendingCall::fromCompletedCall(requestMessage().createReply(QVariant::fromValue(QDBusObjectPath(path))));
+}
+
+QDBusPendingCall errorReply(QDBusError::ErrorType type, const QString &text)
+{
+    return QDBusPendingCall::fromError(QDBusError(type, text));
+}
+
+QDBusMessage propertiesChanged(const QVariantMap &props)
+{
+    QDBusMessage msg = QDBusMessage::createSignal("/job", "org.freedesktop.DBus.Properties", "PropertiesChanged");
+    msg << QString("iface") << QVariant(props) << QStringList();
+    return msg;
+}
+
+// Hooks that make lastore look present and every package installable and new.
+struct LastoreFixture
+{
+    LastoreFixture()
+    {
+        hooks.installedVersion = [](const QString &) { return QString(); };
+        hooks.lastoreService = []() { return QString(kLastore); };
+        hooks.isInstallable = [](const QString &, const QString &) { return true; };
+        hooks.retryDelay = [](int) { return 0; };
+        hooks.asyncCall = [this](const QDBusMessage &msg) {
+            calls.append(msg);
+            return replies.isEmpty() ? jobReply("/job/1") : replies.takeFirst();
+        };
+        hooks.connectSignal = [this](const QString &service, const QString &path, QObject *, const char *) {
+            connected.append(service + path);
+            return connectOk;
+        };
+    }
+    void apply() { InstallBackend::set(hooks); }
+
+    InstallBackend::Hooks hooks;
+    QList<QDBusPendingCall> replies;
+    QList<QDBusMessage> calls;
+    QStringList connected;
+    bool connectOk = true;
+};
+
+}  // namespace
+
+TEST(ut_InstallInterface, lastoreInstallSubmitsTheValidatedNamesAndFollowsTheJob)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg, "1.0"), pkg("hplip")});
+    installer.startInstallPackages();
+
+    ASSERT_TRUE(pumpUntil([&] { return !fx.connected.isEmpty(); }));
+    ASSERT_EQ(fx.calls.size(), 1);
+    EXPECT_EQ(fx.calls[0].service(), QString(kLastore));
+    EXPECT_EQ(fx.calls[0].path(), QString("/org/deepin/dde/Lastore1"));
+    EXPECT_EQ(fx.calls[0].interface(), QString("org.deepin.dde.Lastore1.Manager"));
+    EXPECT_EQ(fx.calls[0].member(), QString("InstallPackage"));
+    EXPECT_EQ(fx.calls[0].arguments(), (QList<QVariant>{QString(), QString(QString(kDriverPkg) + " hplip")}));
+    EXPECT_EQ(fx.connected, QStringList{QString(kLastore) + "/job/1"});
+    EXPECT_TRUE(log.seen.isEmpty());   // still running
+
+    installer.propertyChanged(propertiesChanged({{"Type", "install"}, {"Status", "running"}}));
+    EXPECT_TRUE(log.seen.isEmpty());
+    installer.propertyChanged(propertiesChanged({{"Type", "install"}, {"Status", "succeed"}}));
+    EXPECT_EQ(log.seen, QList<int>{TStat_Suc});
+    EXPECT_TRUE(installer.m_jobPath.isEmpty());
+}
+
+TEST(ut_InstallInterface, lastoreJobFailureReportsThePackages)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+    ASSERT_TRUE(pumpUntil([&] { return !fx.connected.isEmpty(); }));
+
+    installer.propertyChanged(propertiesChanged({{"Type", "install"}, {"Status", "failed"}, {"Description", "dependency problem"}}));
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+    EXPECT_TRUE(installer.getErrorString().contains(kDriverPkg));
+    EXPECT_EQ(fx.calls.size(), 1);   // not a lock error: no resubmit
+}
+
+TEST(ut_InstallInterface, dpkgLockOnTheLastoreJobResubmitsThenGivesUp)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+
+    const QVariantMap locked{{"Status", "failed"}, {"Description", "E: Could not get lock /var/lib/dpkg/lock"}};
+    for (int round = 1; round <= 3; ++round) {   // three resubmits are allowed
+        ASSERT_TRUE(pumpUntil([&] { return fx.calls.size() == round && fx.connected.size() == round; }));
+        installer.propertyChanged(propertiesChanged(locked));
+        EXPECT_TRUE(log.seen.isEmpty());
+    }
+    ASSERT_TRUE(pumpUntil([&] { return fx.calls.size() == 4 && fx.connected.size() == 4; }));
+    installer.propertyChanged(propertiesChanged(locked));
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+    EXPECT_EQ(fx.calls.size(), 4);
+}
+
+TEST(ut_InstallInterface, replyTimeoutsAreRetriedTwice)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    fx.replies = {errorReply(QDBusError::NoReply, "x"), errorReply(QDBusError::Timeout, "y")};
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+
+    ASSERT_TRUE(pumpUntil([&] { return !fx.connected.isEmpty(); }));
+    EXPECT_EQ(fx.calls.size(), 3);   // two timeouts, then the accepted call
+    EXPECT_TRUE(log.seen.isEmpty());
+}
+
+TEST(ut_InstallInterface, thirdReplyTimeoutFails)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    fx.replies = {errorReply(QDBusError::NoReply, "a"), errorReply(QDBusError::NoReply, "b"), errorReply(QDBusError::NoReply, "final-timeout")};
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+
+    ASSERT_TRUE(pumpUntil([&] { return !log.seen.isEmpty(); }));
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+    EXPECT_EQ(fx.calls.size(), 3);
+    EXPECT_TRUE(installer.getErrorString().contains("final-timeout"));
+}
+
+TEST(ut_InstallInterface, daemonRestartIsRetriedUntilItAnswers)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    const QString gone = "Message recipient disconnected from message bus without replying";
+    fx.replies = {errorReply(QDBusError::Other, gone), errorReply(QDBusError::Other, gone), errorReply(QDBusError::Other, gone)};
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+
+    ASSERT_TRUE(pumpUntil([&] { return !fx.connected.isEmpty(); }));
+    EXPECT_EQ(fx.calls.size(), 4);
+    EXPECT_TRUE(log.seen.isEmpty());
+}
+
+TEST(ut_InstallInterface, otherDbusErrorsFailAtOnce)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    fx.replies = {errorReply(QDBusError::AccessDenied, "polkit says no")};
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+
+    ASSERT_TRUE(pumpUntil([&] { return !log.seen.isEmpty(); }));
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+    EXPECT_TRUE(installer.getErrorString().contains("polkit says no"));
+    EXPECT_EQ(fx.calls.size(), 1);
+}
+
+TEST(ut_InstallInterface, failingToSubscribeToTheJobFails)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    fx.connectOk = false;
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+
+    ASSERT_TRUE(pumpUntil([&] { return !log.seen.isEmpty(); }));
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+    EXPECT_TRUE(installer.getErrorString().contains("Connect dbus signal failed"));
+}
+
+TEST(ut_InstallInterface, satisfiedPackagesNeverReachLastore)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    fx.hooks.installedVersion = [](const QString &) { return QString("2.0"); };
+    fx.hooks.compareVersions = [](const QString &, const QString &) { return PackageUtil::VersionOrder::Newer; };
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg, "1.0")});
+    installer.startInstallPackages();
+    EXPECT_EQ(log.seen, QList<int>{TStat_Suc});
+    EXPECT_TRUE(fx.calls.isEmpty());
+}
+
+TEST(ut_InstallInterface, olderInstalledVersionIsUpgradedButNeverDowngraded)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    fx.hooks.installedVersion = [](const QString &) { return QString("1.0"); };
+    fx.hooks.compareVersions = [](const QString &a, const QString &b) {
+        return a == b ? PackageUtil::VersionOrder::Equal : (a < b ? PackageUtil::VersionOrder::Older : PackageUtil::VersionOrder::Newer);
+    };
+    fx.apply();
+    {
+        InstallInterface upgrade;
+        upgrade.setPackages({pkg(kDriverPkg, "2.0")});
+        ASSERT_TRUE(upgrade.collectPackagesToInstall());
+        EXPECT_EQ(upgrade.m_installPackages, QStringList{kDriverPkg});
+        EXPECT_FALSE(upgrade.detectDowngrade());
+    }
+    InstallInterface downgrade;
+    StatusLog log(downgrade);
+    downgrade.setPackages({pkg(kDriverPkg, "0.5")});
+    downgrade.m_installPackages = QStringList{kDriverPkg};
+    EXPECT_TRUE(downgrade.detectDowngrade());
+    EXPECT_TRUE(downgrade.getErrorString().contains("1.0"));
+    EXPECT_TRUE(downgrade.getErrorString().contains("0.5"));
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+}
+
+TEST(ut_InstallInterface, hplipPluginIsNotCheckedAgainstTheIndex)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    QStringList asked;
+    fx.hooks.isInstallable = [&asked](const QString &name, const QString &) {
+        asked << name;
+        return true;
+    };
+    fx.apply();
+    InstallInterface installer;
+    installer.setPackages({pkg("hplip-plugin"), pkg(kDriverPkg)});
+    ASSERT_TRUE(installer.collectPackagesToInstall());
+    QString missing;
+    EXPECT_FALSE(installer.hasUnavailablePackage(missing));
+    EXPECT_EQ(asked, QStringList{kDriverPkg});
+}
+
+TEST(ut_InstallInterface, missingPackageTriggersOneSourceRefreshThenFails)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    fx.hooks.isInstallable = [](const QString &, const QString &) { return false; };
+    fx.replies = {jobReply("/update/1")};
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg, "1.0")});
+    installer.startInstallPackages();
+
+    ASSERT_TRUE(pumpUntil([&] { return !fx.connected.isEmpty(); }));
+    ASSERT_EQ(fx.calls.size(), 1);
+    EXPECT_EQ(fx.calls[0].member(), QString("UpdateSource"));
+    EXPECT_EQ(fx.connected, QStringList{QString(kLastore) + "/update/1"});
+
+    installer.updateSourceChanged(propertiesChanged({{"Type", "update_source"}, {"Status", "running"}}));
+    EXPECT_TRUE(log.seen.isEmpty());
+    installer.updateSourceChanged(propertiesChanged({{"Status", "end"}}));
+    ASSERT_TRUE(pumpUntil([&] { return !log.seen.isEmpty(); }));
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+    EXPECT_TRUE(installer.getErrorString().contains(kDriverPkg));
+    EXPECT_EQ(fx.calls.size(), 1);   // refreshed once, no second UpdateSource
+}
+
+TEST(ut_InstallInterface, refreshThatMakesThePackageAvailableContinuesWithTheInstall)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    bool refreshed = false;
+    fx.hooks.isInstallable = [&refreshed](const QString &, const QString &) { return refreshed; };
+    fx.replies = {jobReply("/update/1")};
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg, "1.0")});
+    installer.startInstallPackages();
+    ASSERT_TRUE(pumpUntil([&] { return !fx.connected.isEmpty(); }));
+
+    refreshed = true;
+    installer.updateSourceChanged(propertiesChanged({{"Type", "update_source"}, {"Status", "failed"}}));   // a failed refresh still goes on
+    ASSERT_TRUE(pumpUntil([&] { return fx.calls.size() == 2 && fx.connected.size() == 2; }));
+    EXPECT_EQ(fx.calls[1].member(), QString("InstallPackage"));
+    EXPECT_TRUE(log.seen.isEmpty());
+}
+
+TEST(ut_InstallInterface, failedRefreshCallStillTriesTheInstallWithoutRefreshing)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    fx.hooks.isInstallable = [](const QString &, const QString &) { return false; };
+    fx.replies = {errorReply(QDBusError::ServiceUnknown, "no lastore")};
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+
+    ASSERT_TRUE(pumpUntil([&] { return !log.seen.isEmpty(); }));
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+    EXPECT_EQ(fx.calls.size(), 1);
+}
+
+TEST(ut_InstallInterface, missingPackageWithoutLastoreFailsWithoutRefresh)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    fx.hooks.lastoreService = []() { return QString(); };
+    fx.hooks.isInstallable = [](const QString &, const QString &) { return false; };
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+    EXPECT_TRUE(fx.calls.isEmpty());
+}
+
+TEST(ut_InstallInterface, stoppedInstallerDropsALateLastoreReply)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+    installer.stop();
+    pumpUntil([&] { return !fx.connected.isEmpty(); }, 300);
+    EXPECT_TRUE(fx.connected.isEmpty());
+    EXPECT_TRUE(log.seen.isEmpty());
+}
+
+// ------------------------------------------------------------- apt fallback
+
+namespace {
+
+// A stand-in for pkexec: records its arguments and behaves per call number.
+struct FakePkexec
+{
+    explicit FakePkexec(const QList<QPair<int, QString>> &runs)
+    {
+        const QString log = dir.filePath("args");
+        const QString counter = dir.filePath("count");
+        QString script = "#!/bin/sh\n"
+                         "n=$(cat '" + counter + "' 2>/dev/null || echo 0); n=$((n+1)); echo $n > '" + counter + "'\n"
+                         "printf '%s\\n' \"$@\" >> '" + log + "'\n"
+                         "echo '--' >> '" + log + "'\n"
+                         "case $n in\n";
+        for (int i = 0; i < runs.size(); ++i)
+            script += QString("%1) echo '%2' >&2; exit %3;;\n").arg(i + 1).arg(runs[i].second).arg(runs[i].first);
+        script += "*) exit 0;;\nesac\n";
+        QFile file(path());
+        file.open(QIODevice::WriteOnly);
+        file.write(script.toUtf8());
+        file.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+    }
+    QString path() const { return dir.filePath("pkexec"); }
+    QStringList loggedArgs() const
+    {
+        QFile file(dir.filePath("args"));
+        file.open(QIODevice::ReadOnly);
+        return QString::fromUtf8(file.readAll()).split('\n', Qt::SkipEmptyParts);
+    }
+    QTemporaryDir dir;
+};
+
+// lastore absent, pkexec replaced.
+void useApt(LastoreFixture &fx, const QString &pkexec)
+{
+    fx.hooks.lastoreService = []() { return QString(); };
+    fx.hooks.pkexecPath = [pkexec]() { return pkexec; };
+}
+
+}  // namespace
+
+TEST(ut_InstallInterface, aptFallbackRunsPkexecAptGetWithTheConfirmedPackages)
+{
+    BackendGuard guard;
+    FakePkexec fake({{0, ""}});
+    LastoreFixture fx;
+    useApt(fx, fake.path());
+    fx.apply();
+    QStringList asked;
+    DriverInstallConfirm::setHandler([&asked](const QStringList &lines) {
+        asked = lines;
+        return true;
+    });
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg, "1.2-3"), pkg("hplip")});
+    installer.startInstallPackages();
+
+    ASSERT_TRUE(pumpUntil([&] { return !log.seen.isEmpty(); }));
+    EXPECT_EQ(log.seen, QList<int>{TStat_Suc});
+    EXPECT_EQ(asked, (QStringList{QString(kDriverPkg) + " (1.2-3)", "hplip"}));
+    const QStringList args = fake.loggedArgs();
+    EXPECT_EQ(args.mid(0, 8), (QStringList{"/usr/bin/env", "DEBIAN_FRONTEND=noninteractive", "/usr/bin/apt-get", "install", "-y",
+                                           "--no-install-recommends", "-o", "DPkg::Lock::Timeout=60"}));
+    EXPECT_EQ(args.mid(8, 2), (QStringList{kDriverPkg, "hplip"}));
+}
+
+TEST(ut_InstallInterface, aptFallbackWithoutPkexecFails)
+{
+    BackendGuard guard;
+    LastoreFixture fx;
+    useApt(fx, QString());
+    fx.apply();
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+    EXPECT_FALSE(installer.getErrorString().isEmpty());
+}
+
+TEST(ut_InstallInterface, declinedConfirmationNeverStartsPkexec)
+{
+    BackendGuard guard;
+    FakePkexec fake({{0, ""}});
+    LastoreFixture fx;
+    useApt(fx, fake.path());
+    fx.apply();
+    DriverInstallConfirm::setHandler([](const QStringList &) { return false; });
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+    EXPECT_EQ(installer.m_aptProc, nullptr);
+    EXPECT_TRUE(fake.loggedArgs().isEmpty());
+}
+
+TEST(ut_InstallInterface, dismissedAuthorizationDialogReportsDenial)
+{
+    BackendGuard guard;
+    FakePkexec fake({{126, "Error executing command as another user: Not authorized"}});
+    LastoreFixture fx;
+    useApt(fx, fake.path());
+    fx.apply();
+    DriverInstallConfirm::setHandler([](const QStringList &) { return true; });
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+
+    ASSERT_TRUE(pumpUntil([&] { return !log.seen.isEmpty(); }));
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+    EXPECT_FALSE(installer.getErrorString().contains(kDriverPkg));   // the denial text, not "Failed to install X"
+}
+
+TEST(ut_InstallInterface, aptLockConflictIsRetriedAndThenSucceeds)
+{
+    BackendGuard guard;
+    FakePkexec fake({{100, "E: Could not get lock /var/lib/dpkg/lock-frontend"}, {0, ""}});
+    LastoreFixture fx;
+    useApt(fx, fake.path());
+    fx.apply();
+    DriverInstallConfirm::setHandler([](const QStringList &) { return true; });
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+
+    ASSERT_TRUE(pumpUntil([&] { return !log.seen.isEmpty(); }));
+    EXPECT_EQ(log.seen, QList<int>{TStat_Suc});
+    EXPECT_EQ(fake.loggedArgs().count("--"), 2);   // pkexec ran twice
+    EXPECT_EQ(installer.m_lockRetries, 1);
+}
+
+TEST(ut_InstallInterface, aptFailureNamesThePackages)
+{
+    BackendGuard guard;
+    FakePkexec fake({{100, "E: Unable to locate package"}});
+    LastoreFixture fx;
+    useApt(fx, fake.path());
+    fx.apply();
+    DriverInstallConfirm::setHandler([](const QStringList &) { return true; });
+    InstallInterface installer;
+    StatusLog log(installer);
+    installer.setPackages({pkg(kDriverPkg)});
+    installer.startInstallPackages();
+
+    ASSERT_TRUE(pumpUntil([&] { return !log.seen.isEmpty(); }));
+    EXPECT_EQ(log.seen, QList<int>{TStat_Fail});
+    EXPECT_TRUE(installer.getErrorString().contains(kDriverPkg));
 }

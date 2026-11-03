@@ -33,3 +33,10 @@ TEST(ut_DriverInstallConfirm, nothingToInstallIsNeverConfirmed)
     EXPECT_FALSE(DriverInstallConfirm::confirm({}));
     DriverInstallConfirm::setHandler(nullptr);
 }
+
+TEST(ut_DriverInstallConfirm, withoutAGuiApplicationNobodyAgrees)
+{
+    // The test binary runs a QCoreApplication, so the default dialog path must refuse.
+    DriverInstallConfirm::setHandler(nullptr);
+    EXPECT_FALSE(DriverInstallConfirm::confirm({"hplip (3.23)"}));
+}

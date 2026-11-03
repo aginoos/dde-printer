@@ -35,6 +35,16 @@
 
 static QString g_captexec = "/opt/cndrvcups-capt/add";
 
+// Replaceable pieces for the unit tests (the test binary #includes this file).
+// The defaults are the real system locations and services; an empty function
+// means "use the real service".
+static QString g_vendorRoot = "/opt/printer-drivers";
+static QString g_lpadmin = "/usr/sbin/lpadmin";
+static std::function<int(const QString &action, const QStringList &args)> g_canonManager;   // managerCanonPrinter
+static std::function<bool(const QString &configDir)> g_vendorAutostart;                    // managerLaunchAutoStart
+static std::function<QStringList(const QString &ppd)> g_driverDepends;                      // DriverManager::getDriverDepends
+static std::function<QStringList()> g_systemPrinterNames;                                   // CUPS queue names
+
 static bool isCanonCAPTDrv(const QString &ppd_name)
 {
     QRegularExpression re("CNCUPS.*CAPT.*\\.ppd");
@@ -59,7 +69,7 @@ static bool isHplipDrv(const QString &ppd_name)
 // empty string. Only well-formed vendor directory names are considered.
 static QString findVendorConfigDir(const QString &ppdname)
 {
-    const QString root = "/opt/printer-drivers";
+    const QString root = g_vendorRoot;
     static const QRegularExpression vendorRe("^[A-Za-z0-9][A-Za-z0-9_.-]*$");
 
     const QStringList vendors = QDir(root).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
@@ -85,7 +95,7 @@ static QString findVendorConfigDir(const QString &ppdname)
 // Runs the vendor's autostart through the root service (polkit-authorized).
 static bool launchVendorAutostart(const QString &configDir)
 {
-    if (!managerLaunchAutoStart(configDir)) {
+    if (!(g_vendorAutostart ? g_vendorAutostart(configDir) : managerLaunchAutoStart(configDir))) {
         qCWarning(COMMONMOUDLE) << "vendor autostart was not started for" << configDir;
         return false;
     }
@@ -200,7 +210,7 @@ QString FixHplipBackend::getMatchHplipUri(const QString &strUri)
 
             for (int i = 0; i < devices.count(); i++) {
                 QRegularExpressionMatch devMatch = re.match(devices[i].uriList[0]);
-                QString devSerial = devMatch.hasMatch() ? match.captured(1).toLower() : "";
+                QString devSerial = devMatch.hasMatch() ? devMatch.captured(1).toLower() : "";
 
                 if (!devSerial.isEmpty() && devSerial == serial) {
                     qCDebug(COMMONMOUDLE) << "getMatchHplipUri";
@@ -275,7 +285,8 @@ void InstallDriver::stop()
 
 void InstallDriver::slotServerDone(int iCode, const QByteArray &result)
 {
-    sender()->deleteLater();
+    if (sender())
+        sender()->deleteLater();
     if (m_bQuit)
         return;
 
@@ -379,7 +390,8 @@ int AddCanonCAPTPrinter::addPrinter()
     }
 
     qCDebug(COMMONMOUDLE) << "ppdname : " << ppd_name << "printInfo: " << printInfo;
-    const int ret = managerCanonPrinter("add", QStringList {m_printer.strName, ppd_name, printInfo});
+    const QStringList addArgs {m_printer.strName, ppd_name, printInfo};
+    const int ret = g_canonManager ? g_canonManager("add", addArgs) : managerCanonPrinter("add", addArgs);
 
     m_proc.setProcessChannelMode(QProcess::ForwardedChannels);
     emit m_proc.finished(ret, ret == CanonOk ? QProcess::NormalExit : QProcess::CrashExit);
@@ -444,7 +456,7 @@ int DefaultAddPrinter::addPrinter()
 
     rememberExistingQueue();
     qCDebug(COMMONMOUDLE) << args;
-    m_proc.start("/usr/sbin/lpadmin", args);
+    m_proc.start(g_lpadmin, args);
 
     return 1;
 }
@@ -713,7 +725,7 @@ int AddPrinterTask::fixDriverDepends()
         }
         launchVendorAutostart(vendorDir);
     }
-    QStringList depends = g_driverManager->getDriverDepends(ppd_name.toUtf8().data());
+    QStringList depends = g_driverDepends ? g_driverDepends(ppd_name) : g_driverManager->getDriverDepends(ppd_name.toUtf8().data());
     if (!depends.isEmpty()) {
         m_installDepends = new InstallInterface(this);
         QList<TPackageInfo> packages;
@@ -785,6 +797,8 @@ void AddPrinterTask::stop()
 
 QStringList GetSystemPrinterNames()
 {
+    if (g_systemPrinterNames)
+        return g_systemPrinterNames();
     QStringList printerNames;
     map<string, map<string, string>> printers;
     map<string, map<string, string>>::iterator itmap;

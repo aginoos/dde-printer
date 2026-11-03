@@ -26,6 +26,10 @@
         <source> not found</source>
         <translation>nicht gefunden</translation>
     </message>
+    <message>
+        <source>This driver needs administrator authorization. Please add the printer in the Print Manager.</source>
+        <translation>Dieser Treiber erfordert eine Administratorberechtigung. Fügen Sie den Drucker in der Druckverwaltung hinzu.</translation>
+    </message>
 </context>
 <context>
     <name>CheckAttributes</name>
@@ -106,6 +110,14 @@
         <location filename="../../Common/vendor/ztroubleshoot.cpp" line="294"/>
         <source>The connection is valid</source>
         <translation>Die Verbindung ist gültig</translation>
+    </message>
+    <message>
+        <source>The USB port is used by ipp-usb. Add the printer again with the driverless (network) option.</source>
+        <translation>Der USB-Anschluss wird von ipp-usb verwendet. Fügen Sie den Drucker erneut mit der treiberlosen Option (Netzwerk) hinzu.</translation>
+    </message>
+    <message>
+        <source>ipp-usb reports a problem with this printer: %1</source>
+        <translation>ipp-usb meldet ein Problem mit diesem Drucker: %1</translation>
     </message>
 </context>
 <context>
@@ -687,6 +699,46 @@
         <source>Install Driver</source>
         <translation>Treiber installieren</translation>
     </message>
+    <message>
+        <source>Canon capt printer does not support name modification.</source>
+        <translation>Canon-CAPT-Drucker unterstützen das Umbenennen nicht.</translation>
+    </message>
+    <message>
+        <source>Applying settings, please wait...</source>
+        <translation>Einstellungen werden angewendet, bitte warten …</translation>
+    </message>
+    <message>
+        <source>Failed to change the server settings. Please authenticate as an administrator and try again.</source>
+        <translation>Die Servereinstellungen konnten nicht geändert werden. Authentifizieren Sie sich als Administrator und versuchen Sie es erneut.</translation>
+    </message>
+    <message>
+        <source>Log out and log in again to turn on print notifications</source>
+        <translation>Melden Sie sich ab und wieder an, um Druckbenachrichtigungen zu aktivieren</translation>
+    </message>
+    <message>
+        <source>Default printer</source>
+        <translation>Standarddrucker</translation>
+    </message>
+    <message>
+        <source>Shared printer</source>
+        <translation>Freigegebener Drucker</translation>
+    </message>
+    <message>
+        <source>Advanced sharing options</source>
+        <translation>Erweiterte Freigabeoptionen</translation>
+    </message>
+    <message>
+        <source>Shared address:</source>
+        <translation>Freigabeadresse:</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Kopieren</translation>
+    </message>
+    <message>
+        <source>Management Tools</source>
+        <translation>Verwaltungswerkzeuge</translation>
+    </message>
 </context>
 <context>
     <name>DPropertySetDlg</name>
@@ -893,6 +945,38 @@
         <source>Failed to install %1</source>
         <translation>%1 konnte nicht installiert werden</translation>
     </message>
+    <message>
+        <source>The driver package information is invalid.</source>
+        <translation>Die Informationen zum Treiberpaket sind ungültig.</translation>
+    </message>
+    <message>
+        <source>The package %1 is not an accepted printer driver package.</source>
+        <translation>Das Paket %1 ist kein zulässiges Druckertreiberpaket.</translation>
+    </message>
+    <message>
+        <source>The package %1 is already installed in a higher version (%2) than the driver requires (%3); installing the driver would downgrade it.</source>
+        <translation>Das Paket %1 ist bereits in einer höheren Version (%2) installiert, als der Treiber erfordert (%3). Die Installation des Treibers würde es auf eine ältere Version zurücksetzen.</translation>
+    </message>
+    <message>
+        <source>The driver package %1 is not available from the software sources.</source>
+        <translation>Das Treiberpaket %1 ist in den Softwarequellen nicht verfügbar.</translation>
+    </message>
+    <message>
+        <source>No package installer is available on this system.</source>
+        <translation>Auf diesem System ist kein Paketinstallationsprogramm verfügbar.</translation>
+    </message>
+    <message>
+        <source>The driver installation was cancelled.</source>
+        <translation>Die Treiberinstallation wurde abgebrochen.</translation>
+    </message>
+    <message>
+        <source>Administrator authorization was denied.</source>
+        <translation>Die Administratorberechtigung wurde verweigert.</translation>
+    </message>
+    <message>
+        <source>The package %1 is already installed in a higher version (%2) than the driver requires (%3)</source>
+        <translation>Das Paket %1 ist bereits in einer höheren Version (%2) installiert, als der Treiber erfordert (%3)</translation>
+    </message>
 </context>
 <context>
     <name>InstallPrinterWindow</name>
@@ -989,6 +1073,18 @@
         <location filename="../ui/installprinterwindow.cpp" line="244"/>
         <source>Installation failed</source>
         <translation>Installation fehlgeschlagen</translation>
+    </message>
+    <message>
+        <source>Installing printer driver... Please do not disconnect. This may take a few minutes. Thank you for your patience.</source>
+        <translation>Druckertreiber wird installiert … Trennen Sie die Verbindung nicht. Dies kann einige Minuten dauern. Vielen Dank für Ihre Geduld.</translation>
+    </message>
+    <message>
+        <source>You have successfully added the printer.</source>
+        <translation>Der Drucker wurde erfolgreich hinzugefügt.</translation>
+    </message>
+    <message>
+        <source>After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window.</source>
+        <translation>Nach der erfolgreichen Installation des Treibers müssen Sie den Drucker konfigurieren. Tun Sie dies im Navigationsfenster.</translation>
     </message>
 </context>
 <context>
@@ -1284,6 +1380,30 @@
         <comment>button</comment>
         <translation>OK</translation>
     </message>
+    <message>
+        <source>Please enter an IP address or hostname</source>
+        <translation>Geben Sie eine IP-Adresse oder einen Hostnamen ein</translation>
+    </message>
+    <message>
+        <source>Windows Share</source>
+        <translation>Windows-Freigabe</translation>
+    </message>
+    <message>
+        <source>Protocol</source>
+        <translation>Protokoll</translation>
+    </message>
+    <message>
+        <source>Auto Select</source>
+        <translation>Automatisch auswählen</translation>
+    </message>
+    <message>
+        <source>%1 shared</source>
+        <translation>%1 freigegeben</translation>
+    </message>
+    <message>
+        <source>(use %1 protocol)</source>
+        <translation>(%1-Protokoll verwenden)</translation>
+    </message>
 </context>
 <context>
     <name>PrinterTestJob</name>
@@ -1556,12 +1676,172 @@ oder</translation>
     <message>
         <location filename="../ui/dprinterpropertytemplate.h" line="33"/>
         <source>Preferences</source>
-        <translation type="unfinished"/>
+        <translation>Einstellungen</translation>
     </message>
     <message>
         <location filename="../../Common/common.cpp" line="154"/>
         <source>%1 not found, please ask the administrator for help, or enter the printer IP address in URI of Properties.</source>
-        <translation type="unfinished"/>
+        <translation>%1 wurde nicht gefunden. Wenden Sie sich an den Administrator oder geben Sie die IP-Adresse des Druckers im URI-Feld der Eigenschaften ein.</translation>
+    </message>
+    <message>
+        <source>Printer problem help: </source>
+        <translation>Hilfe bei Druckerproblemen: </translation>
+    </message>
+    <message>
+        <source>Unable to connect to printer. Please check the IP address or hostname and try again. Make sure the printer is turned on and the IP address or hostname is correct.</source>
+        <translation>Verbindung zum Drucker nicht möglich. Prüfen Sie die IP-Adresse oder den Hostnamen und versuchen Sie es erneut. Stellen Sie sicher, dass der Drucker eingeschaltet und die IP-Adresse bzw. der Hostname korrekt ist.</translation>
+    </message>
+    <message>
+        <source>The Canon capt printer has been added and is not allowed to be added again.</source>
+        <translation>Der Canon-CAPT-Drucker wurde bereits hinzugefügt und kann nicht erneut hinzugefügt werden.</translation>
+    </message>
+    <message>
+        <source>Help on adding and using printers</source>
+        <translation>Hilfe zum Hinzufügen und Verwenden von Druckern</translation>
+    </message>
+    <message>
+        <source> not found, please ask the administrator for help</source>
+        <translation> wurde nicht gefunden. Wenden Sie sich an den Administrator.</translation>
+    </message>
+    <message>
+        <source>After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window.</source>
+        <translation>Nach der erfolgreichen Installation des Treibers müssen Sie den Drucker konfigurieren. Tun Sie dies im Navigationsfenster.</translation>
+    </message>
+    <message>
+        <source>Print Driver Download Navigation</source>
+        <translation>Navigation für Druckertreiber-Downloads</translation>
+    </message>
+    <message>
+        <source>Instructions for Use</source>
+        <translation>Bedienungsanleitung</translation>
+    </message>
+    <message>
+        <source>Can't print? Learn how to resolve</source>
+        <translation>Drucken nicht möglich? So beheben Sie das Problem</translation>
+    </message>
+    <message>
+        <source>UOS Ecology</source>
+        <translation>UOS-Ökosystem</translation>
+    </message>
+    <message>
+        <source>Canon</source>
+        <translation>Canon</translation>
+    </message>
+    <message>
+        <source>Fuji Xerox</source>
+        <translation>Fuji Xerox</translation>
+    </message>
+    <message>
+        <source>Brother</source>
+        <translation>Brother</translation>
+    </message>
+    <message>
+        <source>Dascom</source>
+        <translation>Dascom</translation>
+    </message>
+    <message>
+        <source>Toshiba</source>
+        <translation>Toshiba</translation>
+    </message>
+    <message>
+        <source>Lenovo</source>
+        <translation>Lenovo</translation>
+    </message>
+    <message>
+        <source>1. Check printer connection</source>
+        <translation>1. Druckerverbindung prüfen</translation>
+    </message>
+    <message>
+        <source>Please make sure the printer is turned on and properly connected to this computer. Please check if the printer power, USB or network connection is normal.</source>
+        <translation>Stellen Sie sicher, dass der Drucker eingeschaltet und ordnungsgemäß mit diesem Computer verbunden ist. Prüfen Sie Stromversorgung, USB- und Netzwerkverbindung des Druckers.</translation>
+    </message>
+    <message>
+        <source>2. Check the printer status</source>
+        <translation>2. Druckerstatus prüfen</translation>
+    </message>
+    <message>
+        <source>Please make sure that the printer is working normally, for example, there are no paper jams, ink cartridge exhaustion, etc.</source>
+        <translation>Stellen Sie sicher, dass der Drucker normal funktioniert, z. B. kein Papierstau und keine leere Tintenpatrone vorliegt.</translation>
+    </message>
+    <message>
+        <source>3. Check the printer driver</source>
+        <translation>3. Druckertreiber prüfen</translation>
+    </message>
+    <message>
+        <source>Make sure the printer driver is installed correctly. If the driver does not match the printer, it is recommended to try updating the driver or download the latest version of the driver from the printer manufacturer's official website.</source>
+        <translation>Stellen Sie sicher, dass der Druckertreiber korrekt installiert ist. Passt der Treiber nicht zum Drucker, aktualisieren Sie ihn oder laden Sie die neueste Version von der offiziellen Website des Druckerherstellers herunter.</translation>
+    </message>
+    <message>
+        <source>4. Restart the print service</source>
+        <translation>4. Druckdienst neu starten</translation>
+    </message>
+    <message>
+        <source>Open System Monitor, switch to System Services, search for &quot;cups&quot; and try to restart the service.</source>
+        <translation>Öffnen Sie den Systemmonitor, wechseln Sie zu den Systemdiensten, suchen Sie nach „cups“ und starten Sie den Dienst neu.</translation>
+    </message>
+    <message>
+        <source>5. Check the print queue</source>
+        <translation>5. Druckwarteschlange prüfen</translation>
+    </message>
+    <message>
+        <source>In the print manager, find the printer in use and click the &quot;Print Queue&quot; icon button. Check for any pending print tasks, delete any pending tasks, and then try printing again.</source>
+        <translation>Suchen Sie in der Druckverwaltung den verwendeten Drucker und klicken Sie auf die Schaltfläche „Druckwarteschlange“. Prüfen Sie, ob Druckaufträge ausstehen, löschen Sie diese und versuchen Sie dann erneut zu drucken.</translation>
+    </message>
+    <message>
+        <source>6. Run troubleshooting</source>
+        <translation>6. Fehlerbehebung ausführen</translation>
+    </message>
+    <message>
+        <source>In the print manager, find the printer in use, click the &quot;Troubleshooting&quot; icon button, run it and find solutions based on the detection results.</source>
+        <translation>Suchen Sie in der Druckverwaltung den verwendeten Drucker, klicken Sie auf die Schaltfläche „Fehlerbehebung“, führen Sie sie aus und suchen Sie anhand der Ergebnisse nach Lösungen.</translation>
+    </message>
+    <message>
+        <source>7. Check the default printer settings</source>
+        <translation>7. Standarddrucker-Einstellungen prüfen</translation>
+    </message>
+    <message>
+        <source>In Print Manager, find the printer you are using and confirm whether it is set as default.</source>
+        <translation>Suchen Sie in der Druckverwaltung den verwendeten Drucker und prüfen Sie, ob er als Standarddrucker festgelegt ist.</translation>
+    </message>
+    <message>
+        <source>8. Clean up temporary printer files</source>
+        <translation>8. Temporäre Druckerdateien bereinigen</translation>
+    </message>
+    <message>
+        <source>Open the terminal and enter the following commands in sequence and press Enter. This will stop the print service, delete the printer's temporary files, and finally restart the print service.</source>
+        <translation>Öffnen Sie das Terminal, geben Sie nacheinander die folgenden Befehle ein und bestätigen Sie jeweils mit der Eingabetaste. Dadurch wird der Druckdienst beendet, werden die temporären Druckerdateien gelöscht und wird der Druckdienst anschließend neu gestartet.</translation>
+    </message>
+    <message>
+        <source>9. Update your print manager or operating system</source>
+        <translation>9. Druckverwaltung oder Betriebssystem aktualisieren</translation>
+    </message>
+    <message>
+        <source>Make sure your print manager or operating system is up to date. You can install the latest version of Print Manager through the App Store, and install the latest version of UOS through the Control Center-Update Module.</source>
+        <translation>Stellen Sie sicher, dass Ihre Druckverwaltung und Ihr Betriebssystem auf dem neuesten Stand sind. Die neueste Version der Druckverwaltung können Sie über den App Store installieren, die neueste Version von UOS über das Kontrollzentrum im Bereich „Aktualisierung“.</translation>
+    </message>
+    <message>
+        <source>10. Reinstall the printer</source>
+        <translation>10. Drucker neu installieren</translation>
+    </message>
+    <message>
+        <source>In Print Manager, select the printer you are using, click the &quot;Minus&quot; button to remove it, and then try to reinstall the printer.</source>
+        <translation>Wählen Sie in der Druckverwaltung den verwendeten Drucker aus, entfernen Sie ihn mit der Schaltfläche „Minus“ und versuchen Sie dann, ihn erneut zu installieren.</translation>
+    </message>
+    <message>
+        <source>11. Check antivirus software</source>
+        <translation>11. Antivirensoftware prüfen</translation>
+    </message>
+    <message>
+        <source>Some antivirus software may block printing operations. Try turning off your antivirus software and retesting the printing functionality.</source>
+        <translation>Manche Antivirensoftware kann Druckvorgänge blockieren. Deaktivieren Sie die Antivirensoftware versuchsweise und testen Sie das Drucken erneut.</translation>
+    </message>
+    <message>
+        <source>12. Check for hardware failure</source>
+        <translation>12. Auf Hardwaredefekt prüfen</translation>
+    </message>
+    <message>
+        <source>If none of the above steps solve the problem, you need to consider whether the printer has a hardware failure. It is recommended to try connecting to another computer to test, or contact the manufacturer's technical support.</source>
+        <translation>Wenn keiner der obigen Schritte das Problem löst, liegt möglicherweise ein Hardwaredefekt am Drucker vor. Testen Sie den Drucker an einem anderen Computer oder wenden Sie sich an den technischen Support des Herstellers.</translation>
     </message>
 </context>
 <context>
@@ -1624,6 +1904,10 @@ oder</translation>
         <source>Save debugging information for troubleshooting</source>
         <translation>Speichern Sie Debugging-Informationen zur Fehlerbehebung.</translation>
     </message>
+    <message>
+        <source>To share your printer, turn on these settings</source>
+        <translation>Aktivieren Sie diese Einstellungen, um Ihren Drucker freizugeben</translation>
+    </message>
 </context>
 <context>
     <name>TroubleShootDialog</name>
@@ -1643,6 +1927,508 @@ oder</translation>
         <source>OK</source>
         <comment>button</comment>
         <translation>OK</translation>
+    </message>
+    <message>
+        <source>There is no information to copy.</source>
+        <translation>Es gibt keine Informationen zum Kopieren.</translation>
+    </message>
+    <message>
+        <source>Copied</source>
+        <translation>Kopiert</translation>
+    </message>
+    <message>
+        <source>The repair service is not available.</source>
+        <translation>Der Reparaturdienst ist nicht verfügbar.</translation>
+    </message>
+    <message>
+        <source>Can't print? Learn how to resolve</source>
+        <translation>Drucken nicht möglich? So beheben Sie das Problem</translation>
+    </message>
+</context>
+<context>
+    <name>TroubleShootItem</name>
+    <message>
+        <source>Expand more</source>
+        <translation>Mehr anzeigen</translation>
+    </message>
+    <message>
+        <source>Troubleshoot: </source>
+        <translation>Fehlerbehebung: </translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <comment>button</comment>
+        <translation>Abbrechen</translation>
+    </message>
+    <message>
+        <source>Can't print? Learn how to resolve</source>
+        <translation>Drucken nicht möglich? So beheben Sie das Problem</translation>
+    </message>
+</context>
+<context>
+    <name>CustomPageDialog</name>
+    <message>
+        <source>Custom Paper</source>
+        <translation>Benutzerdefiniertes Papier</translation>
+    </message>
+    <message>
+        <source>Millimeters</source>
+        <translation>Millimeter</translation>
+    </message>
+    <message>
+        <source>Inches</source>
+        <translation>Zoll</translation>
+    </message>
+    <message>
+        <source>Paper Name</source>
+        <translation>Papiername</translation>
+    </message>
+    <message>
+        <source>Unit</source>
+        <translation>Einheit</translation>
+    </message>
+    <message>
+        <source>Width</source>
+        <translation>Breite</translation>
+    </message>
+    <message>
+        <source>Height</source>
+        <translation>Höhe</translation>
+    </message>
+    <message>
+        <source>Margins</source>
+        <translation>Ränder</translation>
+    </message>
+    <message>
+        <source>Top</source>
+        <translation>Oben</translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation>Links</translation>
+    </message>
+    <message>
+        <source>Bottom</source>
+        <translation>Unten</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation>Rechts</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <comment>button</comment>
+        <translation>Abbrechen</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <comment>button</comment>
+        <translation>Speichern</translation>
+    </message>
+    <message>
+        <source>Custom paper %1</source>
+        <translation>Benutzerdefiniertes Papier %1</translation>
+    </message>
+    <message>
+        <source>Please enter a paper name</source>
+        <translation>Geben Sie einen Papiernamen ein</translation>
+    </message>
+    <message>
+        <source>The paper name is too long</source>
+        <translation>Der Papiername ist zu lang</translation>
+    </message>
+    <message>
+        <source>The paper name contains characters that are not allowed</source>
+        <translation>Der Papiername enthält unzulässige Zeichen</translation>
+    </message>
+    <message>
+        <source>The paper width is outside the range supported by the printer</source>
+        <translation>Die Papierbreite liegt außerhalb des vom Drucker unterstützten Bereichs</translation>
+    </message>
+    <message>
+        <source>The paper height is outside the range supported by the printer</source>
+        <translation>Die Papierhöhe liegt außerhalb des vom Drucker unterstützten Bereichs</translation>
+    </message>
+    <message>
+        <source>Margins cannot be negative</source>
+        <translation>Ränder dürfen nicht negativ sein</translation>
+    </message>
+    <message>
+        <source>The margins are larger than the paper</source>
+        <translation>Die Ränder sind größer als das Papier</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <comment>button</comment>
+        <translation>OK</translation>
+    </message>
+    <message>
+        <source>Failed to save the custom paper sizes</source>
+        <translation>Die benutzerdefinierten Papierformate konnten nicht gespeichert werden</translation>
+    </message>
+</context>
+<context>
+    <name>SmbPrinterPage</name>
+    <message>
+        <source>Find Windows Shared Printer</source>
+        <translation>Windows-Freigabedrucker suchen</translation>
+    </message>
+    <message>
+        <source>Enter IP Address</source>
+        <translation>IP-Adresse eingeben</translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <comment>button</comment>
+        <translation>Durchsuchen</translation>
+    </message>
+    <message>
+        <source>No printers found</source>
+        <translation>Keine Drucker gefunden</translation>
+    </message>
+    <message>
+        <source>Enter IP, then Browse</source>
+        <translation>IP eingeben, dann durchsuchen</translation>
+    </message>
+    <message>
+        <source>Authentication Completed</source>
+        <translation>Authentifizierung abgeschlossen</translation>
+    </message>
+    <message>
+        <source>Select Printer</source>
+        <translation>Drucker auswählen</translation>
+    </message>
+    <message>
+        <source>Please enter a valid IP address or hostname</source>
+        <translation>Geben Sie eine gültige IP-Adresse oder einen gültigen Hostnamen ein</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
+</context>
+<context>
+    <name>IppUsbSwitch</name>
+    <message>
+        <source>The ipp-usb printer is not published on the network, so it cannot be added with the driverless solution.</source>
+        <translation>Der ipp-usb-Drucker wird nicht im Netzwerk veröffentlicht und kann daher nicht mit der treiberlosen Lösung hinzugefügt werden.</translation>
+    </message>
+    <message>
+        <source>ipp-usb does not list this printer.</source>
+        <translation>ipp-usb listet diesen Drucker nicht auf.</translation>
+    </message>
+    <message>
+        <source>Failed to add the printer to ipp-usb blacklist.</source>
+        <translation>Der Drucker konnte nicht zur ipp-usb-Sperrliste hinzugefügt werden.</translation>
+    </message>
+    <message>
+        <source>The USB address of the printer did not appear after switching off ipp-usb.</source>
+        <translation>Die USB-Adresse des Druckers ist nach dem Deaktivieren von ipp-usb nicht erschienen.</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Username</source>
+        <translation>Benutzername</translation>
+    </message>
+    <message>
+        <source>Domain</source>
+        <translation>Domäne</translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation>Passwort</translation>
+    </message>
+    <message>
+        <source>Remember Password</source>
+        <translation>Passwort merken</translation>
+    </message>
+    <message>
+        <source>Connection Identity</source>
+        <translation>Verbindungsidentität</translation>
+    </message>
+    <message>
+        <source>Guest</source>
+        <translation>Gast</translation>
+    </message>
+    <message>
+        <source>Registered User</source>
+        <translation>Registrierter Benutzer</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Abbrechen</translation>
+    </message>
+    <message>
+        <source>Connect</source>
+        <translation>Verbinden</translation>
+    </message>
+    <message>
+        <source>Authentication Required for %1</source>
+        <translation>Authentifizierung für %1 erforderlich</translation>
+    </message>
+    <message>
+        <source>Authentication required to connect to printer &quot;%1&quot;</source>
+        <translation>Für die Verbindung mit dem Drucker „%1“ ist eine Authentifizierung erforderlich</translation>
+    </message>
+</context>
+<context>
+    <name>RefreshDevicesSmbTask</name>
+    <message>
+        <source>Please enter a valid IP address or hostname</source>
+        <translation>Geben Sie eine gültige IP-Adresse oder einen gültigen Hostnamen ein</translation>
+    </message>
+    <message>
+        <source>Windows sharing support (libsmbclient) is not available</source>
+        <translation>Die Unterstützung für Windows-Freigaben (libsmbclient) ist nicht verfügbar</translation>
+    </message>
+    <message>
+        <source>Failed to access %1. Please check if the username or password is correct, and ensure the Windows sharing service is configured correctly.</source>
+        <translation>Zugriff auf %1 fehlgeschlagen. Prüfen Sie, ob Benutzername und Passwort korrekt sind, und stellen Sie sicher, dass der Windows-Freigabedienst richtig konfiguriert ist.</translation>
+    </message>
+</context>
+<context>
+    <name>AddCanonCAPTPrinter</name>
+    <message>
+        <source>The Canon driver needs administrator authorization. Please add the printer in the Print Manager.</source>
+        <translation>Der Canon-Treiber erfordert eine Administratorberechtigung. Fügen Sie den Drucker in der Druckverwaltung hinzu.</translation>
+    </message>
+    <message>
+        <source>Canon capt install fail.</source>
+        <translation>Die Installation des Canon-CAPT-Treibers ist fehlgeschlagen.</translation>
+    </message>
+</context>
+<context>
+    <name>TroubleShootJob</name>
+    <message>
+        <source>The repair has been completed.</source>
+        <translation>Die Reparatur wurde abgeschlossen.</translation>
+    </message>
+    <message>
+        <source>The repair did not succeed.</source>
+        <translation>Die Reparatur war nicht erfolgreich.</translation>
+    </message>
+</context>
+<context>
+    <name>CheckCupsErrorLog</name>
+    <message>
+        <source>Check CUPS error log</source>
+        <translation>CUPS-Fehlerprotokoll prüfen</translation>
+    </message>
+    <message>
+        <source>View log</source>
+        <translation>Protokoll anzeigen</translation>
+    </message>
+    <message>
+        <source>Copy info</source>
+        <translation>Informationen kopieren</translation>
+    </message>
+    <message>
+        <source>One-click fix</source>
+        <translation>Mit einem Klick beheben</translation>
+    </message>
+    <message>
+        <source>Possible cause: %1</source>
+        <translation>Mögliche Ursache: %1</translation>
+    </message>
+    <message>
+        <source>Recommended action: %1</source>
+        <translation>Empfohlene Maßnahme: %1</translation>
+    </message>
+    <message>
+        <source>The print service has been repaired.</source>
+        <translation>Der Druckdienst wurde repariert.</translation>
+    </message>
+    <message>
+        <source>The print service could not be repaired.</source>
+        <translation>Der Druckdienst konnte nicht repariert werden.</translation>
+    </message>
+    <message>
+        <source>Checking CUPS error log...</source>
+        <translation>CUPS-Fehlerprotokoll wird geprüft …</translation>
+    </message>
+    <message>
+        <source>The CUPS error log could not be checked</source>
+        <translation>Das CUPS-Fehlerprotokoll konnte nicht geprüft werden</translation>
+    </message>
+    <message>
+        <source>No CUPS error found</source>
+        <translation>Kein CUPS-Fehler gefunden</translation>
+    </message>
+</context>
+<context>
+    <name>CheckSpecificModel</name>
+    <message>
+        <source>Check model-specific issues</source>
+        <translation>Modellspezifische Probleme prüfen</translation>
+    </message>
+    <message>
+        <source>One-click fix</source>
+        <translation>Mit einem Klick beheben</translation>
+    </message>
+    <message>
+        <source>Checking model-specific issues...</source>
+        <translation>Modellspezifische Probleme werden geprüft …</translation>
+    </message>
+    <message>
+        <source>No model-specific issue found</source>
+        <translation>Kein modellspezifisches Problem gefunden</translation>
+    </message>
+    <message>
+        <source>Model-specific issues were found</source>
+        <translation>Modellspezifische Probleme wurden gefunden</translation>
+    </message>
+</context>
+<context>
+    <name>CanonI386</name>
+    <message>
+        <source>32-bit support required</source>
+        <translation>32-Bit-Unterstützung erforderlich</translation>
+    </message>
+    <message>
+        <source>The Canon CAPT driver needs 32-bit (i386) runtime libraries. 32-bit support will be enabled and the required libraries installed. This needs the administrator password.</source>
+        <translation>Der Canon-CAPT-Treiber benötigt 32-Bit-Laufzeitbibliotheken (i386). Die 32-Bit-Unterstützung wird aktiviert und die erforderlichen Bibliotheken werden installiert. Dafür ist das Administratorpasswort erforderlich.</translation>
+    </message>
+    <message>
+        <source>Enable and Install</source>
+        <translation>Aktivieren und installieren</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Abbrechen</translation>
+    </message>
+    <message>
+        <source>The Canon printer was not added because the 32-bit (i386) support it needs was not enabled.</source>
+        <translation>Der Canon-Drucker wurde nicht hinzugefügt, da die erforderliche 32-Bit-Unterstützung (i386) nicht aktiviert wurde.</translation>
+    </message>
+    <message>
+        <source>Could not enable 32-bit (i386) support.</source>
+        <translation>Die 32-Bit-Unterstützung (i386) konnte nicht aktiviert werden.</translation>
+    </message>
+    <message>
+        <source>Could not update the package lists. Please check the network connection and try again.</source>
+        <translation>Die Paketlisten konnten nicht aktualisiert werden. Prüfen Sie die Netzwerkverbindung und versuchen Sie es erneut.</translation>
+    </message>
+    <message>
+        <source>Could not install the 32-bit libraries needed by the Canon driver.</source>
+        <translation>Die vom Canon-Treiber benötigten 32-Bit-Bibliotheken konnten nicht installiert werden.</translation>
+    </message>
+    <message>
+        <source>Another program is using the package manager. Please try again in a few minutes.</source>
+        <translation>Ein anderes Programm verwendet die Paketverwaltung. Versuchen Sie es in einigen Minuten erneut.</translation>
+    </message>
+</context>
+<context>
+    <name>CanonI386Prompt</name>
+    <message>
+        <source>The repair service is not available.</source>
+        <translation>Der Reparaturdienst ist nicht verfügbar.</translation>
+    </message>
+    <message>
+        <source>The 32-bit support could not be set up.</source>
+        <translation>Die 32-Bit-Unterstützung konnte nicht eingerichtet werden.</translation>
+    </message>
+</context>
+<context>
+    <name>ModelFixMap</name>
+    <message>
+        <source>The Canon LBP2900 print service could not be repaired. Please try again.</source>
+        <translation>Der Canon-LBP2900-Druckdienst konnte nicht repariert werden. Versuchen Sie es erneut.</translation>
+    </message>
+</context>
+<context>
+    <name>Common</name>
+    <message>
+        <source>Administrator authorization was denied.</source>
+        <translation>Die Administratorberechtigung wurde verweigert.</translation>
+    </message>
+    <message>
+        <source>The Canon capt printer has been added and is not allowed to be added again.</source>
+        <translation>Der Canon-CAPT-Drucker wurde bereits hinzugefügt und kann nicht erneut hinzugefügt werden.</translation>
+    </message>
+    <message>
+        <source>The Canon driver could not be configured.</source>
+        <translation>Der Canon-Treiber konnte nicht konfiguriert werden.</translation>
+    </message>
+    <message>
+        <source>The printer management service did not respond in time.</source>
+        <translation>Der Druckerverwaltungsdienst hat nicht rechtzeitig geantwortet.</translation>
+    </message>
+    <message>
+        <source>The printer management service is not available.</source>
+        <translation>Der Druckerverwaltungsdienst ist nicht verfügbar.</translation>
+    </message>
+    <message>
+        <source>The printer name, driver or device information is not valid for the Canon driver.</source>
+        <translation>Druckername, Treiber oder Geräteinformationen sind für den Canon-Treiber nicht gültig.</translation>
+    </message>
+    <message>
+        <source>The printer service is busy. Please try again later.</source>
+        <translation>Der Druckdienst ist ausgelastet. Versuchen Sie es später erneut.</translation>
+    </message>
+</context>
+<context>
+    <name>CupsErrorMap</name>
+    <message>
+        <source>CUPS reported an error</source>
+        <translation>CUPS hat einen Fehler gemeldet</translation>
+    </message>
+    <message>
+        <source>Copy the information and contact support.</source>
+        <translation>Kopieren Sie die Informationen und wenden Sie sich an den Support.</translation>
+    </message>
+    <message>
+        <source>The print service logged an error for the last job.</source>
+        <translation>Der Druckdienst hat für den letzten Auftrag einen Fehler protokolliert.</translation>
+    </message>
+</context>
+<context>
+    <name>DriverInstallConfirm</name>
+    <message>
+        <source>Cancel</source>
+        <translation>Abbrechen</translation>
+    </message>
+    <message>
+        <source>Install</source>
+        <translation>Installieren</translation>
+    </message>
+    <message>
+        <source>Install the following driver packages?</source>
+        <translation>Die folgenden Treiberpakete installieren?</translation>
+    </message>
+</context>
+<context>
+    <name>PrinterUi</name>
+    <message>
+        <source>Local Match</source>
+        <translation>Lokale Zuordnung</translation>
+    </message>
+    <message>
+        <source>Online Match</source>
+        <translation>Online-Zuordnung</translation>
+    </message>
+    <message>
+        <source>Use Driverless Solution</source>
+        <translation>Treiberlose Lösung verwenden</translation>
+    </message>
+</context>
+<context>
+    <name>ManagementToolWidget</name>
+    <message>
+        <source>Management Tools</source>
+        <translation>Verwaltungswerkzeuge</translation>
+    </message>
+</context>
+<context>
+    <name>PrinterHelpWindow</name>
+    <message>
+        <source>Learn how to fix issues with not being able to print</source>
+        <translation>So beheben Sie Probleme beim Drucken</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Kopieren</translation>
     </message>
 </context>
 </TS>

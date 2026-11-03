@@ -323,4 +323,62 @@
         <translation>配置失敗，請點擊手動添加%1</translation>
     </message>
 </context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <location filename="../../Common/smbcredentialdialog.cpp" line="1"/>
+        <source>Username</source>
+        <translation>使用者名稱</translation>
+    </message>
+    <message>
+        <location filename="../../Common/smbcredentialdialog.cpp" line="1"/>
+        <source>Domain</source>
+        <translation>網域</translation>
+    </message>
+    <message>
+        <location filename="../../Common/smbcredentialdialog.cpp" line="1"/>
+        <source>Password</source>
+        <translation>密碼</translation>
+    </message>
+    <message>
+        <location filename="../../Common/smbcredentialdialog.cpp" line="1"/>
+        <source>Remember Password</source>
+        <translation>記住密碼</translation>
+    </message>
+    <message>
+        <location filename="../../Common/smbcredentialdialog.cpp" line="1"/>
+        <source>Connection Identity</source>
+        <translation>連線身分</translation>
+    </message>
+    <message>
+        <location filename="../../Common/smbcredentialdialog.cpp" line="1"/>
+        <source>Guest</source>
+        <translation>訪客</translation>
+    </message>
+    <message>
+        <location filename="../../Common/smbcredentialdialog.cpp" line="1"/>
+        <source>Registered User</source>
+        <translation>註冊使用者</translation>
+    </message>
+    <message>
+        <location filename="../../Common/smbcredentialdialog.cpp" line="1"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <location filename="../../Common/smbcredentialdialog.cpp" line="1"/>
+        <source>Connect</source>
+        <translation>連線</translation>
+    </message>
+    <message>
+        <location filename="../../Common/smbcredentialdialog.cpp" line="1"/>
+        <source>Authentication Required for %1</source>
+        <translation>連線 %1 需要驗證</translation>
+    </message>
+    <message>
+        <location filename="../../Common/smbcredentialdialog.cpp" line="1"/>
+        <source>Authentication required to connect to printer "%1"</source>
+        <translation>連線印表機「%1」需要驗證</translation>
+    </message>
+</context>
 </TS>

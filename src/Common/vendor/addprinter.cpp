@@ -42,6 +42,13 @@ static bool isCanonCAPTDrv(const QString &ppd_name)
     return match.hasMatch();
 }
 
+static CanonPrerequisite g_canonPrerequisite;
+
+void setCanonPrerequisite(CanonPrerequisite check)
+{
+    g_canonPrerequisite = std::move(check);
+}
+
 static bool isHplipDrv(const QString &ppd_name)
 {
     return (ppd_name.startsWith("drv:///hpcups.drv") || ppd_name.startsWith("drv:///hpijs.drv") || ppd_name.startsWith("lsb/usr/hplip/") ||
@@ -337,6 +344,18 @@ static bool buildCanonDeviceInfo(const QString &uri, const QString &serial, QStr
     }
     info = "usb:" + serial;
     return true;
+}
+
+// The CAPT driver packages and ccpd are 32-bit: the UI gets to check (and, with
+// the user's consent, enable) i386 support before anything is installed.
+int AddCanonCAPTPrinter::fixDriverDepends()
+{
+    const QString ppdName = QFileInfo(m_solution[CUPS_PPD_NAME].toString()).fileName();
+    if (!m_unattended && g_canonPrerequisite && !g_canonPrerequisite(ppdName, &m_strErr)) {
+        qCWarning(COMMONMOUDLE) << "Canon prerequisites not met";
+        return -1;
+    }
+    return AddPrinterTask::fixDriverDepends();
 }
 
 int AddCanonCAPTPrinter::addPrinter()

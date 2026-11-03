@@ -8,6 +8,8 @@
 #include "ztroubleshoot_p.h"
 #include "qtconvert.h"
 #include "troubleshootservice.h"
+#include "canoni386.h"
+#include "canoni386prompt.h"
 
 #include <DPalette>
 #include <DPaletteHelper>
@@ -329,6 +331,11 @@ void TroubleShootDialog::runRepair(TroubleShootJob *job)
     if (m_repairRunning || job->repairId().isEmpty())
         return;
 
+    // Canon CAPT needs 32-bit libraries: say so before the password is asked for.
+    if (CanonI386::needsConfirmation(job->repairId(), CanonI386::queryStatus())
+        && !CanonI386Prompt::confirm(this))
+        return;
+
     m_repairRunning = true;
     TroubleshootService::runRepair(job->repairId(), this, [this, job](TroubleshootService::Outcome outcome) {
         m_repairRunning = false;
@@ -340,6 +347,12 @@ void TroubleShootDialog::runRepair(TroubleShootJob *job)
         }
         case TroubleshootService::Outcome::Failed:
             showResultMessage(false, job->repairResultText(false));
+            break;
+        case TroubleshootService::Outcome::ArchitectureFailed:
+        case TroubleshootService::Outcome::UpdateFailed:
+        case TroubleshootService::Outcome::InstallFailed:
+        case TroubleshootService::Outcome::PackageManagerBusy:
+            showResultMessage(false, CanonI386::outcomeText(outcome));
             break;
         case TroubleshootService::Outcome::Unavailable:
             showResultMessage(false, tr("The repair service is not available."));

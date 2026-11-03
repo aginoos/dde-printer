@@ -20,6 +20,11 @@ enum class Outcome {
     Failed,       // the repair ran and did not succeed
     Denied,       // not authorized or the dialog was dismissed
     Unavailable,  // service missing, busy or sent a malformed answer
+    // Specific failures of the Canon CAPT 32-bit support (see repaircodes.h).
+    ArchitectureFailed,   // the i386 architecture could not be added
+    UpdateFailed,         // the package lists could not be refreshed
+    InstallFailed,        // the 32-bit libraries could not be installed
+    PackageManagerBusy,   // apt/dpkg stayed locked by another process
 };
 
 struct LogResult
@@ -29,7 +34,7 @@ struct LogResult
 };
 
 constexpr int kLogTimeoutMs = 30 * 1000;
-constexpr int kRepairTimeoutMs = 5 * 60 * 1000;  // includes the authentication dialog
+constexpr int kRepairTimeoutMs = 20 * 60 * 1000;  // password dialog, package list update, install and lock retries
 
 // Error log lines of the caller's latest job on `printerName`. Blocks: call it
 // from a worker thread.

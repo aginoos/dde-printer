@@ -22,10 +22,12 @@ constexpr int kInstallTimeoutMs = 300000;
 // Ids with an implementation: "cups_service", "canon_lbp2900", "brother_dcp_mfc".
 bool isKnownFix(const QString &fixId);
 
-// Runs the repair; `done` gets 0 on success and 1 on failure, exactly once.
+// Runs the repair; `done` gets a RepairCode (repaircodes.h) exactly once: 0 on
+// success, 1 on a plain failure, 2..5 for the specific Canon i386 failures.
 void run(QObject *owner, const QString &fixId, std::function<void(int)> done);
 
-// Fixed package list of the Canon LBP2900 repair; never taken from the caller.
+// Fixed package list of the Canon CAPT repair; never taken from the caller.
+// libc6:i386 and the other runtime libraries come in as dependencies.
 QStringList canonI386Packages();
 
 // Arguments for `dpkg`, and whether its output lists `arch` (e.g. "i386").

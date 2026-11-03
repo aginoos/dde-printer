@@ -20,6 +20,8 @@ SOURCES += $$PWD/ut_common.cpp \
     $$PWD/ut_joblogreader.cpp \
     $$PWD/../../src/service/joblogreader.cpp \
     $$PWD/../../src/service/repairjobs.cpp \
+    $$PWD/../../src/service/canoni386repair.cpp \
+    $$PWD/ut_canoni386.cpp \
     $$PWD/ut_smburi.cpp \
     $$PWD/ut_secretstore.cpp \
     $$PWD/ut_safeprocess.cpp \

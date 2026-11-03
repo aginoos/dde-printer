@@ -9,9 +9,17 @@
 
 #include <QObject>
 
+#include <functional>
+
 class InstallInterface;
 class InstallDriver;
 class FixHplipBackend;
+
+// Optional check the UI installs for Canon CAPT drivers: called with the PPD
+// name before the driver is set up; returns false (with a reason in the
+// string) to stop. Without a hook nothing is checked.
+using CanonPrerequisite = std::function<bool(const QString &ppdName, QString *error)>;
+void setCanonPrerequisite(CanonPrerequisite check);
 
 class AddPrinterTask : public QObject
 {

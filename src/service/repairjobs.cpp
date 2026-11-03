@@ -4,7 +4,9 @@
 
 #include "repairjobs.h"
 
+#include "canoni386repair.h"
 #include "commandrunner.h"
+#include "../Common/repaircodes.h"
 
 #include <QDir>
 #include <QFile>
@@ -15,7 +17,6 @@
 namespace {
 
 const char kCupsUnit[] = "cups.service";
-const char kCcpdUnit[] = "ccpd.service";
 const char kFilterDir[] = "/usr/lib/cups/filter";
 
 using BoolDone = std::function<void(bool)>;
@@ -63,46 +64,6 @@ void repairCups(QObject *owner, BoolDone done)
                 QStringList{"restart", kCupsUnit}};
             runStepsIgnoringResults(owner, escalation,
                 [owner, check, done]() { systemctl(owner, check, done); });
-        });
-    });
-}
-
-void runTool(QObject *owner, const QString &name, const QStringList &args, int timeoutMs,
-             std::function<void(const CommandResult &)> done)
-{
-    const QString tool = CommandRunner::findTool(name);
-    if (tool.isEmpty()) {
-        done(CommandResult());
-        return;
-    }
-    CommandRunner::run(owner, tool, args, done, timeoutMs);
-}
-
-// The 32-bit libraries come from fixed package names; the architecture is only
-// checked, never added, so the repair cannot change the system's multiarch setup.
-void installCanonLibraries(QObject *owner, BoolDone done)
-{
-    runTool(owner, "dpkg", RepairJobs::foreignArchitectureArgs(), RepairJobs::kStepTimeoutMs,
-            [owner, done](const CommandResult &arch) {
-        if (!arch.ok() || !RepairJobs::hasForeignArchitecture(QString::fromUtf8(arch.output), "i386")) {
-            done(false);
-            return;
-        }
-        runTool(owner, "apt-get", RepairJobs::aptInstallArgs(RepairJobs::canonI386Packages()),
-                RepairJobs::kInstallTimeoutMs,
-                [done](const CommandResult &install) { done(install.ok()); });
-    });
-}
-
-void repairCanon(QObject *owner, BoolDone done)
-{
-    systemctl(owner, QStringList{"enable", "--now", kCcpdUnit}, [owner, done](bool) {
-        installCanonLibraries(owner, [owner, done](bool installed) {
-            if (!installed) {
-                done(false);
-                return;
-            }
-            systemctl(owner, QStringList{"is-active", "--quiet", kCcpdUnit}, done);
         });
     });
 }
@@ -155,6 +116,7 @@ bool hasForeignArchitecture(const QString &dpkgOutput, const QString &arch)
 QStringList aptInstallArgs(const QStringList &packages)
 {
     return QStringList{QStringLiteral("-y"), QStringLiteral("-q"),
+                       QStringLiteral("-o"), QStringLiteral("DPkg::Lock::Timeout=60"),
                        QStringLiteral("--no-install-recommends"), QStringLiteral("install")}
         + packages;
 }
@@ -172,11 +134,11 @@ bool isRepairableFilterName(const QString &fileName)
 
 void run(QObject *owner, const QString &fixId, std::function<void(int)> done)
 {
-    const BoolDone finish = [done](bool ok) { done(ok ? 0 : 1); };
+    const BoolDone finish = [done](bool ok) { done(ok ? RepairCode::Ok : RepairCode::Failed); };
     if (fixId == QLatin1String("cups_service"))
         repairCups(owner, finish);
     else if (fixId == QLatin1String("canon_lbp2900"))
-        repairCanon(owner, finish);
+        CanonI386Repair::run(owner, done);
     else if (fixId == QLatin1String("brother_dcp_mfc"))
         finish(repairBrotherFilters());
     else

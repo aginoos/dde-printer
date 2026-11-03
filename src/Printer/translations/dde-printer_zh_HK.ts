@@ -1967,6 +1967,7 @@
     <name>TroubleShootItem</name>
     <message>
         <source>Cancel</source>
+        <comment>button</comment>
         <translation>取消</translation>
     </message>
 </context>
@@ -2065,6 +2066,7 @@
     <name>CustomPageDialog</name>
     <message>
         <source>Cancel</source>
+        <comment>button</comment>
         <translation>取消</translation>
     </message>
 </context>
@@ -2072,6 +2074,7 @@
     <name>CustomPageDialog</name>
     <message>
         <source>Save</source>
+        <comment>button</comment>
         <translation>儲存</translation>
     </message>
 </context>
@@ -2135,6 +2138,7 @@
     <name>CustomPageDialog</name>
     <message>
         <source>OK</source>
+        <comment>button</comment>
         <translation>確定</translation>
     </message>
 </context>
@@ -2163,6 +2167,7 @@
     <name>SmbPrinterPage</name>
     <message>
         <source>Browse</source>
+        <comment>button</comment>
         <translation>瀏覽</translation>
     </message>
 </context>

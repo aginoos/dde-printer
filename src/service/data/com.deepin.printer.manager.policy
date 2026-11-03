@@ -8,8 +8,32 @@
 
   <action id="com.deepin.printer.manager.canon-add">
     <description>Install a Canon CAPT printer</description>
+    <description xml:lang="zh_TW">安裝 Canon CAPT 印表機</description>
+    <description xml:lang="zh_HK">安裝佳能 CAPT 打印機</description>
+    <description xml:lang="uk">Встановлення принтера Canon CAPT</description>
+    <description xml:lang="ru">Установка принтера Canon CAPT</description>
+    <description xml:lang="pt_BR">Instalar uma impressora Canon CAPT</description>
+    <description xml:lang="ko">Canon CAPT 프린터 설치</description>
+    <description xml:lang="ja">Canon CAPTプリンターのインストール</description>
+    <description xml:lang="it">Installare una stampante Canon CAPT</description>
+    <description xml:lang="fr">Installer une imprimante Canon CAPT</description>
+    <description xml:lang="es">Instalar una impresora Canon CAPT</description>
+    <description xml:lang="de">Einen Canon-CAPT-Drucker installieren</description>
+    <description xml:lang="ar">تثبيت طابعة Canon CAPT</description>
     <description xml:lang="zh_CN">安装佳能 CAPT 打印机</description>
     <message>Authentication is required to install a Canon CAPT printer</message>
+    <message xml:lang="zh_TW">安裝 Canon CAPT 印表機需要驗證</message>
+    <message xml:lang="zh_HK">安裝佳能 CAPT 打印機需要驗證</message>
+    <message xml:lang="uk">Для встановлення принтера Canon CAPT потрібна автентифікація</message>
+    <message xml:lang="ru">Для установки принтера Canon CAPT требуется аутентификация</message>
+    <message xml:lang="pt_BR">É necessária autenticação para instalar uma impressora Canon CAPT</message>
+    <message xml:lang="ko">Canon CAPT 프린터를 설치하려면 인증이 필요합니다</message>
+    <message xml:lang="ja">Canon CAPTプリンターをインストールするには認証が必要です</message>
+    <message xml:lang="it">È richiesta l'autenticazione per installare una stampante Canon CAPT</message>
+    <message xml:lang="fr">Une authentification est requise pour installer une imprimante Canon CAPT</message>
+    <message xml:lang="es">Se requiere autenticación para instalar una impresora Canon CAPT</message>
+    <message xml:lang="de">Zum Installieren eines Canon-CAPT-Druckers ist eine Authentifizierung erforderlich</message>
+    <message xml:lang="ar">المصادقة مطلوبة لتثبيت طابعة Canon CAPT</message>
     <message xml:lang="zh_CN">安装佳能 CAPT 打印机需要认证</message>
     <defaults>
       <allow_any>no</allow_any>
@@ -20,8 +44,32 @@
 
   <action id="com.deepin.printer.manager.canon-remove">
     <description>Remove a Canon CAPT printer</description>
+    <description xml:lang="zh_TW">移除 Canon CAPT 印表機</description>
+    <description xml:lang="zh_HK">移除佳能 CAPT 打印機</description>
+    <description xml:lang="uk">Вилучення принтера Canon CAPT</description>
+    <description xml:lang="ru">Удаление принтера Canon CAPT</description>
+    <description xml:lang="pt_BR">Remover uma impressora Canon CAPT</description>
+    <description xml:lang="ko">Canon CAPT 프린터 제거</description>
+    <description xml:lang="ja">Canon CAPTプリンターの削除</description>
+    <description xml:lang="it">Rimuovere una stampante Canon CAPT</description>
+    <description xml:lang="fr">Supprimer une imprimante Canon CAPT</description>
+    <description xml:lang="es">Quitar una impresora Canon CAPT</description>
+    <description xml:lang="de">Einen Canon-CAPT-Drucker entfernen</description>
+    <description xml:lang="ar">إزالة طابعة Canon CAPT</description>
     <description xml:lang="zh_CN">卸载佳能 CAPT 打印机</description>
     <message>Authentication is required to remove a Canon CAPT printer</message>
+    <message xml:lang="zh_TW">移除 Canon CAPT 印表機需要驗證</message>
+    <message xml:lang="zh_HK">移除佳能 CAPT 打印機需要驗證</message>
+    <message xml:lang="uk">Для вилучення принтера Canon CAPT потрібна автентифікація</message>
+    <message xml:lang="ru">Для удаления принтера Canon CAPT требуется аутентификация</message>
+    <message xml:lang="pt_BR">É necessária autenticação para remover uma impressora Canon CAPT</message>
+    <message xml:lang="ko">Canon CAPT 프린터를 제거하려면 인증이 필요합니다</message>
+    <message xml:lang="ja">Canon CAPTプリンターを削除するには認証が必要です</message>
+    <message xml:lang="it">È richiesta l'autenticazione per rimuovere una stampante Canon CAPT</message>
+    <message xml:lang="fr">Une authentification est requise pour supprimer une imprimante Canon CAPT</message>
+    <message xml:lang="es">Se requiere autenticación para quitar una impresora Canon CAPT</message>
+    <message xml:lang="de">Zum Entfernen eines Canon-CAPT-Druckers ist eine Authentifizierung erforderlich</message>
+    <message xml:lang="ar">المصادقة مطلوبة لإزالة طابعة Canon CAPT</message>
     <message xml:lang="zh_CN">卸载佳能 CAPT 打印机需要认证</message>
     <defaults>
       <allow_any>no</allow_any>
@@ -32,8 +80,32 @@
 
   <action id="com.deepin.printer.manager.launch-autostart">
     <description>Run a printer driver start-up script</description>
+    <description xml:lang="zh_TW">執行印表機驅動程式啟動指令碼</description>
+    <description xml:lang="zh_HK">運行打印機驅動啟動腳本</description>
+    <description xml:lang="uk">Запуск стартового сценарію драйвера принтера</description>
+    <description xml:lang="ru">Запуск стартового сценария драйвера принтера</description>
+    <description xml:lang="pt_BR">Executar um script de inicialização do driver de impressora</description>
+    <description xml:lang="ko">프린터 드라이버 시작 스크립트 실행</description>
+    <description xml:lang="ja">プリンタードライバーの起動スクリプトの実行</description>
+    <description xml:lang="it">Eseguire uno script di avvio del driver della stampante</description>
+    <description xml:lang="fr">Exécuter un script de démarrage de pilote d'imprimante</description>
+    <description xml:lang="es">Ejecutar un script de inicio del controlador de impresora</description>
+    <description xml:lang="de">Ein Startskript für Druckertreiber ausführen</description>
+    <description xml:lang="ar">تشغيل برنامج بدء تشغيل مشغّل الطابعة</description>
     <description xml:lang="zh_CN">运行打印机驱动启动脚本</description>
     <message>Authentication is required to start a printer driver service</message>
+    <message xml:lang="zh_TW">啟動印表機驅動程式服務需要驗證</message>
+    <message xml:lang="zh_HK">啟動打印機驅動服務需要驗證</message>
+    <message xml:lang="uk">Для запуску служби драйвера принтера потрібна автентифікація</message>
+    <message xml:lang="ru">Для запуска службы драйвера принтера требуется аутентификация</message>
+    <message xml:lang="pt_BR">É necessária autenticação para iniciar um serviço do driver de impressora</message>
+    <message xml:lang="ko">프린터 드라이버 서비스를 시작하려면 인증이 필요합니다</message>
+    <message xml:lang="ja">プリンタードライバーのサービスを起動するには認証が必要です</message>
+    <message xml:lang="it">È richiesta l'autenticazione per avviare un servizio del driver della stampante</message>
+    <message xml:lang="fr">Une authentification est requise pour démarrer un service de pilote d'imprimante</message>
+    <message xml:lang="es">Se requiere autenticación para iniciar un servicio del controlador de impresora</message>
+    <message xml:lang="de">Zum Starten eines Druckertreiberdienstes ist eine Authentifizierung erforderlich</message>
+    <message xml:lang="ar">المصادقة مطلوبة لبدء خدمة مشغّل الطابعة</message>
     <message xml:lang="zh_CN">启动打印机驱动服务需要认证</message>
     <defaults>
       <allow_any>no</allow_any>
@@ -44,8 +116,32 @@
 
   <action id="com.deepin.printer.manager.set-server-settings">
     <description>Change the print server settings</description>
+    <description xml:lang="zh_TW">變更列印伺服器設定</description>
+    <description xml:lang="zh_HK">更改打印伺服器設置</description>
+    <description xml:lang="uk">Зміна налаштувань сервера друку</description>
+    <description xml:lang="ru">Изменение настроек сервера печати</description>
+    <description xml:lang="pt_BR">Alterar as configurações do servidor de impressão</description>
+    <description xml:lang="ko">인쇄 서버 설정 변경</description>
+    <description xml:lang="ja">印刷サーバー設定の変更</description>
+    <description xml:lang="it">Modificare le impostazioni del server di stampa</description>
+    <description xml:lang="fr">Modifier les paramètres du serveur d'impression</description>
+    <description xml:lang="es">Cambiar la configuración del servidor de impresión</description>
+    <description xml:lang="de">Die Einstellungen des Druckservers ändern</description>
+    <description xml:lang="ar">تغيير إعدادات خادم الطباعة</description>
     <description xml:lang="zh_CN">修改打印服务器设置</description>
     <message>Authentication is required to change the print server settings</message>
+    <message xml:lang="zh_TW">變更列印伺服器設定需要驗證</message>
+    <message xml:lang="zh_HK">更改打印伺服器設置需要驗證</message>
+    <message xml:lang="uk">Для зміни налаштувань сервера друку потрібна автентифікація</message>
+    <message xml:lang="ru">Для изменения настроек сервера печати требуется аутентификация</message>
+    <message xml:lang="pt_BR">É necessária autenticação para alterar as configurações do servidor de impressão</message>
+    <message xml:lang="ko">인쇄 서버 설정을 변경하려면 인증이 필요합니다</message>
+    <message xml:lang="ja">印刷サーバーの設定を変更するには認証が必要です</message>
+    <message xml:lang="it">È richiesta l'autenticazione per modificare le impostazioni del server di stampa</message>
+    <message xml:lang="fr">Une authentification est requise pour modifier les paramètres du serveur d'impression</message>
+    <message xml:lang="es">Se requiere autenticación para cambiar la configuración del servidor de impresión</message>
+    <message xml:lang="de">Zum Ändern der Einstellungen des Druckservers ist eine Authentifizierung erforderlich</message>
+    <message xml:lang="ar">المصادقة مطلوبة لتغيير إعدادات خادم الطباعة</message>
     <message xml:lang="zh_CN">修改打印服务器设置需要认证</message>
     <defaults>
       <allow_any>no</allow_any>
@@ -56,8 +152,32 @@
 
   <action id="com.deepin.printer.manager.repair">
     <description>Repair the print system</description>
+    <description xml:lang="zh_TW">修復列印系統</description>
+    <description xml:lang="zh_HK">修復打印系統</description>
+    <description xml:lang="uk">Відновлення системи друку</description>
+    <description xml:lang="ru">Восстановление системы печати</description>
+    <description xml:lang="pt_BR">Reparar o sistema de impressão</description>
+    <description xml:lang="ko">인쇄 시스템 복구</description>
+    <description xml:lang="ja">印刷システムの修復</description>
+    <description xml:lang="it">Riparare il sistema di stampa</description>
+    <description xml:lang="fr">Réparer le système d'impression</description>
+    <description xml:lang="es">Reparar el sistema de impresión</description>
+    <description xml:lang="de">Das Drucksystem reparieren</description>
+    <description xml:lang="ar">إصلاح نظام الطباعة</description>
     <description xml:lang="zh_CN">修复打印系统</description>
     <message>Authentication is required to repair the print system</message>
+    <message xml:lang="zh_TW">修復列印系統需要驗證</message>
+    <message xml:lang="zh_HK">修復打印系統需要驗證</message>
+    <message xml:lang="uk">Для відновлення системи друку потрібна автентифікація</message>
+    <message xml:lang="ru">Для восстановления системы печати требуется аутентификация</message>
+    <message xml:lang="pt_BR">É necessária autenticação para reparar o sistema de impressão</message>
+    <message xml:lang="ko">인쇄 시스템을 복구하려면 인증이 필요합니다</message>
+    <message xml:lang="ja">印刷システムを修復するには認証が必要です</message>
+    <message xml:lang="it">È richiesta l'autenticazione per riparare il sistema di stampa</message>
+    <message xml:lang="fr">Une authentification est requise pour réparer le système d'impression</message>
+    <message xml:lang="es">Se requiere autenticación para reparar el sistema de impresión</message>
+    <message xml:lang="de">Zum Reparieren des Drucksystems ist eine Authentifizierung erforderlich</message>
+    <message xml:lang="ar">المصادقة مطلوبة لإصلاح نظام الطباعة</message>
     <message xml:lang="zh_CN">修复打印系统需要认证</message>
     <defaults>
       <allow_any>no</allow_any>
@@ -68,8 +188,32 @@
 
   <action id="com.deepin.printer.manager.ippusb-blacklist">
     <description>Change which USB printers ipp-usb may use</description>
+    <description xml:lang="zh_TW">變更 ipp-usb 可使用的 USB 印表機</description>
+    <description xml:lang="zh_HK">更改 ipp-usb 可使用的 USB 打印機</description>
+    <description xml:lang="uk">Зміна списку USB-принтерів, які може використовувати ipp-usb</description>
+    <description xml:lang="ru">Изменение списка USB-принтеров, которые может использовать ipp-usb</description>
+    <description xml:lang="pt_BR">Alterar quais impressoras USB o ipp-usb pode usar</description>
+    <description xml:lang="ko">ipp-usb가 사용할 수 있는 USB 프린터 변경</description>
+    <description xml:lang="ja">ipp-usbが使用できるUSBプリンターの変更</description>
+    <description xml:lang="it">Modificare quali stampanti USB può usare ipp-usb</description>
+    <description xml:lang="fr">Modifier les imprimantes USB que ipp-usb peut utiliser</description>
+    <description xml:lang="es">Cambiar qué impresoras USB puede usar ipp-usb</description>
+    <description xml:lang="de">Ändern, welche USB-Drucker ipp-usb verwenden darf</description>
+    <description xml:lang="ar">تغيير طابعات USB المسموح لـ ipp-usb باستخدامها</description>
     <description xml:lang="zh_CN">更改 ipp-usb 可使用的 USB 打印机</description>
     <message>Authentication is required to change which USB printers ipp-usb may use</message>
+    <message xml:lang="zh_TW">變更 ipp-usb 可使用的 USB 印表機需要驗證</message>
+    <message xml:lang="zh_HK">更改 ipp-usb 可使用的 USB 打印機需要驗證</message>
+    <message xml:lang="uk">Для зміни списку USB-принтерів, які може використовувати ipp-usb, потрібна автентифікація</message>
+    <message xml:lang="ru">Для изменения списка USB-принтеров, которые может использовать ipp-usb, требуется аутентификация</message>
+    <message xml:lang="pt_BR">É necessária autenticação para alterar quais impressoras USB o ipp-usb pode usar</message>
+    <message xml:lang="ko">ipp-usb가 사용할 수 있는 USB 프린터를 변경하려면 인증이 필요합니다</message>
+    <message xml:lang="ja">ipp-usbが使用できるUSBプリンターを変更するには認証が必要です</message>
+    <message xml:lang="it">È richiesta l'autenticazione per modificare quali stampanti USB può usare ipp-usb</message>
+    <message xml:lang="fr">Une authentification est requise pour modifier les imprimantes USB que ipp-usb peut utiliser</message>
+    <message xml:lang="es">Se requiere autenticación para cambiar qué impresoras USB puede usar ipp-usb</message>
+    <message xml:lang="de">Zum Ändern der USB-Drucker, die ipp-usb verwenden darf, ist eine Authentifizierung erforderlich</message>
+    <message xml:lang="ar">المصادقة مطلوبة لتغيير طابعات USB المسموح لـ ipp-usb باستخدامها</message>
     <message xml:lang="zh_CN">更改 ipp-usb 可使用的 USB 打印机需要认证</message>
     <defaults>
       <allow_any>no</allow_any>

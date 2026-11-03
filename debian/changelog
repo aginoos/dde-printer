@@ -1,3 +1,9 @@
+dde-printer (1.0.20+agino3-1) unstable; urgency=medium
+
+  * Complete the translations of all 14 gate languages (ja, ko, de, fr, es, it, pt_BR, ru, uk, ar, zh_*), including the polkit action texts. Machine translations, native review pending (zh_* excepted).
+
+ -- agino Team <admin@aginoos.com>  Tue, 03 Nov 2026 18:30:00 +0800
+
 dde-printer (1.0.20+agino2-1) unstable; urgency=medium
 
   * Canon CAPT: ship agino-ccpd.service (Canon's init script cannot be enabled on Debian 13) and require libstdc++6:i386.

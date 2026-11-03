@@ -727,6 +727,30 @@
         <source>Are you sure you want to delete the printer "%1" ?</source>
         <translation>確定要刪除印表機「%1」嗎？</translation>
     </message>
+    <message>
+        <source>Default printer</source>
+        <translation>預設印表機</translation>
+    </message>
+    <message>
+        <source>Shared printer</source>
+        <translation>共用印表機</translation>
+    </message>
+    <message>
+        <source>Advanced sharing options</source>
+        <translation>進階共用選項</translation>
+    </message>
+    <message>
+        <source>Shared address:</source>
+        <translation>共用位址：</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>複製</translation>
+    </message>
+    <message>
+        <source>Management Tools</source>
+        <translation>管理工具</translation>
+    </message>
 </context>
 <context>
     <name>DPropertySetDlg</name>
@@ -1072,6 +1096,10 @@
         <source>You have successfully added the printer.</source>
         <translation>印表機新增成功。</translation>
     </message>
+    <message>
+        <source>After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window.</source>
+        <translation>驅動程式安裝成功後，需要設定印表機，請在引導視窗中操作。</translation>
+    </message>
 </context>
 <context>
     <name>JobListView</name>
@@ -1386,6 +1414,10 @@
         <source>(use %1 protocol)</source>
         <translation>（使用 %1 通訊協定）</translation>
     </message>
+    <message>
+        <source>Enter an address</source>
+        <translation>輸入位址</translation>
+    </message>
 </context>
 <context>
     <name>PrinterTestJob</name>
@@ -1680,6 +1712,154 @@
         <source>Help on adding and using printers</source>
         <translation>印表機新增與使用協助</translation>
     </message>
+    <message>
+        <source>For more drivers, please refer to our official website: </source>
+        <translation>如需更多驅動程式，請參閱我們的官方網站：</translation>
+    </message>
+    <message>
+        <source> not found, please ask the administrator for help</source>
+        <translation>未找到，請聯絡管理員尋求協助</translation>
+    </message>
+    <message>
+        <source>After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window.</source>
+        <translation>驅動程式安裝成功後，需要設定印表機，請在引導視窗中操作。</translation>
+    </message>
+    <message>
+        <source>Print Driver Download Navigation</source>
+        <translation>印表機驅動程式下載導覽</translation>
+    </message>
+    <message>
+        <source>Instructions for Use</source>
+        <translation>使用說明</translation>
+    </message>
+    <message>
+        <source>Can&apos;t print? Learn how to resolve</source>
+        <translation>無法列印？瞭解如何解決</translation>
+    </message>
+    <message>
+        <source>UOS Ecology</source>
+        <translation>統信生態官網</translation>
+    </message>
+    <message>
+        <source>Canon</source>
+        <translation>Canon</translation>
+    </message>
+    <message>
+        <source>Fuji Xerox</source>
+        <translation>富士全錄</translation>
+    </message>
+    <message>
+        <source>Brother</source>
+        <translation>Brother</translation>
+    </message>
+    <message>
+        <source>Dascom</source>
+        <translation>Dascom</translation>
+    </message>
+    <message>
+        <source>Toshiba</source>
+        <translation>東芝</translation>
+    </message>
+    <message>
+        <source>Lenovo</source>
+        <translation>聯想</translation>
+    </message>
+    <message>
+        <source>1. Check printer connection</source>
+        <translation>1. 檢查印表機連線</translation>
+    </message>
+    <message>
+        <source>Please make sure the printer is turned on and properly connected to this computer. Please check if the printer power, USB or network connection is normal.</source>
+        <translation>請確認印表機已開啟，並正確連接至此電腦。請檢查印表機電源、USB 或網路連線是否正常。</translation>
+    </message>
+    <message>
+        <source>2. Check the printer status</source>
+        <translation>2. 檢查印表機狀態</translation>
+    </message>
+    <message>
+        <source>Please make sure that the printer is working normally, for example, there are no paper jams, ink cartridge exhaustion, etc.</source>
+        <translation>請確認印表機運作正常，例如沒有卡紙、墨水匣用盡等問題。</translation>
+    </message>
+    <message>
+        <source>3. Check the printer driver</source>
+        <translation>3. 檢查印表機驅動程式</translation>
+    </message>
+    <message>
+        <source>Make sure the printer driver is installed correctly. If the driver does not match the printer, it is recommended to try updating the driver or download the latest version of the driver from the printer manufacturer&apos;s official website.</source>
+        <translation>請確認已正確安裝印表機驅動程式。若驅動程式與印表機不相符，建議嘗試更新驅動程式，或從印表機製造商的官方網站下載最新版本的驅動程式。</translation>
+    </message>
+    <message>
+        <source>4. Restart the print service</source>
+        <translation>4. 重新啟動列印服務</translation>
+    </message>
+    <message>
+        <source>Open System Monitor, switch to System Services, search for &quot;cups&quot; and try to restart the service.</source>
+        <translation>開啟系統監控，切換至「系統服務」，搜尋「cups」並嘗試重新啟動該服務。</translation>
+    </message>
+    <message>
+        <source>5. Check the print queue</source>
+        <translation>5. 檢查列印佇列</translation>
+    </message>
+    <message>
+        <source>In the print manager, find the printer in use and click the &quot;Print Queue&quot; icon button. Check for any pending print tasks, delete any pending tasks, and then try printing again.</source>
+        <translation>在列印管理員中，找到正在使用的印表機，點選「列印佇列」圖示按鈕。檢查是否有擱置的列印工作，刪除所有擱置的工作，然後重新嘗試列印。</translation>
+    </message>
+    <message>
+        <source>6. Run troubleshooting</source>
+        <translation>6. 執行疑難排解</translation>
+    </message>
+    <message>
+        <source>In the print manager, find the printer in use, click the &quot;Troubleshooting&quot; icon button, run it and find solutions based on the detection results.</source>
+        <translation>在列印管理員中，找到正在使用的印表機，點選「疑難排解」圖示按鈕，執行後依偵測結果尋找解決方法。</translation>
+    </message>
+    <message>
+        <source>7. Check the default printer settings</source>
+        <translation>7. 檢查預設印表機設定</translation>
+    </message>
+    <message>
+        <source>In Print Manager, find the printer you are using and confirm whether it is set as default.</source>
+        <translation>在列印管理員中，找到正在使用的印表機，確認是否已設為預設。</translation>
+    </message>
+    <message>
+        <source>8. Clean up temporary printer files</source>
+        <translation>8. 清理印表機暫存檔</translation>
+    </message>
+    <message>
+        <source>Open the terminal and enter the following commands in sequence and press Enter. This will stop the print service, delete the printer&apos;s temporary files, and finally restart the print service.</source>
+        <translation>開啟終端機，依序輸入下列指令並按下 Enter 鍵。這會停止列印服務、刪除印表機的暫存檔，最後重新啟動列印服務。</translation>
+    </message>
+    <message>
+        <source>9. Update your print manager or operating system</source>
+        <translation>9. 更新列印管理員或作業系統</translation>
+    </message>
+    <message>
+        <source>Make sure your print manager or operating system is up to date. You can install the latest version of Print Manager through the App Store, and install the latest version of UOS through the Control Center-Update Module.</source>
+        <translation>請確認列印管理員或作業系統為最新版本。您可透過應用程式商店安裝最新版本的列印管理員，並透過控制中心的更新模組安裝最新版本的 UOS。</translation>
+    </message>
+    <message>
+        <source>10. Reinstall the printer</source>
+        <translation>10. 重新安裝印表機</translation>
+    </message>
+    <message>
+        <source>In Print Manager, select the printer you are using, click the &quot;Minus&quot; button to remove it, and then try to reinstall the printer.</source>
+        <translation>在列印管理員中，選取正在使用的印表機，點選「減號」按鈕將其移除，然後嘗試重新安裝該印表機。</translation>
+    </message>
+    <message>
+        <source>11. Check antivirus software</source>
+        <translation>11. 檢查防毒軟體</translation>
+    </message>
+    <message>
+        <source>Some antivirus software may block printing operations. Try turning off your antivirus software and retesting the printing functionality.</source>
+        <translation>部分防毒軟體可能會阻擋列印操作。請嘗試關閉防毒軟體後重新測試列印功能。</translation>
+    </message>
+    <message>
+        <source>12. Check for hardware failure</source>
+        <translation>12. 檢查硬體故障</translation>
+    </message>
+    <message>
+        <source>If none of the above steps solve the problem, you need to consider whether the printer has a hardware failure. It is recommended to try connecting to another computer to test, or contact the manufacturer&apos;s technical support.</source>
+        <translation>若上述步驟均無法解決問題，請考慮印表機是否有硬體故障。建議嘗試連接至另一台電腦測試，或聯絡製造商的技術支援。</translation>
+    </message>
 </context>
 <context>
     <name>RenamePrinterWindow</name>
@@ -1741,6 +1921,10 @@
         <source>Save debugging information for troubleshooting</source>
         <translation>保留除錯訊息用於故障排除</translation>
     </message>
+    <message>
+        <source>To share your printer, turn on these settings</source>
+        <translation>如需共用印表機，請開啟這些設定</translation>
+    </message>
 </context>
 <context>
     <name>TroubleShootDialog</name>
@@ -1772,6 +1956,10 @@
     <message>
         <source>The repair service is not available.</source>
         <translation>修復服務無法使用。</translation>
+    </message>
+    <message>
+        <source>Can&apos;t print? Learn how to resolve</source>
+        <translation>無法列印？瞭解如何解決</translation>
     </message>
 </context>
 <context>
@@ -2257,6 +2445,27 @@
         <location filename="../ui/printerapplication.cpp" line="1"/>
         <source>Use Driverless Solution</source>
         <translation>使用免驅動方案</translation>
+    </message>
+</context>
+<context>
+    <name>ManagementToolWidget</name>
+    <message>
+        <source>Management Tools</source>
+        <translation>管理工具</translation>
+    </message>
+</context>
+<context>
+    <name>PrinterHelpWindow</name>
+    <message>
+        <source>Learn how to fix issues with not being able to print</source>
+        <translation>瞭解如何解決無法列印的問題</translation>
+    </message>
+</context>
+<context>
+    <name>PrinterHelpWindow</name>
+    <message>
+        <source>Copy</source>
+        <translation>複製</translation>
     </message>
 </context>
 </TS>

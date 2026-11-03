@@ -1447,6 +1447,10 @@
         <source>(use %1 protocol)</source>
         <translation>（使用 %1 协议）</translation>
     </message>
+    <message>
+        <source>Enter an address</source>
+        <translation>输入地址</translation>
+    </message>
 </context>
 <context>
     <name>PrinterTestJob</name>
@@ -1915,6 +1919,14 @@
         <location filename="../ui/printerhelpwindow.cpp" line="46"/>
         <source>If none of the above steps solve the problem, you need to consider whether the printer has a hardware failure. It is recommended to try connecting to another computer to test, or contact the manufacturer&apos;s technical support.</source>
         <translation>如果上述步骤均未解决问题，需要考虑打印机是否存在硬件故障。建议尝试连接到另一台计算机上测试，或者联系制造商的技术支持。</translation>
+    </message>
+    <message>
+        <source>For more drivers, please refer to our official website: </source>
+        <translation>如需更多驱动，请访问我们的官方网站：</translation>
+    </message>
+    <message>
+        <source> not found, please ask the administrator for help</source>
+        <translation>未找到，请联系管理员获取帮助</translation>
     </message>
 </context>
 <context>

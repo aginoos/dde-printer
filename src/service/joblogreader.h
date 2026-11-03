@@ -56,6 +56,10 @@ QString extractJobLines(const QByteArray &text, int jobId, qint64 notBeforeEpoch
 QString readJobLog(const QString &path, int jobId, qint64 budgetBytes = kScanBudgetBytes,
                    qint64 notBeforeEpoch = 0);
 
+// Log file read by readLatestJobLog() (/var/log/cups/error_log unless changed);
+// tests use a temporary file. Empty restores the default.
+void setErrorLogPath(const QString &path);
+
 // Login name of a uid, empty when unknown.
 QString userNameOf(uint uid);
 

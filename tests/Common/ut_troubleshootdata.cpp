@@ -16,6 +16,7 @@
 #include "vendor/modelfixmap.h"
 #include "vendor/troubleshootdata.h"
 #include "vendor/troubleshootservice.h"
+#include "repaircodes.h"
 
 namespace {
 
@@ -305,7 +306,224 @@ TEST(ut_TroubleshootService, OutcomeMapping)
     using TroubleshootService::Outcome;
     EXPECT_EQ(TroubleshootService::outcomeForCode(0), Outcome::Success);
     EXPECT_EQ(TroubleshootService::outcomeForCode(1), Outcome::Failed);
+    EXPECT_EQ(TroubleshootService::outcomeForCode(RepairCode::ArchitectureFailed), Outcome::ArchitectureFailed);
+    EXPECT_EQ(TroubleshootService::outcomeForCode(RepairCode::UpdateFailed), Outcome::UpdateFailed);
+    EXPECT_EQ(TroubleshootService::outcomeForCode(RepairCode::InstallFailed), Outcome::InstallFailed);
+    EXPECT_EQ(TroubleshootService::outcomeForCode(RepairCode::PackageManagerBusy), Outcome::PackageManagerBusy);
+    EXPECT_EQ(TroubleshootService::outcomeForCode(-12345), Outcome::Failed);   // unknown codes are a failure
     EXPECT_EQ(TroubleshootService::outcomeForError(QDBusError::AccessDenied), Outcome::Denied);
     EXPECT_EQ(TroubleshootService::outcomeForError(QDBusError::NoReply), Outcome::Unavailable);
     EXPECT_EQ(TroubleshootService::outcomeForError(QDBusError::ServiceUnknown), Outcome::Unavailable);
+}
+
+// ------------------------------------------------------------ injected seams
+
+namespace {
+
+// Replaces the command runner of the model checks for one test and records
+// every call; the default runner is restored afterwards.
+class FakeQueries
+{
+public:
+    struct Call
+    {
+        QString program;
+        QStringList args;
+        int timeoutMs;
+    };
+
+    FakeQueries(int exitCode, const QString &out = QString(), bool started = true, bool timedOut = false)
+    {
+        m_previous = ModelCheckRunner::setCommandRunner(
+            [this, exitCode, out, started, timedOut](const QString &program, const QStringList &args, int timeout) {
+                calls.append({program, args, timeout});
+                SafeProcess::Result r;
+                r.started = started;
+                r.timedOut = timedOut;
+                r.exitCode = exitCode;
+                r.out = out;
+                return r;
+            });
+    }
+    ~FakeQueries() { ModelCheckRunner::setCommandRunner(m_previous); }
+
+    QList<Call> calls;
+
+private:
+    ModelCheckRunner::CommandRunner m_previous;
+};
+
+ModelCheck makeCheck(ModelCheck::Type type, const QString &target, const QString &pattern = QString())
+{
+    ModelCheck check;
+    check.type = type;
+    check.target = target;
+    check.pattern = pattern;
+    return check;
+}
+
+}  // namespace
+
+TEST(ut_ModelCheck, ServiceActiveAsksSystemctlIsActive)
+{
+    FakeQueries ok(0);
+    EXPECT_TRUE(ModelCheckRunner::passes(makeCheck(ModelCheck::Type::ServiceActive, "ccpd.service")));
+    ASSERT_EQ(ok.calls.size(), 1);
+    EXPECT_EQ(ok.calls.first().program, QString("systemctl"));
+    EXPECT_EQ(ok.calls.first().args, (QStringList{"is-active", "--quiet", "--", "ccpd.service"}));
+    EXPECT_GT(ok.calls.first().timeoutMs, 0);   // every query is bounded
+}
+
+TEST(ut_ModelCheck, ServiceEnabledAsksSystemctlIsEnabled)
+{
+    FakeQueries ok(0);
+    EXPECT_TRUE(ModelCheckRunner::passes(makeCheck(ModelCheck::Type::ServiceEnabled, "ccpd.service")));
+    ASSERT_EQ(ok.calls.size(), 1);
+    EXPECT_EQ(ok.calls.first().args.first(), QString("is-enabled"));
+}
+
+TEST(ut_ModelCheck, ServiceCheckFailsOnExitCodeTimeoutOrMissingTool)
+{
+    const ModelCheck check = makeCheck(ModelCheck::Type::ServiceActive, "ccpd.service");
+    {
+        FakeQueries inactive(3);
+        EXPECT_FALSE(ModelCheckRunner::passes(check));
+    }
+    {
+        FakeQueries timedOut(0, QString(), true, true);
+        EXPECT_FALSE(ModelCheckRunner::passes(check));
+    }
+    {
+        FakeQueries notStarted(0, QString(), false);
+        EXPECT_FALSE(ModelCheckRunner::passes(check));
+    }
+}
+
+TEST(ut_ModelCheck, PackageInstalledReadsTheDpkgStatus)
+{
+    const ModelCheck check = makeCheck(ModelCheck::Type::PackageInstalled, "cndrvcups-capt:i386");
+    {
+        FakeQueries installed(0, "install ok installed");
+        EXPECT_TRUE(ModelCheckRunner::passes(check));
+        ASSERT_EQ(installed.calls.size(), 1);
+        EXPECT_EQ(installed.calls.first().program, QString("dpkg-query"));
+        EXPECT_EQ(installed.calls.first().args,
+                  (QStringList{"-W", "-f=${Status}", "--", "cndrvcups-capt:i386"}));
+    }
+    {
+        FakeQueries removed(0, "deinstall ok config-files");   // config files only: not installed
+        EXPECT_FALSE(ModelCheckRunner::passes(check));
+    }
+    {
+        FakeQueries unknown(1, "");                             // dpkg-query exits 1 for unknown packages
+        EXPECT_FALSE(ModelCheckRunner::passes(check));
+    }
+    {
+        FakeQueries failedButPrinted(1, "install ok installed");   // a failed query is never trusted
+        EXPECT_FALSE(ModelCheckRunner::passes(check));
+    }
+}
+
+TEST(ut_ModelCheck, FilesNotWritableUsesTheFileSystemNotACommand)
+{
+    FakeQueries unused(0);
+    QTemporaryDir dir;
+    ASSERT_TRUE(dir.isValid());
+    QFile file(dir.filePath("lbp_x"));
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    file.close();
+    file.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::WriteOther);
+
+    const ModelCheck check = makeCheck(ModelCheck::Type::FilesNotWritable, dir.path(), "lbp_*");
+    EXPECT_FALSE(ModelCheckRunner::passes(check));
+    file.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner);
+    EXPECT_TRUE(ModelCheckRunner::passes(check));
+    EXPECT_TRUE(unused.calls.isEmpty());
+}
+
+TEST(ut_ModelCheck, FailedChecksKeepsOnlyTheFailingOnesInOrder)
+{
+    // The runner answers by unit name: "good" passes, the others fail.
+    const ModelCheckRunner::CommandRunner previous = ModelCheckRunner::setCommandRunner(
+        [](const QString &, const QStringList &args, int) {
+            SafeProcess::Result r;
+            r.started = true;
+            r.exitCode = args.last() == QLatin1String("good.service") ? 0 : 1;
+            return r;
+        });
+    const QList<ModelCheck> checks{
+        makeCheck(ModelCheck::Type::ServiceActive, "bad1.service"),
+        makeCheck(ModelCheck::Type::ServiceActive, "good.service"),
+        makeCheck(ModelCheck::Type::ServiceEnabled, "bad2.service")};
+
+    const QList<ModelCheck> failed = ModelCheckRunner::failedChecks(checks);
+    ModelCheckRunner::setCommandRunner(previous);
+
+    ASSERT_EQ(failed.size(), 2);
+    EXPECT_EQ(failed.at(0).target, QString("bad1.service"));
+    EXPECT_EQ(failed.at(1).target, QString("bad2.service"));
+    EXPECT_TRUE(ModelCheckRunner::failedChecks({}).isEmpty());
+}
+
+TEST(ut_ModelCheck, SetCommandRunnerReturnsThePreviousRunner)
+{
+    int firstCalls = 0;
+    ModelCheckRunner::setCommandRunner([&firstCalls](const QString &, const QStringList &, int) {
+        ++firstCalls;
+        SafeProcess::Result r;
+        r.started = true;
+        return r;
+    });
+    const ModelCheckRunner::CommandRunner prev = ModelCheckRunner::setCommandRunner({});
+    ASSERT_TRUE(static_cast<bool>(prev));
+    prev("x", {}, 1);
+    EXPECT_EQ(firstCalls, 1);
+    EXPECT_FALSE(static_cast<bool>(ModelCheckRunner::setCommandRunner({})));   // default again
+}
+
+TEST(ut_IppUsbDiag, DiagnoseLocalUsesTheInjectedDeviceList)
+{
+    AvahiTool::IppUsbDevice ok;
+    ok.model = "Pantum P3301DN series";
+    ok.status = "OK";
+    int listed = 0;
+    const IppUsbDiag::DeviceLister previous = IppUsbDiag::setDeviceLister([&]() {
+        ++listed;
+        return QList<AvahiTool::IppUsbDevice>{ok};
+    });
+
+    EXPECT_EQ(IppUsbDiag::diagnoseLocal("usb://Pantum/P3301DN%20series?serial=1").verdict,
+              IppUsbDiag::Verdict::TakenOver);
+    EXPECT_EQ(listed, 1);
+    // A uri without a USB model never needs the device list.
+    EXPECT_EQ(IppUsbDiag::diagnoseLocal("socket://10.0.0.2").verdict, IppUsbDiag::Verdict::NotInvolved);
+    EXPECT_EQ(listed, 1);
+    EXPECT_EQ(IppUsbDiag::diagnoseLocal("usb://Epson/L360?serial=1").verdict, IppUsbDiag::Verdict::NotInvolved);
+    EXPECT_EQ(listed, 2);
+
+    IppUsbDiag::setDeviceLister(previous);
+}
+
+TEST(ut_IppUsbDiag, UnhealthyDeviceKeepsItsStatusText)
+{
+    AvahiTool::IppUsbDevice bad;
+    bad.model = "Canon LBP2900";
+    bad.status = "failed to start";
+    const auto previous = IppUsbDiag::setDeviceLister([bad]() { return QList<AvahiTool::IppUsbDevice>{bad}; });
+    const IppUsbDiag::Result r = IppUsbDiag::diagnoseLocal("hp:/usb/Canon_LBP2900?serial=1");
+    IppUsbDiag::setDeviceLister(previous);
+    EXPECT_EQ(r.verdict, IppUsbDiag::Verdict::Unhealthy);
+    EXPECT_EQ(r.status, QString("failed to start"));
+}
+
+TEST(ut_IppUsbDiag, SameModelIgnoresSeparatorsAndSeriesSuffixBothWays)
+{
+    EXPECT_TRUE(IppUsbDiag::sameModel("Brother HL-L2350DW", "brother hl l2350dw series"));
+    EXPECT_TRUE(IppUsbDiag::sameModel("a/b+c", "ABC"));
+    EXPECT_FALSE(IppUsbDiag::sameModel("Epson L360", ""));
+}
+
+TEST(ut_TroubleshootData, DataDirIsTheInstalledRootOwnedDirectory)
+{
+    EXPECT_EQ(TroubleshootData::dataDir(), QString("/usr/share/dde-printer/troubleshoot"));
 }

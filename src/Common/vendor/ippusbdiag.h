@@ -10,6 +10,8 @@
 #include <QList>
 #include <QString>
 
+#include <functional>
+
 // Why a printer on a USB device uri cannot be reached directly: ipp-usb takes
 // the USB interface over and exposes the printer as an IPP network printer.
 namespace IppUsbDiag {
@@ -35,6 +37,12 @@ bool sameModel(const QString &uriModel, const QString &ippUsbModel);
 
 // Pure decision on the given device list.
 Result diagnose(const QString &deviceUri, const QList<AvahiTool::IppUsbDevice> &devices);
+
+// Source of the device list used by diagnoseLocal(); replaceable so that tests
+// never run `ipp-usb`. Installs `lister` and returns the previous one; an empty
+// function selects AvahiTool::ippUsbDevices again (the default).
+using DeviceLister = std::function<QList<AvahiTool::IppUsbDevice>()>;
+DeviceLister setDeviceLister(DeviceLister lister);
 
 // Same with the devices reported by `ipp-usb status` (blocking).
 Result diagnoseLocal(const QString &deviceUri);

@@ -899,29 +899,29 @@ TEST(ut_ZDeviceManager, ippProbeListsTheQueuesOfTheHostsCupsServer)
         map<string, string> queue;
         queue[CUPS_OP_INFO] = "sOffice laser";
         queue[CUPS_OP_MAKE_MODEL] = "sAcme Rocket 5";
-        queue[CUPS_OP_URI_SUP] = "sipp://10.0.0.7/printers/Office";
+        queue[CUPS_OP_URI_SUP] = "sipp://127.0.0.1/printers/Office";
         printers["Office"] = queue;
         return printers;
     };
-    RefreshDevicesByHostTask task("10.0.0.7");
+    RefreshDevicesByHostTask task("127.0.0.1");
 
-    EXPECT_EQ(task.probe_ipp("10.0.0.7"), 0);
+    EXPECT_EQ(task.probe_ipp("127.0.0.1"), 0);
 
-    EXPECT_EQ(askedHost, QString("10.0.0.7"));
+    EXPECT_EQ(askedHost, QString("127.0.0.1"));
     ASSERT_EQ(task.getResult().size(), 1);   // the closed ipp service port adds nothing
     const TDeviceInfo info = task.getResult().first();
     EXPECT_EQ(info.strName, QString("Office"));
     EXPECT_EQ(info.strInfo, QString("Office laser"));
     EXPECT_EQ(info.strMakeAndModel, QString("Acme Rocket 5"));
-    EXPECT_EQ(info.strLocation, QString("10.0.0.7"));
-    EXPECT_EQ(info.uriList, QStringList{"ipp://10.0.0.7/printers/Office"});
+    EXPECT_EQ(info.strLocation, QString("127.0.0.1"));
+    EXPECT_EQ(info.uriList, QStringList{"ipp://127.0.0.1/printers/Office"});
 }
 
 TEST(ut_ZDeviceManager, ippProbeWithoutAnyAnswerFindsNothing)
 {
     DeviceSeams seams;
-    RefreshDevicesByHostTask task("10.0.0.7");
-    EXPECT_EQ(task.probe_ipp("10.0.0.7"), 0);
+    RefreshDevicesByHostTask task("127.0.0.1");
+    EXPECT_EQ(task.probe_ipp("127.0.0.1"), 0);
     EXPECT_TRUE(task.getResult().isEmpty());
 }
 

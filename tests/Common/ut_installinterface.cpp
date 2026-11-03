@@ -8,6 +8,8 @@
 #include <QDBusError>
 #include <QDBusObjectPath>
 #include <QDBusPendingCall>
+#include <QDBusServer>
+#include <QDBusVirtualObject>
 #include <QElapsedTimer>
 #include <QFile>
 #include <QTemporaryDir>
@@ -365,20 +367,70 @@ bool pumpUntil(Condition done, int timeoutMs = 5000)
     return done();
 }
 
-QDBusMessage requestMessage()
+// What the fake lastore answers to one call.
+struct Scripted
 {
-    return QDBusMessage::createMethodCall(kLastore, "/p", "i", "m");
+    QDBusError::ErrorType type = QDBusError::NoError;
+    QString text;
+    QString path;
+};
+
+Scripted jobReply(const QString &path)
+{
+    Scripted reply;
+    reply.path = path;
+    return reply;
 }
 
-QDBusPendingCall jobReply(const QString &path)
+Scripted errorReply(QDBusError::ErrorType type, const QString &text)
 {
-    return QDBusPendingCall::fromCompletedCall(requestMessage().createReply(QVariant::fromValue(QDBusObjectPath(path))));
+    Scripted reply;
+    reply.type = type;
+    reply.text = text;
+    return reply;
 }
 
-QDBusPendingCall errorReply(QDBusError::ErrorType type, const QString &text)
+// Answers every call on a peer-to-peer D-Bus connection, so the replies are
+// really encoded and decoded (QDBusPendingReply checks the wire signature).
+class FakeLastoreObject : public QDBusVirtualObject
 {
-    return QDBusPendingCall::fromError(QDBusError(type, text));
-}
+public:
+    QList<Scripted> *replies = nullptr;
+
+    QString introspect(const QString &) const override { return QString(); }
+    bool handleMessage(const QDBusMessage &message, const QDBusConnection &connection) override
+    {
+        const Scripted next = (replies && !replies->isEmpty()) ? replies->takeFirst() : jobReply("/job/1");
+        if (next.type == QDBusError::NoError)
+            connection.send(message.createReply(QVariant::fromValue(QDBusObjectPath(next.path))));
+        else
+            connection.send(message.createErrorReply(next.type, next.text));
+        return true;
+    }
+};
+
+struct PeerBus
+{
+    PeerBus(QList<Scripted> *replies)
+        : server("unix:tmpdir=/tmp")
+    {
+        static int counter = 0;
+        server.setAnonymousAuthenticationAllowed(true);
+        object.replies = replies;
+        QObject::connect(&server, &QDBusServer::newConnection, &server, [this](const QDBusConnection &incoming) {
+            serverSide = incoming;
+            serverSide.registerVirtualObject("/", &object, QDBusVirtualObject::SubPath);
+        });
+        client = QDBusConnection::connectToPeer(server.address(), QString("ut-installinterface-%1").arg(counter++));
+        pumpUntil([this] { return serverSide.isConnected() && client.isConnected(); });
+    }
+    ~PeerBus() { QDBusConnection::disconnectFromPeer(client.name()); }
+
+    QDBusServer server;
+    QDBusConnection serverSide{QString()};
+    QDBusConnection client{QString()};
+    FakeLastoreObject object;
+};
 
 QDBusMessage propertiesChanged(const QVariantMap &props)
 {
@@ -398,7 +450,12 @@ struct LastoreFixture
         hooks.retryDelay = [](int) { return 0; };
         hooks.asyncCall = [this](const QDBusMessage &msg) {
             calls.append(msg);
-            return replies.isEmpty() ? jobReply("/job/1") : replies.takeFirst();
+            if (!bus)
+                bus = std::make_unique<PeerBus>(&replies);
+            // A peer connection has no bus names: send the same call without a destination.
+            QDBusMessage outgoing = QDBusMessage::createMethodCall(QString(), msg.path(), msg.interface(), msg.member());
+            outgoing.setArguments(msg.arguments());
+            return bus->client.asyncCall(outgoing, 5000);
         };
         hooks.connectSignal = [this](const QString &service, const QString &path, QObject *, const char *) {
             connected.append(service + path);
@@ -408,7 +465,8 @@ struct LastoreFixture
     void apply() { InstallBackend::set(hooks); }
 
     InstallBackend::Hooks hooks;
-    QList<QDBusPendingCall> replies;
+    QList<Scripted> replies;
+    std::unique_ptr<PeerBus> bus;
     QList<QDBusMessage> calls;
     QStringList connected;
     bool connectOk = true;

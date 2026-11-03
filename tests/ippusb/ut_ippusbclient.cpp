@@ -6,6 +6,7 @@
 
 #include <QDBusError>
 #include <QDBusMessage>
+#include <QStringList>
 
 #include "ippusbclient.h"
 
@@ -87,4 +88,81 @@ TEST(ut_IppUsbClient, otherErrorsAreFailures)
     EXPECT_EQ(outcomeFromReply(errorReply(QDBusError::InvalidArgs)), Outcome::InvalidArgument);
     EXPECT_FALSE(isSuccess(outcomeFromReply(errorReply(QDBusError::NoReply))));
     EXPECT_FALSE(isSuccess(outcomeFromReply(errorReply(QDBusError::ServiceUnknown))));
+}
+
+namespace {
+
+struct TransportScope
+{
+    bool owned = true;
+    int ownerChecks = 0;
+    QStringList methods;
+    QStringList ids;
+    QDBusMessage reply = replyWith(0);
+
+    TransportScope()
+    {
+        Transport transport;
+        transport.isServiceOwnedByRoot = [this]() { ++ownerChecks; return owned; };
+        transport.callService = [this](const QString &method, const QString &id) {
+            methods << method;
+            ids << id;
+            return reply;
+        };
+        setTransport(transport);
+    }
+    ~TransportScope() { resetTransport(); }
+};
+
+}  // namespace
+
+TEST(ut_IppUsbClient, addCallsServiceMethodWithTheId)
+{
+    TransportScope t;
+    EXPECT_EQ(addToBlacklist("04b8:0e1a"), Outcome::Ok);
+    EXPECT_EQ(t.methods, QStringList{"AddDeviceToIppusbBlacklist"});
+    EXPECT_EQ(t.ids, QStringList{"04b8:0e1a"});
+}
+
+TEST(ut_IppUsbClient, removeCallsServiceMethod)
+{
+    TransportScope t;
+    t.reply = replyWith(2);
+    EXPECT_EQ(removeFromBlacklist("04B8:0E1A"), Outcome::NotListed);
+    EXPECT_EQ(t.methods, QStringList{"RemoveDeviceFromIppusbBlacklist"});
+}
+
+TEST(ut_IppUsbClient, serviceNotOwnedByRootIsUnavailableAndNeverCalled)
+{
+    TransportScope t;
+    t.owned = false;
+    EXPECT_EQ(addToBlacklist("04b8:0e1a"), Outcome::Unavailable);
+    EXPECT_TRUE(t.methods.isEmpty());
+}
+
+TEST(ut_IppUsbClient, malformedIdSkipsOwnerCheckAndCall)
+{
+    TransportScope t;
+    EXPECT_EQ(addToBlacklist("bad"), Outcome::InvalidArgument);
+    EXPECT_EQ(t.ownerChecks, 0);
+    EXPECT_TRUE(t.methods.isEmpty());
+}
+
+TEST(ut_IppUsbClient, errorRepliesFromTheServiceAreMapped)
+{
+    TransportScope t;
+    t.reply = errorReply(QDBusError::AccessDenied);
+    EXPECT_EQ(addToBlacklist("04b8:0e1a"), Outcome::Denied);
+    t.reply = replyWith(3);
+    EXPECT_EQ(addToBlacklist("04b8:0e1a"), Outcome::Unavailable);   // ipp-usb not installed
+    t.reply = replyWith(99);
+    EXPECT_EQ(addToBlacklist("04b8:0e1a"), Outcome::Failed);
+}
+
+TEST(ut_IppUsbClient, resetTransportRestoresMalformedIdHandling)
+{
+    {
+        TransportScope t;
+    }
+    EXPECT_EQ(addToBlacklist("nope"), Outcome::InvalidArgument);
 }

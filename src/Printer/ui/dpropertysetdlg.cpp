@@ -1110,7 +1110,22 @@ void DPropertySetDlg::generalCombo_clicked(int index)
         }
     }
 
+    if (!pFocusedWidget) {
+        return;
+    }
+
     QString strWidgetName = pFocusedWidget->objectName();
+
+    // The page size combo is a general option: "Custom" opens the editor instead of
+    // becoming the selection.
+    if (strWidgetName == QLatin1String("PageSize_Combo")) {
+        QComboBox *pPageCombo = qobject_cast<QComboBox *>(pFocusedWidget);
+        if (pPageCombo && pPageCombo->itemData(index, COMBOITEMROLE::VALUEROLE).toString() == CUSTOMPAGECHOICE) {
+            openCustomPageDialog();
+            return;
+        }
+    }
+
     QString strChoice = changeComboSelectionByName(strWidgetName, index);
 
     if (strChoice == UNSUPPORTED) {

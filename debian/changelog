@@ -1,3 +1,10 @@
+dde-printer (1.0.20+agino5-1) unstable; urgency=medium
+
+  * Drop the 201-page Uniontech FAQ PDF and the help-popup entry that opened it. agino excludes /usr/share/deepin-manual/* (no deepin-manual viewer), so the file was never installed and the entry did nothing.
+  * Do not install the deepin-manual assets by default (INSTALL_MANUAL=1 at build time brings them back). The package shrinks from 11.6 MB to 1.6 MB.
+
+ -- agino Team <admin@aginoos.com>  Wed, 04 Nov 2026 01:00:00 +0800
+
 dde-printer (1.0.20+agino4-1) unstable; urgency=medium
 
   * Troubleshooting: the printer connection check and the "add printer by IP" probes (JetDirect, LPD) ignore the desktop proxy (all_proxy / system proxy), a printer is on the local network.

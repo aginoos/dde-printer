@@ -19,6 +19,7 @@
 
 #include <cups/cups.h>
 
+#include <functional>
 #include <memory>
 #include <limits.h>
 #include <stdlib.h>
@@ -33,6 +34,42 @@ static TBackendSchemes g_backendSchemes[] = {{"usb", CUPS_EXCLUDE_NONE},
     {"smfpnetdiscovery", CUPS_EXCLUDE_NONE},
     {CUPS_INCLUDE_ALL, "cups-brf,dcp,parallel,serial,hpfax"}
 };
+
+// Test seams. Every default is the original behaviour; tests replace them so
+// that no CUPS server, probe tool or well-known port is touched.
+// Lists the devices the CUPS server finds with the given backend filters.
+static std::function<map<string, map<string, string>>(vector<string> &, vector<string> &)> g_deviceLister =
+    [](vector<string> &exclude, vector<string> &include) {
+        map<string, map<string, string>> devs;
+        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
+        if (conPtr)
+            devs = conPtr->getDevices(&exclude, &include, 0, CUPS_TIMEOUT_DEFAULT);
+        return devs;
+    };
+// Lists the queues of the CUPS server running on a host (probe_ipp).
+static std::function<map<string, map<string, string>>(const QString &)> g_hostPrinterLister =
+    [](const QString &strHost) {
+        map<string, map<string, string>> printersMap;
+        /*连接指定ip的cups服务器，不是全局的默认ip*/
+        auto conPtr = CupsConnectionFactory::createConnection(strHost, 0, 0);
+        if (conPtr) {
+            // an unreachable host must not keep the UI spinning for the 30 s default
+            conPtr->setTimeout(IPP_PROBE_TIMEOUT_SECONDS);
+            try {
+                printersMap = conPtr->getPrinters();
+            } catch (const std::runtime_error &e) {
+                // not a CUPS server: the plain ipp endpoints are still probed afterwards
+                qCWarning(COMMONMOUDLE) << "runtime error:" << e.what();
+            }
+            conPtr->setTimeout(DEFAULT_HTTP_TIMEOUT_SECONDS);
+        }
+        return printersMap;
+    };
+static QString g_snmpBackendPath = "/usr/lib/cups/backend/snmp";
+static QString g_hpMakeUriProgram = "hp-makeuri";
+static int g_jetdirectPort = 9100;
+static int g_lpdPort = 515;
+static int g_ippServicePort = 631;
 
 RefreshDevicesTask::RefreshDevicesTask(int id, QObject *parent)
     : TaskInterface(id, parent)
@@ -228,9 +265,7 @@ int RefreshDevicesByBackendTask::doWork()
         }
 
         try {
-            auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-            if (conPtr)
-                devs = conPtr->getDevices(&exSechemes, &inSechemes, 0, CUPS_TIMEOUT_DEFAULT);
+            devs = g_deviceLister(exSechemes, inSechemes);
         } catch (const std::exception &ex) {
             qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
             continue;
@@ -338,7 +373,7 @@ int RefreshDevicesByHostTask::probe_snmp(const QString &strHost)
         qCWarning(COMMONMOUDLE) << "snmp probe skipped, invalid host";
         return -1;
     }
-    const SafeProcess::Result snmp = SafeProcess::run("/usr/lib/cups/backend/snmp", {strHost});
+    const SafeProcess::Result snmp = SafeProcess::run(g_snmpBackendPath, {strHost});
     const int iRet = snmp.status();
     if (0 == iRet) {
         QStringList retList = snmp.out.split("\n");
@@ -375,7 +410,7 @@ int RefreshDevicesByHostTask::probe_hplip(const QString &strHost)
         qCWarning(COMMONMOUDLE) << "hplip probe skipped, invalid host";
         return -1;
     }
-    const SafeProcess::Result makeuri = SafeProcess::run("hp-makeuri", {"-c", strHost});
+    const SafeProcess::Result makeuri = SafeProcess::run(g_hpMakeUriProgram, {"-c", strHost});
     const int iRet = makeuri.status();
     const QString strRet = makeuri.out.trimmed();
     if (0 == iRet && strRet.contains(":")) {
@@ -399,10 +434,10 @@ int RefreshDevicesByHostTask::probe_jetdirect(const QString &strHost)
 {
     qCDebug(COMMONMOUDLE) << "probe_jetdirect" << strHost;
     QTcpSocket socket;
-    socket.connectToHost(strHost, 9100);
+    socket.connectToHost(strHost, g_jetdirectPort);
     if (socket.waitForConnected(SOCKET_Timeout)) {
         TDeviceInfo info;
-        info.uriList << QString("socket://%1:%2").arg(strHost).arg(9100);
+        info.uriList << QString("socket://%1:%2").arg(strHost).arg(g_jetdirectPort);
         info.iType = InfoFrom_Host;
         // a raw socket carries no identity: ask the printer for manufacturer and model
         const QString identity = queryPjlIdentity(socket);
@@ -439,6 +474,9 @@ IppPtr requestPrinterInfo(http_t *http, const QString &printerUri, const char *r
                   static_cast<int>(sizeof(requested) / sizeof(requested[0])), nullptr, requested);
     return IppPtr(cupsDoRequest(http, request, resource));
 }
+
+// Seam: sends the Get-Printer-Attributes request for one endpoint. Tests replace it.
+std::function<IppPtr(http_t *, const QString &, const char *)> g_ippRequester = requestPrinterInfo;
 
 TDeviceInfo deviceFromIppResponse(ipp_t *response, const QString &printerUri)
 {
@@ -492,7 +530,7 @@ int RefreshDevicesByHostTask::probe_ipp_service(const QString &strHost)
         return -1;
     }
 
-    const int ippPort = 631;
+    const int ippPort = g_ippServicePort;
     int cancel = 0;
     HttpPtr http(httpConnect2(strHost.toUtf8().constData(), ippPort, nullptr, AF_UNSPEC,
                               HTTP_ENCRYPTION_IF_REQUESTED, 1, static_cast<int>(IPP_PROBE_TIMEOUT_SECONDS * 1000), &cancel));
@@ -507,7 +545,7 @@ int RefreshDevicesByHostTask::probe_ipp_service(const QString &strHost)
             return -1;
 
         const QString printerUri = QString("ipp://%1:%2%3").arg(ippHostForUri(strHost)).arg(ippPort).arg(path);
-        IppPtr response = requestPrinterInfo(http.get(), printerUri, path);
+        IppPtr response = g_ippRequester(http.get(), printerUri, path);
         if (!response || ippGetStatusCode(response.get()) > IPP_STATUS_OK_CONFLICTING) {
             qCDebug(COMMONMOUDLE) << "ipp path" << path << "failed:"
                                   << (response ? ippErrorString(ippGetStatusCode(response.get())) : cupsLastErrorString());
@@ -528,21 +566,8 @@ int RefreshDevicesByHostTask::probe_ipp_service(const QString &strHost)
 
 int RefreshDevicesByHostTask::probe_ipp(const QString &strHost)
 {
-    map<string, map<string, string>> printersMap;
     map<string, map<string, string>>::iterator itPrinters;
-    /*连接指定ip的cups服务器，不是全局的默认ip*/
-    auto conPtr = CupsConnectionFactory::createConnection(strHost, 0, 0);
-    if (conPtr) {
-        // an unreachable host must not keep the UI spinning for the 30 s default
-        conPtr->setTimeout(IPP_PROBE_TIMEOUT_SECONDS);
-        try {
-            printersMap = conPtr->getPrinters();
-        } catch (const std::runtime_error &e) {
-            // not a CUPS server: the plain ipp endpoints are still probed below
-            qCWarning(COMMONMOUDLE) << "runtime error:" << e.what();
-        }
-        conPtr->setTimeout(DEFAULT_HTTP_TIMEOUT_SECONDS);
-    }
+    map<string, map<string, string>> printersMap = g_hostPrinterLister(strHost);
 
     for (itPrinters = printersMap.begin(); itPrinters != printersMap.end(); itPrinters++) {
         TDeviceInfo info;
@@ -568,7 +593,7 @@ int RefreshDevicesByHostTask::probe_lpd(const QString &strHost)
 {
     qCDebug(COMMONMOUDLE) << "probe_lpd" << strHost;
     QTcpSocket socket;
-    socket.connectToHost(strHost, 515);
+    socket.connectToHost(strHost, g_lpdPort);
     if (socket.waitForConnected(SOCKET_Timeout)) {
         TDeviceInfo info;
         info.iType = InfoFrom_Host;

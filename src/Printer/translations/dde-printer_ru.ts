@@ -26,6 +26,10 @@
         <source> not found</source>
         <translation>не найдено</translation>
     </message>
+    <message>
+        <source>This driver needs administrator authorization. Please add the printer in the Print Manager.</source>
+        <translation>Для этого драйвера требуются права администратора. Добавьте принтер в Диспетчере печати.</translation>
+    </message>
 </context>
 <context>
     <name>CheckAttributes</name>
@@ -106,6 +110,14 @@
         <location filename="../../Common/vendor/ztroubleshoot.cpp" line="294"/>
         <source>The connection is valid</source>
         <translation>Соединение действительно</translation>
+    </message>
+    <message>
+        <source>The USB port is used by ipp-usb. Add the printer again with the driverless (network) option.</source>
+        <translation>Порт USB занят службой ipp-usb. Добавьте принтер снова, выбрав вариант без драйвера (по сети).</translation>
+    </message>
+    <message>
+        <source>ipp-usb reports a problem with this printer: %1</source>
+        <translation>ipp-usb сообщает о проблеме с этим принтером: %1</translation>
     </message>
 </context>
 <context>
@@ -687,6 +699,46 @@
         <source>Install Driver</source>
         <translation>Установить Драйвер</translation>
     </message>
+    <message>
+        <source>Canon capt printer does not support name modification.</source>
+        <translation>Принтер Canon CAPT не поддерживает изменение имени.</translation>
+    </message>
+    <message>
+        <source>Applying settings, please wait...</source>
+        <translation>Применение настроек, подождите...</translation>
+    </message>
+    <message>
+        <source>Failed to change the server settings. Please authenticate as an administrator and try again.</source>
+        <translation>Не удалось изменить настройки сервера. Пройдите аутентификацию от имени администратора и повторите попытку.</translation>
+    </message>
+    <message>
+        <source>Log out and log in again to turn on print notifications</source>
+        <translation>Выйдите из системы и войдите снова, чтобы включить уведомления о печати</translation>
+    </message>
+    <message>
+        <source>Default printer</source>
+        <translation>Принтер по умолчанию</translation>
+    </message>
+    <message>
+        <source>Shared printer</source>
+        <translation>Общий принтер</translation>
+    </message>
+    <message>
+        <source>Advanced sharing options</source>
+        <translation>Дополнительные параметры общего доступа</translation>
+    </message>
+    <message>
+        <source>Shared address:</source>
+        <translation>Общий адрес:</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Копировать</translation>
+    </message>
+    <message>
+        <source>Management Tools</source>
+        <translation>Инструменты управления</translation>
+    </message>
 </context>
 <context>
     <name>DPropertySetDlg</name>
@@ -893,6 +945,38 @@
         <source>Failed to install %1</source>
         <translation>Ошибка установки %1</translation>
     </message>
+    <message>
+        <source>The driver package information is invalid.</source>
+        <translation>Недопустимые сведения о пакете драйвера.</translation>
+    </message>
+    <message>
+        <source>The package %1 is not an accepted printer driver package.</source>
+        <translation>Пакет %1 не является допустимым пакетом драйвера принтера.</translation>
+    </message>
+    <message>
+        <source>The package %1 is already installed in a higher version (%2) than the driver requires (%3); installing the driver would downgrade it.</source>
+        <translation>Пакет %1 уже установлен в версии (%2), более новой, чем требуется драйверу (%3); установка драйвера приведёт к понижению версии.</translation>
+    </message>
+    <message>
+        <source>The driver package %1 is not available from the software sources.</source>
+        <translation>Пакет драйвера %1 недоступен в источниках программ.</translation>
+    </message>
+    <message>
+        <source>No package installer is available on this system.</source>
+        <translation>В системе нет доступного установщика пакетов.</translation>
+    </message>
+    <message>
+        <source>The driver installation was cancelled.</source>
+        <translation>Установка драйвера отменена.</translation>
+    </message>
+    <message>
+        <source>Administrator authorization was denied.</source>
+        <translation>В авторизации администратора отказано.</translation>
+    </message>
+    <message>
+        <source>The package %1 is already installed in a higher version (%2) than the driver requires (%3)</source>
+        <translation>Пакет %1 уже установлен в версии (%2), более новой, чем требуется драйверу (%3)</translation>
+    </message>
 </context>
 <context>
     <name>InstallPrinterWindow</name>
@@ -989,6 +1073,18 @@
         <location filename="../ui/installprinterwindow.cpp" line="244"/>
         <source>Installation failed</source>
         <translation>Установка не удалась</translation>
+    </message>
+    <message>
+        <source>Installing printer driver... Please do not disconnect. This may take a few minutes. Thank you for your patience.</source>
+        <translation>Установка драйвера принтера... Не отключайте устройство. Это может занять несколько минут. Благодарим за терпение.</translation>
+    </message>
+    <message>
+        <source>You have successfully added the printer.</source>
+        <translation>Принтер успешно добавлен.</translation>
+    </message>
+    <message>
+        <source>After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window.</source>
+        <translation>После успешной установки драйвера необходимо настроить принтер. Сделайте это в окне навигации.</translation>
     </message>
 </context>
 <context>
@@ -1266,7 +1362,7 @@
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="795"/>
         <source>Connect to the network and try again</source>
-        <translation type="unfinished"/>
+        <translation>Подключитесь к сети и повторите попытку</translation>
     </message>
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="797"/>
@@ -1276,13 +1372,37 @@
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="798"/>
         <source>Please try to install it manually or search its official website</source>
-        <translation type="unfinished"/>
+        <translation>Попробуйте установить его вручную или найдите на официальном сайте</translation>
     </message>
     <message>
         <location filename="../ui/printersearchwindow.cpp" line="808"/>
         <source>OK</source>
         <comment>button</comment>
         <translation>ОК</translation>
+    </message>
+    <message>
+        <source>Please enter an IP address or hostname</source>
+        <translation>Введите IP-адрес или имя хоста</translation>
+    </message>
+    <message>
+        <source>Windows Share</source>
+        <translation>Общий ресурс Windows</translation>
+    </message>
+    <message>
+        <source>Protocol</source>
+        <translation>Протокол</translation>
+    </message>
+    <message>
+        <source>Auto Select</source>
+        <translation>Выбирать автоматически</translation>
+    </message>
+    <message>
+        <source>%1 shared</source>
+        <translation>Общий доступ: %1</translation>
+    </message>
+    <message>
+        <source>(use %1 protocol)</source>
+        <translation>(использовать протокол %1)</translation>
     </message>
 </context>
 <context>
@@ -1326,27 +1446,27 @@
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="229"/>
         <source>Cyan</source>
-        <translation type="unfinished"/>
+        <translation>Голубой</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="230"/>
         <source>Dark-gray</source>
-        <translation type="unfinished"/>
+        <translation>Тёмно-серый</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="231"/>
         <source>Dark gray</source>
-        <translation type="unfinished"/>
+        <translation>Тёмно-серый</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="232"/>
         <source>Dark-yellow</source>
-        <translation type="unfinished"/>
+        <translation>Тёмно-жёлтый</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="233"/>
         <source>Dark yellow</source>
-        <translation type="unfinished"/>
+        <translation>Тёмно-жёлтый</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="234"/>
@@ -1356,7 +1476,7 @@
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="235"/>
         <source>Gray</source>
-        <translation type="unfinished"/>
+        <translation>Серый</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="236"/>
@@ -1366,47 +1486,47 @@
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="237"/>
         <source>Light-black</source>
-        <translation type="unfinished"/>
+        <translation>Светло-чёрный</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="238"/>
         <source>Light black</source>
-        <translation type="unfinished"/>
+        <translation>Светло-чёрный</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="239"/>
         <source>Light-cyan</source>
-        <translation type="unfinished"/>
+        <translation>Светло-голубой</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="240"/>
         <source>Light cyan</source>
-        <translation type="unfinished"/>
+        <translation>Светло-голубой</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="241"/>
         <source>Light-gray</source>
-        <translation type="unfinished"/>
+        <translation>Светло-серый</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="242"/>
         <source>Light gray</source>
-        <translation type="unfinished"/>
+        <translation>Светло-серый</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="243"/>
         <source>Light-magenta</source>
-        <translation type="unfinished"/>
+        <translation>Светло-пурпурный</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="244"/>
         <source>Light magenta</source>
-        <translation type="unfinished"/>
+        <translation>Светло-пурпурный</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="245"/>
         <source>Magenta</source>
-        <translation type="unfinished"/>
+        <translation>Пурпурный</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="246"/>
@@ -1426,7 +1546,7 @@
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="249"/>
         <source>White</source>
-        <translation type="unfinished"/>
+        <translation>Белый</translation>
     </message>
     <message>
         <location filename="../ui/dprintersupplyshowdlg.cpp" line="250"/>
@@ -1531,7 +1651,7 @@
     <message>
         <location filename="../ui/uisourcestring.h" line="43"/>
         <source>For more drivers, please refer to our official website: </source>
-        <translation type="unfinished"/>
+        <translation>Дополнительные драйверы см. на официальном сайте: </translation>
     </message>
     <message>
         <location filename="../util/ddestination.cpp" line="201"/>
@@ -1556,12 +1676,172 @@
     <message>
         <location filename="../ui/dprinterpropertytemplate.h" line="33"/>
         <source>Preferences</source>
-        <translation type="unfinished"/>
+        <translation>Настройки</translation>
     </message>
     <message>
         <location filename="../../Common/common.cpp" line="154"/>
         <source>%1 not found, please ask the administrator for help, or enter the printer IP address in URI of Properties.</source>
-        <translation type="unfinished"/>
+        <translation>%1 не найден, обратитесь за помощью к администратору или введите IP-адрес принтера в поле URI в свойствах.</translation>
+    </message>
+    <message>
+        <source>Printer problem help: </source>
+        <translation>Справка по проблемам с принтером: </translation>
+    </message>
+    <message>
+        <source>Unable to connect to printer. Please check the IP address or hostname and try again. Make sure the printer is turned on and the IP address or hostname is correct.</source>
+        <translation>Не удаётся подключиться к принтеру. Проверьте IP-адрес или имя хоста и повторите попытку. Убедитесь, что принтер включён, а IP-адрес или имя хоста указаны верно.</translation>
+    </message>
+    <message>
+        <source>The Canon capt printer has been added and is not allowed to be added again.</source>
+        <translation>Принтер Canon CAPT уже добавлен, повторное добавление не допускается.</translation>
+    </message>
+    <message>
+        <source>Help on adding and using printers</source>
+        <translation>Справка по добавлению и использованию принтеров</translation>
+    </message>
+    <message>
+        <source> not found, please ask the administrator for help</source>
+        <translation> не найден, обратитесь за помощью к администратору</translation>
+    </message>
+    <message>
+        <source>After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window.</source>
+        <translation>После успешной установки драйвера необходимо настроить принтер. Сделайте это в окне навигации.</translation>
+    </message>
+    <message>
+        <source>Print Driver Download Navigation</source>
+        <translation>Навигация по загрузке драйверов принтеров</translation>
+    </message>
+    <message>
+        <source>Instructions for Use</source>
+        <translation>Инструкция по использованию</translation>
+    </message>
+    <message>
+        <source>Can&apos;t print? Learn how to resolve</source>
+        <translation>Не удаётся печатать? Узнайте, как это исправить</translation>
+    </message>
+    <message>
+        <source>UOS Ecology</source>
+        <translation>Экосистема UOS</translation>
+    </message>
+    <message>
+        <source>Canon</source>
+        <translation>Canon</translation>
+    </message>
+    <message>
+        <source>Fuji Xerox</source>
+        <translation>Fuji Xerox</translation>
+    </message>
+    <message>
+        <source>Brother</source>
+        <translation>Brother</translation>
+    </message>
+    <message>
+        <source>Dascom</source>
+        <translation>Dascom</translation>
+    </message>
+    <message>
+        <source>Toshiba</source>
+        <translation>Toshiba</translation>
+    </message>
+    <message>
+        <source>Lenovo</source>
+        <translation>Lenovo</translation>
+    </message>
+    <message>
+        <source>1. Check printer connection</source>
+        <translation>1. Проверьте подключение принтера</translation>
+    </message>
+    <message>
+        <source>Please make sure the printer is turned on and properly connected to this computer. Please check if the printer power, USB or network connection is normal.</source>
+        <translation>Убедитесь, что принтер включён и правильно подключён к этому компьютеру. Проверьте питание принтера, а также USB- или сетевое подключение.</translation>
+    </message>
+    <message>
+        <source>2. Check the printer status</source>
+        <translation>2. Проверьте состояние принтера</translation>
+    </message>
+    <message>
+        <source>Please make sure that the printer is working normally, for example, there are no paper jams, ink cartridge exhaustion, etc.</source>
+        <translation>Убедитесь, что принтер работает нормально: например, нет замятия бумаги, не закончились чернила в картридже и т. п.</translation>
+    </message>
+    <message>
+        <source>3. Check the printer driver</source>
+        <translation>3. Проверьте драйвер принтера</translation>
+    </message>
+    <message>
+        <source>Make sure the printer driver is installed correctly. If the driver does not match the printer, it is recommended to try updating the driver or download the latest version of the driver from the printer manufacturer&apos;s official website.</source>
+        <translation>Убедитесь, что драйвер принтера установлен правильно. Если драйвер не подходит принтеру, рекомендуется обновить его или загрузить последнюю версию драйвера с официального сайта производителя принтера.</translation>
+    </message>
+    <message>
+        <source>4. Restart the print service</source>
+        <translation>4. Перезапустите службу печати</translation>
+    </message>
+    <message>
+        <source>Open System Monitor, switch to System Services, search for "cups" and try to restart the service.</source>
+        <translation>Откройте «Системный монитор», перейдите на вкладку «Системные службы», найдите «cups» и попробуйте перезапустить службу.</translation>
+    </message>
+    <message>
+        <source>5. Check the print queue</source>
+        <translation>5. Проверьте очередь печати</translation>
+    </message>
+    <message>
+        <source>In the print manager, find the printer in use and click the "Print Queue" icon button. Check for any pending print tasks, delete any pending tasks, and then try printing again.</source>
+        <translation>В Диспетчере печати найдите используемый принтер и нажмите кнопку-значок «Очередь печати». Проверьте наличие ожидающих заданий печати, удалите их и повторите печать.</translation>
+    </message>
+    <message>
+        <source>6. Run troubleshooting</source>
+        <translation>6. Запустите устранение неполадок</translation>
+    </message>
+    <message>
+        <source>In the print manager, find the printer in use, click the "Troubleshooting" icon button, run it and find solutions based on the detection results.</source>
+        <translation>В Диспетчере печати найдите используемый принтер, нажмите кнопку-значок «Устранение неполадок», запустите проверку и найдите решение по её результатам.</translation>
+    </message>
+    <message>
+        <source>7. Check the default printer settings</source>
+        <translation>7. Проверьте настройки принтера по умолчанию</translation>
+    </message>
+    <message>
+        <source>In Print Manager, find the printer you are using and confirm whether it is set as default.</source>
+        <translation>В Диспетчере печати найдите используемый принтер и убедитесь, что он назначен принтером по умолчанию.</translation>
+    </message>
+    <message>
+        <source>8. Clean up temporary printer files</source>
+        <translation>8. Очистите временные файлы принтера</translation>
+    </message>
+    <message>
+        <source>Open the terminal and enter the following commands in sequence and press Enter. This will stop the print service, delete the printer&apos;s temporary files, and finally restart the print service.</source>
+        <translation>Откройте терминал и по очереди введите следующие команды, нажимая Enter. Это остановит службу печати, удалит временные файлы принтера и затем снова запустит службу печати.</translation>
+    </message>
+    <message>
+        <source>9. Update your print manager or operating system</source>
+        <translation>9. Обновите Диспетчер печати или операционную систему</translation>
+    </message>
+    <message>
+        <source>Make sure your print manager or operating system is up to date. You can install the latest version of Print Manager through the App Store, and install the latest version of UOS through the Control Center-Update Module.</source>
+        <translation>Убедитесь, что Диспетчер печати или операционная система обновлены. Последнюю версию Диспетчера печати можно установить через Магазин приложений, а последнюю версию UOS — через модуль обновления Центра управления.</translation>
+    </message>
+    <message>
+        <source>10. Reinstall the printer</source>
+        <translation>10. Переустановите принтер</translation>
+    </message>
+    <message>
+        <source>In Print Manager, select the printer you are using, click the "Minus" button to remove it, and then try to reinstall the printer.</source>
+        <translation>В Диспетчере печати выберите используемый принтер, нажмите кнопку «Минус», чтобы удалить его, и затем попробуйте установить принтер заново.</translation>
+    </message>
+    <message>
+        <source>11. Check antivirus software</source>
+        <translation>11. Проверьте антивирусное ПО</translation>
+    </message>
+    <message>
+        <source>Some antivirus software may block printing operations. Try turning off your antivirus software and retesting the printing functionality.</source>
+        <translation>Некоторое антивирусное ПО может блокировать печать. Попробуйте отключить антивирус и повторите проверку печати.</translation>
+    </message>
+    <message>
+        <source>12. Check for hardware failure</source>
+        <translation>12. Проверьте оборудование на неисправность</translation>
+    </message>
+    <message>
+        <source>If none of the above steps solve the problem, you need to consider whether the printer has a hardware failure. It is recommended to try connecting to another computer to test, or contact the manufacturer&apos;s technical support.</source>
+        <translation>Если ни один из описанных шагов не решил проблему, возможно, неисправен сам принтер. Рекомендуется попробовать подключить его к другому компьютеру или обратиться в техническую поддержку производителя.</translation>
     </message>
 </context>
 <context>
@@ -1624,6 +1904,10 @@
         <source>Save debugging information for troubleshooting</source>
         <translation>Сохранить отладочную информацию для решения проблем</translation>
     </message>
+    <message>
+        <source>To share your printer, turn on these settings</source>
+        <translation>Чтобы предоставить общий доступ к принтеру, включите эти параметры</translation>
+    </message>
 </context>
 <context>
     <name>TroubleShootDialog</name>
@@ -1643,6 +1927,508 @@
         <source>OK</source>
         <comment>button</comment>
         <translation>ОК</translation>
+    </message>
+    <message>
+        <source>There is no information to copy.</source>
+        <translation>Нет данных для копирования.</translation>
+    </message>
+    <message>
+        <source>Copied</source>
+        <translation>Скопировано</translation>
+    </message>
+    <message>
+        <source>The repair service is not available.</source>
+        <translation>Служба восстановления недоступна.</translation>
+    </message>
+    <message>
+        <source>Can&apos;t print? Learn how to resolve</source>
+        <translation>Не удаётся печатать? Узнайте, как это исправить</translation>
+    </message>
+</context>
+<context>
+    <name>TroubleShootItem</name>
+    <message>
+        <source>Expand more</source>
+        <translation>Показать больше</translation>
+    </message>
+    <message>
+        <source>Troubleshoot: </source>
+        <translation>Устранение неполадок: </translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <comment>button</comment>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <source>Can&apos;t print? Learn how to resolve</source>
+        <translation>Не удаётся печатать? Узнайте, как это исправить</translation>
+    </message>
+</context>
+<context>
+    <name>CustomPageDialog</name>
+    <message>
+        <source>Custom Paper</source>
+        <translation>Нестандартная бумага</translation>
+    </message>
+    <message>
+        <source>Millimeters</source>
+        <translation>Миллиметры</translation>
+    </message>
+    <message>
+        <source>Inches</source>
+        <translation>Дюймы</translation>
+    </message>
+    <message>
+        <source>Paper Name</source>
+        <translation>Название бумаги</translation>
+    </message>
+    <message>
+        <source>Unit</source>
+        <translation>Единицы</translation>
+    </message>
+    <message>
+        <source>Width</source>
+        <translation>Ширина</translation>
+    </message>
+    <message>
+        <source>Height</source>
+        <translation>Высота</translation>
+    </message>
+    <message>
+        <source>Margins</source>
+        <translation>Поля</translation>
+    </message>
+    <message>
+        <source>Top</source>
+        <translation>Сверху</translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation>Слева</translation>
+    </message>
+    <message>
+        <source>Bottom</source>
+        <translation>Снизу</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation>Справа</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <comment>button</comment>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <comment>button</comment>
+        <translation>Сохранить</translation>
+    </message>
+    <message>
+        <source>Custom paper %1</source>
+        <translation>Нестандартная бумага %1</translation>
+    </message>
+    <message>
+        <source>Please enter a paper name</source>
+        <translation>Введите название бумаги</translation>
+    </message>
+    <message>
+        <source>The paper name is too long</source>
+        <translation>Название бумаги слишком длинное</translation>
+    </message>
+    <message>
+        <source>The paper name contains characters that are not allowed</source>
+        <translation>Название бумаги содержит недопустимые символы</translation>
+    </message>
+    <message>
+        <source>The paper width is outside the range supported by the printer</source>
+        <translation>Ширина бумаги выходит за пределы, поддерживаемые принтером</translation>
+    </message>
+    <message>
+        <source>The paper height is outside the range supported by the printer</source>
+        <translation>Высота бумаги выходит за пределы, поддерживаемые принтером</translation>
+    </message>
+    <message>
+        <source>Margins cannot be negative</source>
+        <translation>Поля не могут быть отрицательными</translation>
+    </message>
+    <message>
+        <source>The margins are larger than the paper</source>
+        <translation>Поля больше размера бумаги</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <comment>button</comment>
+        <translation>ОК</translation>
+    </message>
+    <message>
+        <source>Failed to save the custom paper sizes</source>
+        <translation>Не удалось сохранить размеры нестандартной бумаги</translation>
+    </message>
+</context>
+<context>
+    <name>SmbPrinterPage</name>
+    <message>
+        <source>Find Windows Shared Printer</source>
+        <translation>Поиск общего принтера Windows</translation>
+    </message>
+    <message>
+        <source>Enter IP Address</source>
+        <translation>Введите IP-адрес</translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <comment>button</comment>
+        <translation>Обзор</translation>
+    </message>
+    <message>
+        <source>No printers found</source>
+        <translation>Принтеры не найдены</translation>
+    </message>
+    <message>
+        <source>Enter IP, then Browse</source>
+        <translation>Введите IP-адрес и нажмите «Обзор»</translation>
+    </message>
+    <message>
+        <source>Authentication Completed</source>
+        <translation>Аутентификация выполнена</translation>
+    </message>
+    <message>
+        <source>Select Printer</source>
+        <translation>Выбор принтера</translation>
+    </message>
+    <message>
+        <source>Please enter a valid IP address or hostname</source>
+        <translation>Введите корректный IP-адрес или имя хоста</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>ОК</translation>
+    </message>
+</context>
+<context>
+    <name>IppUsbSwitch</name>
+    <message>
+        <source>The ipp-usb printer is not published on the network, so it cannot be added with the driverless solution.</source>
+        <translation>Принтер ipp-usb не опубликован в сети, поэтому его нельзя добавить с помощью решения без драйвера.</translation>
+    </message>
+    <message>
+        <source>ipp-usb does not list this printer.</source>
+        <translation>ipp-usb не содержит этот принтер в списке.</translation>
+    </message>
+    <message>
+        <source>Failed to add the printer to ipp-usb blacklist.</source>
+        <translation>Не удалось добавить принтер в чёрный список ipp-usb.</translation>
+    </message>
+    <message>
+        <source>The USB address of the printer did not appear after switching off ipp-usb.</source>
+        <translation>USB-адрес принтера не появился после отключения ipp-usb.</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Username</source>
+        <translation>Имя пользователя</translation>
+    </message>
+    <message>
+        <source>Domain</source>
+        <translation>Домен</translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation>Пароль</translation>
+    </message>
+    <message>
+        <source>Remember Password</source>
+        <translation>Запомнить пароль</translation>
+    </message>
+    <message>
+        <source>Connection Identity</source>
+        <translation>Тип подключения</translation>
+    </message>
+    <message>
+        <source>Guest</source>
+        <translation>Гость</translation>
+    </message>
+    <message>
+        <source>Registered User</source>
+        <translation>Зарегистрированный пользователь</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <source>Connect</source>
+        <translation>Подключиться</translation>
+    </message>
+    <message>
+        <source>Authentication Required for %1</source>
+        <translation>Требуется аутентификация для %1</translation>
+    </message>
+    <message>
+        <source>Authentication required to connect to printer "%1"</source>
+        <translation>Для подключения к принтеру «%1» требуется аутентификация</translation>
+    </message>
+</context>
+<context>
+    <name>RefreshDevicesSmbTask</name>
+    <message>
+        <source>Please enter a valid IP address or hostname</source>
+        <translation>Введите корректный IP-адрес или имя хоста</translation>
+    </message>
+    <message>
+        <source>Windows sharing support (libsmbclient) is not available</source>
+        <translation>Поддержка общего доступа Windows (libsmbclient) недоступна</translation>
+    </message>
+    <message>
+        <source>Failed to access %1. Please check if the username or password is correct, and ensure the Windows sharing service is configured correctly.</source>
+        <translation>Не удалось получить доступ к %1. Проверьте правильность имени пользователя и пароля и убедитесь, что служба общего доступа Windows настроена правильно.</translation>
+    </message>
+</context>
+<context>
+    <name>AddCanonCAPTPrinter</name>
+    <message>
+        <source>The Canon driver needs administrator authorization. Please add the printer in the Print Manager.</source>
+        <translation>Для драйвера Canon требуются права администратора. Добавьте принтер в Диспетчере печати.</translation>
+    </message>
+    <message>
+        <source>Canon capt install fail.</source>
+        <translation>Не удалось установить Canon CAPT.</translation>
+    </message>
+</context>
+<context>
+    <name>TroubleShootJob</name>
+    <message>
+        <source>The repair has been completed.</source>
+        <translation>Восстановление завершено.</translation>
+    </message>
+    <message>
+        <source>The repair did not succeed.</source>
+        <translation>Восстановить не удалось.</translation>
+    </message>
+</context>
+<context>
+    <name>CheckCupsErrorLog</name>
+    <message>
+        <source>Check CUPS error log</source>
+        <translation>Проверка журнала ошибок CUPS</translation>
+    </message>
+    <message>
+        <source>View log</source>
+        <translation>Просмотреть журнал</translation>
+    </message>
+    <message>
+        <source>Copy info</source>
+        <translation>Копировать сведения</translation>
+    </message>
+    <message>
+        <source>One-click fix</source>
+        <translation>Исправить в один клик</translation>
+    </message>
+    <message>
+        <source>Possible cause: %1</source>
+        <translation>Возможная причина: %1</translation>
+    </message>
+    <message>
+        <source>Recommended action: %1</source>
+        <translation>Рекомендуемое действие: %1</translation>
+    </message>
+    <message>
+        <source>The print service has been repaired.</source>
+        <translation>Служба печати восстановлена.</translation>
+    </message>
+    <message>
+        <source>The print service could not be repaired.</source>
+        <translation>Не удалось восстановить службу печати.</translation>
+    </message>
+    <message>
+        <source>Checking CUPS error log...</source>
+        <translation>Проверка журнала ошибок CUPS...</translation>
+    </message>
+    <message>
+        <source>The CUPS error log could not be checked</source>
+        <translation>Не удалось проверить журнал ошибок CUPS</translation>
+    </message>
+    <message>
+        <source>No CUPS error found</source>
+        <translation>Ошибок CUPS не найдено</translation>
+    </message>
+</context>
+<context>
+    <name>CheckSpecificModel</name>
+    <message>
+        <source>Check model-specific issues</source>
+        <translation>Проверка проблем, специфичных для модели</translation>
+    </message>
+    <message>
+        <source>One-click fix</source>
+        <translation>Исправить в один клик</translation>
+    </message>
+    <message>
+        <source>Checking model-specific issues...</source>
+        <translation>Проверка проблем, специфичных для модели...</translation>
+    </message>
+    <message>
+        <source>No model-specific issue found</source>
+        <translation>Проблем, специфичных для модели, не найдено</translation>
+    </message>
+    <message>
+        <source>Model-specific issues were found</source>
+        <translation>Обнаружены проблемы, специфичные для модели</translation>
+    </message>
+</context>
+<context>
+    <name>CanonI386</name>
+    <message>
+        <source>32-bit support required</source>
+        <translation>Требуется поддержка 32-разрядных программ</translation>
+    </message>
+    <message>
+        <source>The Canon CAPT driver needs 32-bit (i386) runtime libraries. 32-bit support will be enabled and the required libraries installed. This needs the administrator password.</source>
+        <translation>Для драйвера Canon CAPT нужны 32-разрядные (i386) библиотеки времени выполнения. Будет включена поддержка 32-разрядных программ и установлены необходимые библиотеки. Для этого требуется пароль администратора.</translation>
+    </message>
+    <message>
+        <source>Enable and Install</source>
+        <translation>Включить и установить</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <source>The Canon printer was not added because the 32-bit (i386) support it needs was not enabled.</source>
+        <translation>Принтер Canon не добавлен, так как не была включена необходимая ему поддержка 32-разрядных (i386) программ.</translation>
+    </message>
+    <message>
+        <source>Could not enable 32-bit (i386) support.</source>
+        <translation>Не удалось включить поддержку 32-разрядных (i386) программ.</translation>
+    </message>
+    <message>
+        <source>Could not update the package lists. Please check the network connection and try again.</source>
+        <translation>Не удалось обновить списки пакетов. Проверьте подключение к сети и повторите попытку.</translation>
+    </message>
+    <message>
+        <source>Could not install the 32-bit libraries needed by the Canon driver.</source>
+        <translation>Не удалось установить 32-разрядные библиотеки, необходимые драйверу Canon.</translation>
+    </message>
+    <message>
+        <source>Another program is using the package manager. Please try again in a few minutes.</source>
+        <translation>Менеджер пакетов занят другой программой. Повторите попытку через несколько минут.</translation>
+    </message>
+</context>
+<context>
+    <name>CanonI386Prompt</name>
+    <message>
+        <source>The repair service is not available.</source>
+        <translation>Служба восстановления недоступна.</translation>
+    </message>
+    <message>
+        <source>The 32-bit support could not be set up.</source>
+        <translation>Не удалось настроить поддержку 32-разрядных программ.</translation>
+    </message>
+</context>
+<context>
+    <name>ModelFixMap</name>
+    <message>
+        <source>The Canon LBP2900 print service could not be repaired. Please try again.</source>
+        <translation>Не удалось восстановить службу печати Canon LBP2900. Повторите попытку.</translation>
+    </message>
+</context>
+<context>
+    <name>Common</name>
+    <message>
+        <source>Administrator authorization was denied.</source>
+        <translation>В авторизации администратора отказано.</translation>
+    </message>
+    <message>
+        <source>The Canon capt printer has been added and is not allowed to be added again.</source>
+        <translation>Принтер Canon CAPT уже добавлен, повторное добавление не допускается.</translation>
+    </message>
+    <message>
+        <source>The Canon driver could not be configured.</source>
+        <translation>Не удалось настроить драйвер Canon.</translation>
+    </message>
+    <message>
+        <source>The printer management service did not respond in time.</source>
+        <translation>Служба управления принтерами не ответила вовремя.</translation>
+    </message>
+    <message>
+        <source>The printer management service is not available.</source>
+        <translation>Служба управления принтерами недоступна.</translation>
+    </message>
+    <message>
+        <source>The printer name, driver or device information is not valid for the Canon driver.</source>
+        <translation>Имя принтера, драйвер или сведения об устройстве недопустимы для драйвера Canon.</translation>
+    </message>
+    <message>
+        <source>The printer service is busy. Please try again later.</source>
+        <translation>Служба принтера занята. Повторите попытку позже.</translation>
+    </message>
+</context>
+<context>
+    <name>CupsErrorMap</name>
+    <message>
+        <source>CUPS reported an error</source>
+        <translation>CUPS сообщила об ошибке</translation>
+    </message>
+    <message>
+        <source>Copy the information and contact support.</source>
+        <translation>Скопируйте сведения и обратитесь в службу поддержки.</translation>
+    </message>
+    <message>
+        <source>The print service logged an error for the last job.</source>
+        <translation>Служба печати записала ошибку при последнем задании.</translation>
+    </message>
+</context>
+<context>
+    <name>DriverInstallConfirm</name>
+    <message>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <source>Install</source>
+        <translation>Установить</translation>
+    </message>
+    <message>
+        <source>Install the following driver packages?</source>
+        <translation>Установить следующие пакеты драйверов?</translation>
+    </message>
+</context>
+<context>
+    <name>PrinterUi</name>
+    <message>
+        <source>Local Match</source>
+        <translation>Локальный подбор</translation>
+    </message>
+    <message>
+        <source>Online Match</source>
+        <translation>Подбор в сети</translation>
+    </message>
+    <message>
+        <source>Use Driverless Solution</source>
+        <translation>Использовать решение без драйвера</translation>
+    </message>
+</context>
+<context>
+    <name>ManagementToolWidget</name>
+    <message>
+        <source>Management Tools</source>
+        <translation>Инструменты управления</translation>
+    </message>
+</context>
+<context>
+    <name>PrinterHelpWindow</name>
+    <message>
+        <source>Learn how to fix issues with not being able to print</source>
+        <translation>Узнайте, как устранить проблемы с печатью</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Копировать</translation>
     </message>
 </context>
 </TS>

@@ -6,10 +6,14 @@
 #define ADDPRINTER_P_H
 
 #include "addprinter.h"
+#include "packageutil.h"
 #include "zdevicemanager.h"
 
 #include <QProcess>
 #include <QDBusMessage>
+#include <QDBusPendingCall>
+
+#include <functional>
 
 class PrinterServerInterface;
 
@@ -21,6 +25,25 @@ typedef struct tagPackageInfo {
 } TPackageInfo;
 
 class QDBusPendingCallWatcher;
+
+// Replaceable environment of InstallInterface (tests). Any empty member keeps
+// the real behaviour: PackageUtil queries, the lastore calls on the system
+// bus, pkexec from the fixed tool directories, the real retry delays.
+namespace InstallBackend {
+struct Hooks
+{
+    std::function<QString(const QString &)> installedVersion;
+    std::function<PackageUtil::VersionOrder(const QString &, const QString &)> compareVersions;
+    std::function<bool(const QString &, const QString &)> isInstallable;
+    std::function<QString()> lastoreService;
+    std::function<QString()> pkexecPath;
+    std::function<QDBusPendingCall(const QDBusMessage &)> asyncCall;                 // system bus call
+    std::function<bool(const QString &service, const QString &path, QObject *receiver, const char *slot)> connectSignal;
+    std::function<int(int delayMs)> retryDelay;                                      // maps the wait before a resubmit
+};
+void set(const Hooks &hooks);
+void reset();
+}  // namespace InstallBackend
 
 // Installs driver packages through lastore (D-Bus) or, on systems without it,
 // through pkexec + apt-get. All waiting is event driven; nothing blocks the UI.

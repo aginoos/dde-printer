@@ -41,6 +41,9 @@ LastoreEndpoint endpointFor(const QString &service)
     return {"/com/deepin/lastore", "com.deepin.lastore.Manager"};
 }
 
+PackageUtil::VersionOrder compareOf(const QString &lhs, const QString &rhs);
+bool installableOf(const QString &package, const QString &version);
+
 bool isDpkgLockError(const QString &text)
 {
     return text.contains("could not get lock", Qt::CaseInsensitive)
@@ -65,10 +68,64 @@ QVariantMap changedProperties(const QDBusMessage &msg)
     if (arguments.count() != 3) {
         return QVariantMap();
     }
+    if (arguments[1].metaType() == QMetaType::fromType<QVariantMap>()) {
+        return arguments[1].toMap();   // already unmarshalled (tests, local senders)
+    }
     return qdbus_cast<QVariantMap>(arguments[1].value<QDBusArgument>());
 }
 
+InstallBackend::Hooks &hooks()
+{
+    static InstallBackend::Hooks instance;
+    return instance;
+}
+
+QString installedVersionOf(const QString &package)
+{
+    return hooks().installedVersion ? hooks().installedVersion(package) : PackageUtil::installedVersion(package);
+}
+
+QDBusPendingCall callSystemBus(const QDBusMessage &msg)
+{
+    return hooks().asyncCall ? hooks().asyncCall(msg) : callSystemBus(msg);
+}
+
+bool connectToJob(const QString &service, const QString &path, QObject *receiver, const char *slot)
+{
+    if (hooks().connectSignal) {
+        return hooks().connectSignal(service, path, receiver, slot);
+    }
+    return QDBusConnection::systemBus().connect(service, path, kPropertiesInterface, "PropertiesChanged", receiver, slot);
+}
+
+PackageUtil::VersionOrder compareOf(const QString &lhs, const QString &rhs)
+{
+    return hooks().compareVersions ? hooks().compareVersions(lhs, rhs) : PackageUtil::compareVersions(lhs, rhs);
+}
+
+bool installableOf(const QString &package, const QString &version)
+{
+    return hooks().isInstallable ? hooks().isInstallable(package, version) : PackageUtil::isInstallable(package, version);
+}
+
+int resubmitDelay(int delayMs)
+{
+    return hooks().retryDelay ? hooks().retryDelay(delayMs) : delayMs;
+}
+
 }  // namespace
+
+namespace InstallBackend {
+void set(const Hooks &newHooks)
+{
+    hooks() = newHooks;
+}
+
+void reset()
+{
+    hooks() = Hooks();
+}
+}  // namespace InstallBackend
 
 InstallInterface::InstallInterface(QObject *parent)
     : QObject(parent)
@@ -125,10 +182,10 @@ bool InstallInterface::collectPackagesToInstall()
             return false;
         }
 
-        const QString installed = PackageUtil::installedVersion(package.packageName);
+        const QString installed = installedVersionOf(package.packageName);
         if (!installed.isEmpty()) {
             const bool satisfied = package.packageVer.isEmpty()
-                || PackageUtil::compareVersions(installed, package.packageVer) != PackageUtil::VersionOrder::Older;
+                || compareOf(installed, package.packageVer) != PackageUtil::VersionOrder::Older;
             if (satisfied) {
                 qCInfo(COMMONMOUDLE) << package.packageName << "already installed, version" << installed << "requested" << package.packageVer;
                 continue;
@@ -149,7 +206,7 @@ bool InstallInterface::hasUnavailablePackage(QString &missing) const
         if (name.contains("hplip-plugin")) {
             continue;
         }
-        if (!PackageUtil::isInstallable(name, versionOf(name))) {
+        if (!installableOf(name, versionOf(name))) {
             missing = name;
             return true;
         }
@@ -162,12 +219,12 @@ bool InstallInterface::hasUnavailablePackage(QString &missing) const
 bool InstallInterface::detectDowngrade()
 {
     for (const QString &name : m_installPackages) {
-        const QString installed = PackageUtil::installedVersion(name);
+        const QString installed = installedVersionOf(name);
         const QString wanted = versionOf(name);
         if (installed.isEmpty() || wanted.isEmpty()) {
             continue;
         }
-        if (PackageUtil::compareVersions(installed, wanted) == PackageUtil::VersionOrder::Newer) {
+        if (compareOf(installed, wanted) == PackageUtil::VersionOrder::Newer) {
             qCWarning(COMMONMOUDLE) << "refusing to downgrade" << name << "installed version" << installed
                                     << "requested version" << wanted;
             failWith(tr("The package %1 is already installed in a higher version (%2) than the driver requires (%3); "
@@ -181,7 +238,7 @@ bool InstallInterface::detectDowngrade()
 void InstallInterface::startInstallPackages(bool allowRefresh)
 {
     m_lockRetries = m_timeoutRetries = m_disconnectRetries = 0;
-    m_service = PackageUtil::lastoreService();
+    m_service = hooks().lastoreService ? hooks().lastoreService() : PackageUtil::lastoreService();
 
     if (!collectPackagesToInstall()) {
         return;
@@ -210,7 +267,7 @@ void InstallInterface::requestSourceRefresh()
 {
     const LastoreEndpoint ep = endpointFor(m_service);
     const QDBusMessage msg = QDBusMessage::createMethodCall(m_service, ep.path, ep.interface, "UpdateSource");
-    auto *watcher = new QDBusPendingCallWatcher(QDBusConnection::systemBus().asyncCall(msg, kCallTimeoutMs), this);
+    auto *watcher = new QDBusPendingCallWatcher(callSystemBus(msg), this);
     connect(watcher, &QDBusPendingCallWatcher::finished, this, &InstallInterface::onUpdateCallFinished);
 }
 
@@ -224,8 +281,7 @@ void InstallInterface::onUpdateCallFinished(QDBusPendingCallWatcher *watcher)
     const QDBusPendingReply<QDBusObjectPath> reply = *watcher;
     if (reply.isValid()) {
         m_updatePath = reply.value().path();
-        if (QDBusConnection::systemBus().connect(m_service, m_updatePath, kPropertiesInterface, "PropertiesChanged",
-                                                 this, SLOT(updateSourceChanged(QDBusMessage)))) {
+        if (connectToJob(m_service, m_updatePath, this, SLOT(updateSourceChanged(QDBusMessage)))) {
             qCInfo(COMMONMOUDLE) << "Start Update";
             return;
         }
@@ -258,12 +314,12 @@ void InstallInterface::updateSourceChanged(const QDBusMessage &msg)
     m_strUpdateStatus.clear();
     disconnectUpdate();
     // A failed refresh still lets the install run against the current index.
-    QTimer::singleShot(1000, this, [this]() { startInstallPackages(false); });
+    QTimer::singleShot(resubmitDelay(1000), this, [this]() { startInstallPackages(false); });
 }
 
 void InstallInterface::scheduleSubmit(int delayMs)
 {
-    QTimer::singleShot(delayMs, this, [this]() {
+    QTimer::singleShot(resubmitDelay(delayMs), this, [this]() {
         if (!m_bQuit) {
             submitInstall();
         }
@@ -280,7 +336,7 @@ void InstallInterface::submitInstall()
     const LastoreEndpoint ep = endpointFor(m_service);
     QDBusMessage msg = QDBusMessage::createMethodCall(m_service, ep.path, ep.interface, "InstallPackage");
     msg << QString() << m_installPackages.join(" ");  // names were validated above
-    auto *watcher = new QDBusPendingCallWatcher(QDBusConnection::systemBus().asyncCall(msg, kCallTimeoutMs), this);
+    auto *watcher = new QDBusPendingCallWatcher(callSystemBus(msg), this);
     connect(watcher, &QDBusPendingCallWatcher::finished, this, &InstallInterface::onInstallCallFinished);
 }
 
@@ -294,8 +350,7 @@ void InstallInterface::onInstallCallFinished(QDBusPendingCallWatcher *watcher)
     const QDBusPendingReply<QDBusObjectPath> reply = *watcher;
     if (reply.isValid()) {
         m_jobPath = reply.value().path();
-        if (QDBusConnection::systemBus().connect(m_service, m_jobPath, kPropertiesInterface, "PropertiesChanged",
-                                                 this, SLOT(propertyChanged(QDBusMessage)))) {
+        if (connectToJob(m_service, m_jobPath, this, SLOT(propertyChanged(QDBusMessage)))) {
             qCDebug(COMMONMOUDLE) << "Start install " << m_installPackages;
             return;
         }
@@ -368,7 +423,7 @@ void InstallInterface::propertyChanged(const QDBusMessage &msg)
 
 void InstallInterface::startAptInstall()
 {
-    const QString pkexec = SafeProcess::findTool("pkexec");
+    const QString pkexec = hooks().pkexecPath ? hooks().pkexecPath() : SafeProcess::findTool("pkexec");
     if (pkexec.isEmpty()) {
         failWith(tr("No package installer is available on this system."));
         return;

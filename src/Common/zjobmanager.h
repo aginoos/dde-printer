@@ -11,7 +11,10 @@
 #include <QMap>
 #include <QVariant>
 
+#include <functional>
 #include <map>
+#include <string>
+#include <vector>
 using namespace std;
 
 #define JOB_ALL "all jobs"
@@ -27,6 +30,32 @@ enum {
 #define HIGHEST_Priority 100
 
 #define PrintTestTitle "Test page"
+
+// The calls JobManager makes to the CUPS server and the session service. The
+// default implementation talks to the server configured in the settings; tests
+// install their own. Methods may throw std::exception, JobManager reports that
+// as an error code. Without a reachable server the default does nothing.
+class JobBackend
+{
+public:
+    virtual ~JobBackend() = default;
+
+    virtual void getJobs(map<int, map<string, string>> &jobs, const char *which, int myJobs,
+                         int limit, int firstJobId, const vector<string> *attrs);
+    // false when no server could be reached
+    virtual bool cancelJob(int jobId, int purge);
+    virtual bool cancelAllJobs(const char *dest);
+    virtual void holdJob(int jobId);
+    virtual void releaseJob(int jobId);
+    virtual void restartJob(int jobId);
+    virtual void moveJob(const char *destUri, int jobId, const char *srcUri);
+    virtual void setJobPriority(int jobId, int priority);
+    virtual void printTestPage(const char *dest, const char *file, const char *title,
+                               const char *format, int &jobId);
+    virtual QString testPageFile() const;
+    // Check whether the notification service dropped a job; empty when the service is absent.
+    virtual std::function<bool(int)> purgedCheck();
+};
 
 class JobManager : public QObject
 {
@@ -80,11 +109,20 @@ public:
 
     bool isCompletedState(int state);
 
+    // Replaces the backend and returns the previous one; nullptr selects the
+    // default again. The caller keeps ownership.
+    JobBackend *setBackend(JobBackend *backend);
+
 protected:
     JobManager()
         : QObject(nullptr)
     {
     }
+
+private:
+    JobBackend *backend();
+
+    JobBackend *m_backend = nullptr;
 };
 
 #define g_jobManager JobManager::getInstance()

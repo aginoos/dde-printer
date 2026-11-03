@@ -226,6 +226,10 @@
         <source>%1 %2, reason: %3</source>
         <translation>%1%2，原因：%3</translation>
     </message>
+    <message>
+        <source>%1 printed successfully, please take away the paper in time!</source>
+        <translation>%1 打印完成，請及時取走紙張！</translation>
+    </message>
 </context>
 <context>
     <name>DriverManager</name>
@@ -304,6 +308,10 @@
         <source>%1 not found, please ask the administrator for help, or enter the printer IP address in URI of Properties.</source>
         <translation>%1無法解析，請聯繫管理員，或前往屬性-URI手動輸入打印機IP</translation>
     </message>
+    <message>
+        <source> not found, please ask the administrator for help</source>
+        <translation>未找到，請聯絡管理員尋求協助</translation>
+    </message>
 </context>
 <context>
     <name>USBThread</name>
@@ -321,6 +329,83 @@
         <location filename="../usbprinter/usbthread.cpp" line="310"/>
         <source>Configuration failed. Click to add the printer %1.</source>
         <translation>配置失敗，請點擊手動添加%1</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Username</source>
+        <translation>用戶名</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Domain</source>
+        <translation>域</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Password</source>
+        <translation>密碼</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Remember Password</source>
+        <translation>記住密碼</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Connection Identity</source>
+        <translation>連接身份</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Guest</source>
+        <translation>訪客</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Registered User</source>
+        <translation>註冊用戶</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Connect</source>
+        <translation>連接</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Authentication Required for %1</source>
+        <translation>連接 %1 需要驗證</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Authentication required to connect to printer &quot;%1&quot;</source>
+        <translation>連接打印機「%1」需要驗證</translation>
     </message>
 </context>
 </TS>

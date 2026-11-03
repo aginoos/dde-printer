@@ -226,6 +226,10 @@
         <source>%1 %2, reason: %3</source>
         <translation>%1%2，原因：%3</translation>
     </message>
+    <message>
+        <source>%1 printed successfully, please take away the paper in time!</source>
+        <translation>%1 列印完成，請及時取走紙張！</translation>
+    </message>
 </context>
 <context>
     <name>DriverManager</name>
@@ -303,6 +307,10 @@
         <location filename="../../Common/common.cpp" line="154"/>
         <source>%1 not found, please ask the administrator for help, or enter the printer IP address in URI of Properties.</source>
         <translation>%1無法解析，請聯絡管理員，或前往屬性-URI手動輸入印表機IP</translation>
+    </message>
+    <message>
+        <source> not found, please ask the administrator for help</source>
+        <translation>未找到，請聯絡管理員尋求協助</translation>
     </message>
 </context>
 <context>

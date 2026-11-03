@@ -712,6 +712,11 @@
         <source>Failed to change the server settings. Please authenticate as an administrator and try again.</source>
         <translation>修改伺服器設定失敗，請以管理員身分驗證後重試。</translation>
     </message>
+    <message>
+        <location filename="../ui/dprintersshowwindow.cpp" line="635"/>
+        <source>Log out and log in again to turn on print notifications</source>
+        <translation>登出並重新登入後才會有列印通知</translation>
+    </message>
 </context>
 <context>
     <name>DPropertySetDlg</name>

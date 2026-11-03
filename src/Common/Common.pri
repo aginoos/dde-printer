@@ -17,6 +17,7 @@ HEADERS +=  \
     $$PWD/ippusbswitch.h \
     $$PWD/usbautoaddconfig.h \
     $$PWD/driverplatformconfig.h \
+    $$PWD/pluginstatus.h \
     $$PWD/qtconvert.h \
     $$PWD/zsettings.h \
     $$PWD/cupsconnectionfactory.h \
@@ -58,6 +59,7 @@ SOURCES +=  \
     $$PWD/ippusbswitch.cpp \
     $$PWD/usbautoaddconfig.cpp \
     $$PWD/driverplatformconfig.cpp \
+    $$PWD/pluginstatus.cpp \
     $$PWD/safeprocess.cpp \
     $$PWD/canoni386.cpp \
     $$PWD/secretstore.cpp \

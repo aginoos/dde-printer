@@ -322,6 +322,7 @@ private:
     */
 
     void showEvent(QShowEvent *event) override;
+    void warnWhenPluginNotLoaded();
 
     /**
     * @projectName   Printer

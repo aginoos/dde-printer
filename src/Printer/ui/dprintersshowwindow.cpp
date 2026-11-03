@@ -14,6 +14,7 @@
 #include "config.h"
 #include "cupsconnectionfactory.h"
 #include "common.h"
+#include "pluginstatus.h"
 #include "secretstore.h"
 
 #include "printertestpagedialog.h"
@@ -25,6 +26,7 @@
 
 #include <DDialog>
 #include <DMessageBox>
+#include <DMessageManager>
 #include <DSettingsDialog>
 #include <DTitlebar>
 #include <DApplication>
@@ -618,6 +620,23 @@ void DPrintersShowWindow::showAdminToolsSlot()
     toolWidget.exec();
 }
 
+// The plugin that wakes the helper is read by deepin-service-manager only when it starts, so right after
+// an install or upgrade it is missing until the next login. Say so once, with a message that goes away
+// by itself; a session in which the plugin is loaded never sees anything. The bus name can appear a
+// few seconds after login, so the check is repeated once before speaking up.
+void DPrintersShowWindow::warnWhenPluginNotLoaded()
+{
+    if (!PluginStatus::needsRelogin(PluginStatus::metadataInstalled(), PluginStatus::serviceRegistered()))
+        return;
+    QTimer::singleShot(6000, this, [this]() {
+        if (!PluginStatus::needsRelogin(PluginStatus::metadataInstalled(), PluginStatus::serviceRegistered()))
+            return;
+        qCWarning(COMMONMOUDLE) << "the printer plugin of deepin-service-manager is not loaded";
+        DMessageManager::instance()->sendMessage(this, QIcon(":/images/warning_logo.svg"),
+                                                 tr("Log out and log in again to turn on print notifications"));
+    });
+}
+
 void DPrintersShowWindow::showEvent(QShowEvent *event)
 {
     DMainWindow::showEvent(event);
@@ -650,6 +669,8 @@ void DPrintersShowWindow::showEvent(QShowEvent *event)
             qCInfo(COMMONMOUDLE) << "start dde-printer-helper";
             QProcess::startDetached("/usr/bin/dde-printer-helper", QStringList());
         }
+
+        warnWhenPluginNotLoaded();
 
         //连接dbus信号
         if (!QDBusConnection::sessionBus().connect(SERVICE_INTERFACE_NAME, SERVICE_INTERFACE_PATH, SERVICE_INTERFACE_NAME,

@@ -39,6 +39,8 @@
 #include <QSqlQuery>
 #include <QtConcurrent/QtConcurrent>
 
+#include <functional>
+
 #include <map>
 
 #include "ippusbpolicy.h"
@@ -54,21 +56,46 @@ static QSet<QString> g_offlineDriver;
 
 static int g_iStatus = TStat_None;
 
-static const QString g_dbpath = "/opt/deepin/dde-printer/printer-drivers/deb-repo";
+// Seam: lists every PPD the CUPS server knows. Tests replace it so no CUPS
+// server is contacted. The default asks the configured server as before; an
+// unreachable server gives an empty list.
+static std::function<map<string, map<string, string>>()> g_ppdLister = []() {
+    map<string, map<string, string>> allPPDS;
+    auto conPtr = CupsConnectionFactory::createConnectionBySettings();
+    if (conPtr)
+        allPPDS = conPtr->getPPDs2(0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, -1, nullptr, nullptr, nullptr);
+    return allPPDS;
+};
+
+// Seam: location of the offline driver list (tests use a scratch file).
+static QString g_offlineJsonPath = "/usr/share/dde-printer/offline.json";
+
+// Not const so tests can point the offline driver lookup at a scratch database.
+static QString g_dbpath = "/opt/deepin/dde-printer/printer-drivers/deb-repo";
 static const QString g_ppddbname = "ppd.db";
 static const QString g_dbversion = "0.1.2";
 
-static bool isLastoreConfigVerAccord()
+static QString readLastoreConfigVersion()
 {
     QString name = "org.deepin.lastore";
     DConfig *config = DConfig::create(name, name);
 
     if (config == nullptr) {
-        return false;
+        return QString();
     }
 
     QString version = config->value("version").toByteArray();
     config->deleteLater();
+    return version;
+}
+
+// Seam: tests replace the reader so no dconfig service is needed. The default
+// reads the lastore DConfig exactly as before.
+static std::function<QString()> g_lastoreVersionReader = readLastoreConfigVersion;
+
+static bool isLastoreConfigVerAccord()
+{
+    const QString version = g_lastoreVersionReader();
 
     qCDebug(COMMONMOUDLE) << "config ver:" << version;
     if (!version.isEmpty() && QVersionNumber::fromString(version) > QVersionNumber::fromString("1.0")) {
@@ -683,9 +710,7 @@ int RefreshLocalPPDS::doWork()
     g_iStatus = TStat_Running;
 
     try {
-        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-        if (conPtr)
-            allPPDS = conPtr->getPPDs2(0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, -1, nullptr, nullptr, nullptr);
+        allPPDS = g_ppdLister();
     } catch (const std::exception &ex) {
         qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
         return -1;
@@ -1072,7 +1097,7 @@ void DriverSearcher::slotDriverDone(int iCode, const QByteArray &result)
 void genOfflineDriver()
 {
     /* 0. 解析离线json文件 */
-    QString filePath = "/usr/share/dde-printer/offline.json";
+    QString filePath = g_offlineJsonPath;
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qInfo() << QString("Fail to open offline file.");
@@ -1480,6 +1505,22 @@ bool hasDriverlessAttributes(const map<string, string> &attrs)
     return false;
 }
 
+// Seam: asks the printer itself for its IPP attributes (talking to it directly,
+// not through the local CUPS). Tests replace it. The default connects and
+// returns the attributes; an unreachable printer gives an empty map.
+std::function<map<string, string>(const QString &, int, int, const QString &)> g_printerAttributesFetcher =
+    [](const QString &host, int port, int encryption, const QString &uri) {
+        map<string, string> attrs;
+        auto conPtr = CupsConnectionFactory::createConnection(host, port, encryption);
+        if (!conPtr)
+            return attrs;
+
+        conPtr->setTimeout(EVERYWHERE_PROBE_TIMEOUT_SECONDS);
+        // request what CUPS requests when it builds an IPP Everywhere PPD
+        const vector<string> requestList = {"all", "media-col-database"};
+        return conPtr->getPrinterAttributes(nullptr, uri.toUtf8().constData(), &requestList);
+    };
+
 int defaultPortForScheme(const QString &scheme)
 {
     if (scheme == "ipp" || scheme == "ipps")
@@ -1520,14 +1561,7 @@ QMap<QString, QVariant> DriverManager::getEveryWhereDriver(const QString &strUri
 
     try {
         // talk to the printer directly; the local CUPS would have to fetch the uri itself
-        auto conPtr = CupsConnectionFactory::createConnection(url.host(), port, encryption);
-        if (!conPtr)
-            return QMap<QString, QVariant>();
-
-        conPtr->setTimeout(EVERYWHERE_PROBE_TIMEOUT_SECONDS);
-        // request what CUPS requests when it builds an IPP Everywhere PPD
-        const vector<string> requestList = {"all", "media-col-database"};
-        const map<string, string> attrs = conPtr->getPrinterAttributes(nullptr, uri.toUtf8().constData(), &requestList);
+        const map<string, string> attrs = g_printerAttributesFetcher(url.host(), port, encryption, uri);
 
         if (hasDriverlessAttributes(attrs)) {
             qCInfo(COMMONMOUDLE) << "Verified IPP Everywhere driver for" << strUri;
@@ -1541,6 +1575,16 @@ QMap<QString, QVariant> DriverManager::getEveryWhereDriver(const QString &strUri
     return QMap<QString, QVariant>();
 }
 
+// Seam: downloads a PPD from the configured CUPS server and returns the local
+// file name; false when there is no connection. Tests replace it.
+static std::function<bool(const char *, string &)> g_serverPpdFetcher = [](const char *name, string &file) {
+    auto conPtr = CupsConnectionFactory::createConnectionBySettings();
+    if (!conPtr)
+        return false;
+    file = conPtr->getServerPPD(name);
+    return true;
+};
+
 QStringList DriverManager::getDriverDepends(const char *strPPD)
 {
     PPD p;
@@ -1551,10 +1595,9 @@ QStringList DriverManager::getDriverDepends(const char *strPPD)
         if (QFile::exists(strPPD)) {
             p.load(strPPD);
         } else {
-            auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-            if (!conPtr)
+            string ppdfile;
+            if (!g_serverPpdFetcher(strPPD, ppdfile))
                 return depends;
-            string ppdfile = conPtr->getServerPPD(strPPD);
 
             qCDebug(COMMONMOUDLE) << strPPD << STQ(ppdfile);
             p.load(ppdfile.c_str());

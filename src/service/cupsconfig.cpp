@@ -58,6 +58,29 @@ http_t *connectLocal()
                         1, kConnectTimeoutMs, nullptr);
 }
 
+Backend &backendOverride()
+{
+    static Backend backend;
+    return backend;
+}
+
+Backend activeBackend()
+{
+    Backend b = backendOverride();
+    if (!b.connect) b.connect = connectLocal;
+    if (!b.setServerSettings) b.setServerSettings = [](http_t *h, int n, cups_option_t *o) {
+        return cupsAdminSetServerSettings(h, n, o);
+    };
+    if (!b.lastError) b.lastError = []() { return QString::fromLocal8Bit(cupsLastErrorString()); };
+    if (!b.close) b.close = [](http_t *h) { httpClose(h); };
+    return b;
+}
+
+}
+
+void setBackend(const Backend &backend)
+{
+    backendOverride() = backend;
 }
 
 std::optional<QVector<ServerSetting>> parse(const QVariantMap &raw, QString *error)
@@ -100,7 +123,8 @@ bool apply(const QVector<ServerSetting> &settings, QString *error)
         return false;
     }
 
-    http_t *http = connectLocal();
+    const Backend backend = activeBackend();
+    http_t *http = backend.connect();
     if (!http) {
         setError(error, QStringLiteral("Cannot connect to the local CUPS server"));
         return false;
@@ -111,12 +135,12 @@ bool apply(const QVector<ServerSetting> &settings, QString *error)
     for (const ServerSetting &s : settings)
         count = cupsAddOption(s.key.constData(), s.enabled ? "1" : "0", count, &options);
 
-    const int ok = cupsAdminSetServerSettings(http, count, options);
+    const int ok = backend.setServerSettings(http, count, options);
     if (!ok)
         setError(error, QStringLiteral("CUPS rejected the settings: %1")
-                            .arg(QString::fromLocal8Bit(cupsLastErrorString())));
+                            .arg(backend.lastError()));
     cupsFreeOptions(count, options);
-    httpClose(http);
+    backend.close(http);
     return ok != 0;
 }
 

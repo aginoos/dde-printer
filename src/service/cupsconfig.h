@@ -9,6 +9,10 @@
 #include <QVariantMap>
 #include <QVector>
 
+#include <cups/cups.h>
+#include <cups/http.h>
+
+#include <functional>
 #include <optional>
 
 // Server-side handling of CUPS server settings (cupsd.conf switches).
@@ -41,6 +45,17 @@ constexpr int kMaxSettings = 6;
 // settings in a stable (sorted by key) order; on failure returns nullopt
 // and fills *error.
 std::optional<QVector<ServerSetting>> parse(const QVariantMap &raw, QString *error = nullptr);
+
+// The calls apply() makes into libcups. The default talks to the local CUPS
+// server; tests install fakes. `http` is opaque to apply().
+struct Backend {
+    std::function<http_t *()> connect;                                   // nullptr: no connection
+    std::function<int(http_t *, int, cups_option_t *)> setServerSettings; // non-zero: accepted
+    std::function<QString()> lastError;
+    std::function<void(http_t *)> close;
+};
+// Replaces the backend; a default constructed Backend (empty functions) restores the real one.
+void setBackend(const Backend &backend);
 
 // Writes validated settings through the local CUPS server (blocking; run it
 // off the event loop). Returns false and fills *error on failure.

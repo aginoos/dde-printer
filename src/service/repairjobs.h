@@ -19,6 +19,10 @@ namespace RepairJobs {
 constexpr int kStepTimeoutMs = 60000;
 constexpr int kInstallTimeoutMs = 300000;
 
+// Directory scanned by the Brother filter repair (/usr/lib/cups/filter unless
+// changed); tests point it at a temporary directory. Empty restores the default.
+void setFilterDirectory(const QString &path);
+
 // Ids with an implementation: "cups_service", "canon_lbp2900", "brother_dcp_mfc".
 bool isKnownFix(const QString &fixId);
 

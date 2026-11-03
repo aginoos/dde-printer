@@ -1,3 +1,11 @@
+dde-printer (1.0.20+agino4-1) unstable; urgency=medium
+
+  * Troubleshooting: the printer connection check and the "add printer by IP" probes (JetDirect, LPD) ignore the desktop proxy (all_proxy / system proxy), a printer is on the local network.
+  * Troubleshooting: the CUPS error-log check starts the on-demand manager service instead of reporting it unavailable (QDBusInterface is invalid while the service is not running).
+  * PrinterTestJob: disconnect the job-state signal with the signature it was connected with.
+
+ -- agino Team <admin@aginoos.com>  Tue, 03 Nov 2026 22:00:00 +0800
+
 dde-printer (1.0.20+agino3-1) unstable; urgency=medium
 
   * Complete the translations of all 14 gate languages (ja, ko, de, fr, es, it, pt_BR, ru, uk, ar, zh_*), including the polkit action texts. Machine translations, native review pending (zh_* excepted).

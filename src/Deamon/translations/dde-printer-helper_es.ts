@@ -226,6 +226,10 @@
         <source>%1 %2, reason: %3</source>
         <translation>%1 %2, razón: %3</translation>
     </message>
+    <message>
+        <source>%1 printed successfully, please take away the paper in time!</source>
+        <translation>%1 se imprimió correctamente. ¡Recoja el papel a tiempo!</translation>
+    </message>
 </context>
 <context>
     <name>DriverManager</name>
@@ -302,7 +306,11 @@
     <message>
         <location filename="../../Common/common.cpp" line="154"/>
         <source>%1 not found, please ask the administrator for help, or enter the printer IP address in URI of Properties.</source>
-        <translation type="unfinished"/>
+        <translation>%1 no encontrado. Pida ayuda al administrador o introduzca la dirección IP de la impresora en el URI de las propiedades.</translation>
+    </message>
+    <message>
+        <source> not found, please ask the administrator for help</source>
+        <translation> no encontrado. Pida ayuda al administrador</translation>
     </message>
 </context>
 <context>
@@ -321,6 +329,53 @@
         <location filename="../usbprinter/usbthread.cpp" line="310"/>
         <source>Configuration failed. Click to add the printer %1.</source>
         <translation>Configurado con éxito. Clic para añadir la impresora %1.</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Username</source>
+        <translation>Nombre de usuario</translation>
+    </message>
+    <message>
+        <source>Domain</source>
+        <translation>Dominio</translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation>Contraseña</translation>
+    </message>
+    <message>
+        <source>Remember Password</source>
+        <translation>Recordar contraseña</translation>
+    </message>
+    <message>
+        <source>Connection Identity</source>
+        <translation>Identidad de conexión</translation>
+    </message>
+    <message>
+        <source>Guest</source>
+        <translation>Invitado</translation>
+    </message>
+    <message>
+        <source>Registered User</source>
+        <translation>Usuario registrado</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <source>Connect</source>
+        <translation>Conectar</translation>
+    </message>
+    <message>
+        <source>Authentication Required for %1</source>
+        <translation>Se requiere autenticación para %1</translation>
+    </message>
+    <message>
+        <source>Authentication required to connect to printer "%1"</source>
+        <translation>Se requiere autenticación para conectarse a la impresora «%1»</translation>
     </message>
 </context>
 </TS>

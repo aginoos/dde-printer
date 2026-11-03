@@ -4,10 +4,13 @@
 
 #pragma once
 
+#include "safeprocess.h"
 #include "vendor/troubleshootservice.h"
 
 #include <QString>
 #include <QStringList>
+
+#include <functional>
 
 // Client side of the Canon CAPT 32-bit support: finds out whether the i386
 // libraries the Canon driver needs are present, decides when the user has to
@@ -29,6 +32,11 @@ QStringList requiredLibraries();
 // `dpkg-query -W -f '${db:Status-Abbrev}\n' <libraries>` output.
 Status parseStatus(const QString &foreignArchitectures, const QString &libraryStatus, int expectedLibraries);
 bool isReady(const Status &status);
+
+// Replaces the command execution of queryStatus() (tests); an empty function
+// restores SafeProcess::run.
+using Runner = std::function<SafeProcess::Result(const QString &program, const QStringList &args)>;
+void setRunner(Runner runner);
 
 // Reads the status with read-only commands. Blocks for a moment.
 Status queryStatus();

@@ -36,9 +36,25 @@ int countInstalled(const QString &statusOutput)
     return count;
 }
 
+CanonI386::Runner &runner()
+{
+    static Runner instance;
+    return instance;
+}
+
+SafeProcess::Result runCommand(const QString &program, const QStringList &args)
+{
+    return runner() ? runner()(program, args) : SafeProcess::run(program, args);
+}
+
 }  // namespace
 
 namespace CanonI386 {
+
+void setRunner(Runner newRunner)
+{
+    runner() = std::move(newRunner);
+}
 
 QString fixId()
 {
@@ -66,14 +82,14 @@ bool isReady(const Status &status)
 
 Status queryStatus()
 {
-    const SafeProcess::Result arch = SafeProcess::run(
+    const SafeProcess::Result arch = runCommand(
         QStringLiteral("dpkg"), {QStringLiteral("--print-foreign-architectures")});
     const QStringList libraries = requiredLibraries();
     const QStringList queryArgs = QStringList{QStringLiteral("-W"), QStringLiteral("-f"),
                                               QStringLiteral("${db:Status-Abbrev}\\n")}
         + libraries;
     // The exit code is not 0 when a package is unknown; only the output counts.
-    const SafeProcess::Result libs = SafeProcess::run(QStringLiteral("dpkg-query"), queryArgs);
+    const SafeProcess::Result libs = runCommand(QStringLiteral("dpkg-query"), queryArgs);
     return parseStatus(arch.ok() ? arch.out : QString(), libs.out, libraries.size());
 }
 

@@ -7,6 +7,7 @@
 #include "canoni386.h"
 #include "canoni386repair.h"
 #include "repaircodes.h"
+#include "safeprocess.h"
 #include "vendor/troubleshootservice.h"
 
 using namespace CanonI386Repair;
@@ -135,4 +136,75 @@ TEST(ut_CanonI386, OutcomeMapping)
     EXPECT_FALSE(CanonI386::outcomeText(Outcome::ArchitectureFailed).isEmpty());
     EXPECT_NE(CanonI386::outcomeText(Outcome::UpdateFailed), CanonI386::outcomeText(Outcome::InstallFailed));
     EXPECT_FALSE(CanonI386::outcomeText(Outcome::PackageManagerBusy).isEmpty());
+}
+
+namespace {
+
+struct RunnerGuard
+{
+    ~RunnerGuard() { CanonI386::setRunner(nullptr); }
+};
+
+SafeProcess::Result reply(bool ok, const QString &out)
+{
+    SafeProcess::Result r;
+    r.started = true;
+    r.exitCode = ok ? 0 : 1;
+    r.out = out;
+    return r;
+}
+
+}   // namespace
+
+TEST(ut_CanonI386, QueryStatusReadsArchitectureAndLibraries)
+{
+    RunnerGuard guard;
+    QList<QPair<QString, QStringList>> calls;
+    CanonI386::setRunner([&calls](const QString &program, const QStringList &args) {
+        calls.append({program, args});
+        if (program == "dpkg")
+            return reply(true, "i386\n");
+        return reply(false, "ii \nii \n");   // dpkg-query exits non-zero when a package is unknown
+    });
+
+    const CanonI386::Status status = CanonI386::queryStatus();
+    EXPECT_TRUE(CanonI386::isReady(status));
+    ASSERT_EQ(calls.size(), 2);
+    EXPECT_EQ(calls[0].first, QString("dpkg"));
+    EXPECT_EQ(calls[0].second, QStringList{"--print-foreign-architectures"});
+    EXPECT_EQ(calls[1].first, QString("dpkg-query"));
+    EXPECT_EQ(calls[1].second.mid(calls[1].second.size() - 2), CanonI386::requiredLibraries());
+}
+
+TEST(ut_CanonI386, QueryStatusTreatsAFailedArchitectureCommandAsDisabled)
+{
+    RunnerGuard guard;
+    CanonI386::setRunner([](const QString &program, const QStringList &) {
+        return program == "dpkg" ? reply(false, "i386\n") : reply(true, "ii \nii \n");
+    });
+    const CanonI386::Status status = CanonI386::queryStatus();
+    EXPECT_FALSE(status.architectureEnabled);
+    EXPECT_FALSE(CanonI386::isReady(status));
+}
+
+TEST(ut_CanonI386, QueryStatusWithOneMissingLibraryIsNotReady)
+{
+    RunnerGuard guard;
+    CanonI386::setRunner([](const QString &program, const QStringList &) {
+        return program == "dpkg" ? reply(true, "i386\n") : reply(false, "ii \n");
+    });
+    const CanonI386::Status status = CanonI386::queryStatus();
+    EXPECT_TRUE(status.architectureEnabled);
+    EXPECT_FALSE(status.librariesInstalled);
+}
+
+TEST(ut_CanonI386, TextsAndFixId)
+{
+    EXPECT_EQ(CanonI386::fixId(), QString("canon_lbp2900"));
+    EXPECT_FALSE(CanonI386::confirmTitle().isEmpty());
+    EXPECT_TRUE(CanonI386::confirmMessage().contains("i386"));
+    EXPECT_NE(CanonI386::confirmAcceptText(), CanonI386::confirmCancelText());
+    EXPECT_FALSE(CanonI386::cancelledText().isEmpty());
+    EXPECT_TRUE(CanonI386::outcomeText(TroubleshootService::Outcome::Denied).isEmpty());
+    EXPECT_TRUE(CanonI386::outcomeText(TroubleshootService::Outcome::Failed).isEmpty());
 }

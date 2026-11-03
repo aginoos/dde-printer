@@ -86,7 +86,8 @@ bool PrinterService::isInvaild()
 PrinterService::PrinterService()
 {
     m_osVersion = g_Settings->getOSVersion();
-    m_urlDriver = g_Settings->getDriverPlatformUrl() +
+    m_platformUrl = g_Settings->getDriverPlatformUrl();
+    m_urlDriver = m_platformUrl +
                   QString("?arch=%1&system=%2&majorVersion=%3&minorVersion=%4")
                           .arg(g_Settings->getSystemArch())
                           .arg(g_Settings->getSysInfo())
@@ -170,6 +171,11 @@ PrinterServerInterface *PrinterService::searchDriverSolution(const QString &manu
                                                              const QString &model, const QString &ieee1284_id)
 {
     QJsonObject obj;
+
+    // No service address configured (the default): nothing is sent and the search goes on
+    // with the local drivers.
+    if (m_platformUrl.isEmpty())
+        return nullptr;
 
     const bool isHp = manufacturer == "HP" || manufacturer == "Hewlett-Packard";
     const QString make = isHp ? QStringLiteral("HP") : manufacturer;

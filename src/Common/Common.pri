@@ -16,6 +16,7 @@ HEADERS +=  \
     $$PWD/ippusbplanner.h \
     $$PWD/ippusbswitch.h \
     $$PWD/usbautoaddconfig.h \
+    $$PWD/driverplatformconfig.h \
     $$PWD/qtconvert.h \
     $$PWD/zsettings.h \
     $$PWD/cupsconnectionfactory.h \
@@ -56,6 +57,7 @@ SOURCES +=  \
     $$PWD/ippusbplanner.cpp \
     $$PWD/ippusbswitch.cpp \
     $$PWD/usbautoaddconfig.cpp \
+    $$PWD/driverplatformconfig.cpp \
     $$PWD/safeprocess.cpp \
     $$PWD/canoni386.cpp \
     $$PWD/secretstore.cpp \

@@ -13,6 +13,17 @@
               "permissions": "readwrite",
               "visibility": "public"
         },
+        "driver_platform_url": {
+              "value": "",
+              "serial": 0,
+              "flags": ["global"],
+              "name": "Online driver search address",
+              "name[zh_CN]": "在线驱动搜索地址",
+              "description": "Address of the online driver search service (https://host/path, or http:// for a loopback host). Empty: the online search is not used and nothing is sent.",
+              "description[zh_CN]": "在线驱动搜索服务的地址（https://主机/路径；本机回环地址可用 http://）。留空：不使用在线搜索，也不会向外发送任何信息。",
+              "permissions": "readwrite",
+              "visibility": "public"
+        },
         "allow_auto_usb": {
               "value": true,
               "serial": 0,

@@ -87,6 +87,7 @@ private:
     QString m_urlPrefix;
     QString m_version;
     QString m_code;
+    QString m_platformUrl;   // empty: online driver search is off
     QString m_urlDriver;
 };
 

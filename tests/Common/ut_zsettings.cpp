@@ -122,16 +122,24 @@ TEST_F(ut_zsettings, getCupsServerEncryption)
     EXPECT_EQ(ret, 0);
 }
 
-TEST(ut_zsettingsDriverUrl, overrideIsIgnoredWhenNotAllowed)
+TEST(ut_zsettingsDriverUrl, environmentOverrideIsIgnoredWhenNotAllowed)
 {
-    const QString official = zSettings::resolveDriverPlatformUrl(QByteArray(), false);
-    EXPECT_TRUE(official.startsWith("https://"));
-    EXPECT_EQ(zSettings::resolveDriverPlatformUrl("http://evil.example/x", false), official);
+    const QString configured = "https://drivers.example.invalid/search";
+    EXPECT_EQ(zSettings::resolveDriverPlatformUrl("http://127.0.0.1:8080/x", false, configured), configured);
+    EXPECT_EQ(zSettings::resolveDriverPlatformUrl("https://evil.example/x", false, QString()), QString());
 }
 
-TEST(ut_zsettingsDriverUrl, overrideAppliesOnlyWhenAllowedAndNotEmpty)
+TEST(ut_zsettingsDriverUrl, environmentOverrideAppliesOnlyWhenAllowedAndValid)
 {
-    const QString official = zSettings::resolveDriverPlatformUrl(QByteArray(), true);
-    EXPECT_EQ(zSettings::resolveDriverPlatformUrl("http://127.0.0.1:8080/x", true), QString("http://127.0.0.1:8080/x"));
-    EXPECT_EQ(zSettings::resolveDriverPlatformUrl("", true), official);
+    const QString configured = "https://drivers.example.invalid/search";
+    EXPECT_EQ(zSettings::resolveDriverPlatformUrl("http://127.0.0.1:8080/x", true, configured), QString("http://127.0.0.1:8080/x"));
+    EXPECT_EQ(zSettings::resolveDriverPlatformUrl("", true, configured), configured);
+    // an override that does not pass the validation falls back to the configured address
+    EXPECT_EQ(zSettings::resolveDriverPlatformUrl("http://evil.example/x", true, configured), configured);
+}
+
+TEST(ut_zsettingsDriverUrl, defaultIsNoService)
+{
+    EXPECT_EQ(zSettings::resolveDriverPlatformUrl(QByteArray(), false, QString()), QString());
+    EXPECT_EQ(zSettings::resolveDriverPlatformUrl(QByteArray(), false, "not a url"), QString());
 }

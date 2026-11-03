@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "zsettings.h"
+#include "driverplatformconfig.h"
 #include "config.h"
 
 #include <DSysInfo>
@@ -20,7 +21,6 @@
 #define HOST_PORT       80
 #define SERVER_ADDR     "printer.deepin.com"
 #define OS_VERSION      "eagle"
-#define DRIVER_PLATFORM_URL "https://driver.uniontech.com/api/v1/drive/search"
 static QMap<int, QString> DeepinTypeStrMap({{0, "unknown"}, {1, "apricot"}, {2, "eagle"}, {3, "fou"}, {4, "plum"}});
 
 QString sysArch()
@@ -167,22 +167,25 @@ int zSettings::getCupsServerEncryption()
     return value("CupsServerEncryption", cupsEncryption()).toInt();
 }
 
-QString zSettings::resolveDriverPlatformUrl(const QByteArray &override, bool allowOverride)
+QString zSettings::resolveDriverPlatformUrl(const QByteArray &override, bool allowOverride, const QString &configured)
 {
-    // Only builds meant for development and tests may point the lookup at
-    // another server; a release build always asks the official platform.
+    // Only builds meant for development and tests may point the lookup at another server
+    // through the environment; every build reads the DConfig value. Both go through the same
+    // validation, and "nothing usable" means the online search is not used.
     if (allowOverride && !override.isEmpty()) {
-        return QString::fromUtf8(override);
+        const QString url = DriverPlatformConfig::normalize(QString::fromUtf8(override));
+        if (!url.isEmpty())
+            return url;
     }
-    return QStringLiteral(DRIVER_PLATFORM_URL);
+    return DriverPlatformConfig::normalize(configured);
 }
 
 const QString zSettings::getDriverPlatformUrl()
 {
 #ifndef QT_NO_DEBUG
-    return resolveDriverPlatformUrl(qgetenv("DRIVER_PLATFORM_TEST_URL"), true);
+    return resolveDriverPlatformUrl(qgetenv("DRIVER_PLATFORM_TEST_URL"), true, DriverPlatformConfig::configuredUrl());
 #else
-    return resolveDriverPlatformUrl(QByteArray(), false);
+    return resolveDriverPlatformUrl(QByteArray(), false, DriverPlatformConfig::configuredUrl());
 #endif
 }
 const QString zSettings::getSystemArch()

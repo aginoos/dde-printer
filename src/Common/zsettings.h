@@ -21,7 +21,7 @@ public:
     const QString getOSVersion();
     const QString getDriverPlatformUrl();
     // `override` (the DRIVER_PLATFORM_TEST_URL value) wins only when allowed.
-    static QString resolveDriverPlatformUrl(const QByteArray &override, bool allowOverride);
+    static QString resolveDriverPlatformUrl(const QByteArray &override, bool allowOverride, const QString &configured);
     const QString getSystemArch(); 
     int getSubscriptionId();
     void setSubscriptionId(int id);

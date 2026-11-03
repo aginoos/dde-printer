@@ -12,10 +12,18 @@
 
 namespace {
 
+// The online search is off unless an address is configured, so the tests give the service one
+// (the tests are built with -fno-access-control). The query tail is what the service builds.
 QString urlOf(const QString &manufacturer, const QString &model, const QString &id)
 {
-    std::unique_ptr<PrinterServerInterface> request(
-        PrinterService::getInstance()->searchDriverSolution(manufacturer, model, id));
+    PrinterService *service = PrinterService::getInstance();
+    const QString savedPlatform = service->m_platformUrl;
+    const QString savedUrl = service->m_urlDriver;
+    service->m_platformUrl = QStringLiteral("https://drivers.example.invalid/api/search");
+    service->m_urlDriver = service->m_platformUrl + QStringLiteral("?arch=x86_64&system=agino&majorVersion=26&minorVersion=0");
+    std::unique_ptr<PrinterServerInterface> request(service->searchDriverSolution(manufacturer, model, id));
+    service->m_platformUrl = savedPlatform;
+    service->m_urlDriver = savedUrl;
     return request ? request->m_url : QString();
 }
 
@@ -118,4 +126,15 @@ TEST(ut_PrinterService, requestKeepsTheUrlAndArguments)
     PrinterServerInterface request("https://example.invalid/x", QJsonObject{{"k", 1}});
     EXPECT_EQ(request.m_url, QString("https://example.invalid/x"));
     EXPECT_EQ(request.m_args.value("k").toInt(), 1);
+}
+
+TEST(ut_PrinterService, noAddressMeansNoRequest)
+{
+    PrinterService *service = PrinterService::getInstance();
+    const QString saved = service->m_platformUrl;
+    service->m_platformUrl.clear();
+    std::unique_ptr<PrinterServerInterface> request(
+        service->searchDriverSolution("Canon", "LBP2900", "MFG:Canon;MDL:LBP2900;"));
+    service->m_platformUrl = saved;
+    EXPECT_EQ(request, nullptr);   // nothing is sent; the caller carries on with the local drivers
 }

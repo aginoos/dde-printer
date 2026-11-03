@@ -71,7 +71,10 @@ int CustomPageDialog::currentRow() const
 QDoubleSpinBox *CustomPageDialog::createSpinBox()
 {
     auto *box = new QDoubleSpinBox(this);
-    box->setFixedWidth(110);
+    // Room for four integer digits, a decimal separator and two decimals,
+    // plus the frame and the up/down buttons.
+    box->setMinimumWidth(box->fontMetrics().horizontalAdvance(QStringLiteral("9999.99")) + 48);
+    box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     box->setKeyboardTracking(false);
     connect(box, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &CustomPageDialog::onGeometryEdited);
     return box;

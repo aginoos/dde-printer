@@ -4,6 +4,8 @@
 
 #include "troubleshootservice.h"
 
+#include "../repaircodes.h"
+
 #include <QDBusConnection>
 #include <QDBusInterface>
 #include <QDBusPendingCall>
@@ -27,7 +29,20 @@ Outcome outcomeForError(QDBusError::ErrorType type)
 
 Outcome outcomeForCode(int code)
 {
-    return code == 0 ? Outcome::Success : Outcome::Failed;
+    switch (code) {
+    case RepairCode::Ok:
+        return Outcome::Success;
+    case RepairCode::ArchitectureFailed:
+        return Outcome::ArchitectureFailed;
+    case RepairCode::UpdateFailed:
+        return Outcome::UpdateFailed;
+    case RepairCode::InstallFailed:
+        return Outcome::InstallFailed;
+    case RepairCode::PackageManagerBusy:
+        return Outcome::PackageManagerBusy;
+    default:
+        return Outcome::Failed;
+    }
 }
 
 LogResult readJobErrorLog(const QString &printerName)

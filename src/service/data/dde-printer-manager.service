@@ -27,6 +27,19 @@ ReadWritePaths=-/var/captmon
 ReadWritePaths=-/opt/printer-drivers
 ReadWritePaths=-/usr/lib/cups/filter
 ReadWritePaths=-/usr/share/ipp-usb/quirks
+# Canon CAPT 32-bit support (canoni386repair.cpp): dpkg --add-architecture,
+# apt-get update and apt-get install are NOT run inside this sandbox. They
+# need /var/lib/dpkg, /var/lib/apt, /var/cache/apt, /usr and /etc/apt to be
+# writable, plus the many capabilities and system calls that maintainer
+# scripts use; widening ReadWritePaths, CapabilityBoundingSet and
+# SystemCallFilter that far would weaken the sandbox for every request.
+# Instead the service asks systemd (system bus, uid 0, no extra capability or
+# path needed here) to start a one-shot transient unit per step with
+# `systemd-run --wait --pipe --collect`, which does not inherit this
+# sandbox. Only fixed tool paths and arguments are passed. The read-only
+# queries (dpkg --print-foreign-architectures, dpkg-query) work with the
+# existing read-only view of /var/lib/dpkg. No option below was changed for
+# this feature.
 InaccessiblePaths=/etc/shadow
 InaccessiblePaths=-/etc/NetworkManager/system-connections
 InaccessiblePaths=-/etc/pam.d

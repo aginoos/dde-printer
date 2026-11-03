@@ -21,6 +21,7 @@ SOURCES += main.cpp \
     cupsconfig.cpp \
     joblogreader.cpp \
     repairjobs.cpp \
+    canoni386repair.cpp \
     ippusbblacklist.cpp \
     taskquota.cpp
 
@@ -45,6 +46,8 @@ HEADERS += \
     cupsconfig.h \
     joblogreader.h \
     repairjobs.h \
+    canoni386repair.h \
+    ../Common/repaircodes.h \
     ippusbblacklist.h \
     taskquota.h
 

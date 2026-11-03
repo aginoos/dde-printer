@@ -44,6 +44,8 @@ HEADERS +=  \
     $$PWD/vendor/modelcheck.h \
     $$PWD/vendor/ippusbdiag.h \
     $$PWD/vendor/troubleshootservice.h \
+    $$PWD/repaircodes.h \
+    $$PWD/canoni386.h \
     $$PWD/vendor/ztroubleshoot.h
 
 SOURCES +=  \
@@ -55,6 +57,7 @@ SOURCES +=  \
     $$PWD/ippusbswitch.cpp \
     $$PWD/usbautoaddconfig.cpp \
     $$PWD/safeprocess.cpp \
+    $$PWD/canoni386.cpp \
     $$PWD/secretstore.cpp \
     $$PWD/smburi.cpp \
     $$PWD/smbcredentialdialog.cpp \

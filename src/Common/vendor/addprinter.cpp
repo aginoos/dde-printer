@@ -14,6 +14,7 @@
 #include "cupsconnectionfactory.h"
 #include "zprintermanager.h"
 
+#include <cups/cups.h>
 #include <QTextStream>
 #include <QRegularExpression>
 #include <QFile>
@@ -445,9 +446,30 @@ QStringList DefaultAddPrinter::existingQueueNames()
     return GetSystemPrinterNames();
 }
 
+// Deletes a queue through the local scheduler. Kept here so the helper and the
+// tests do not need to link the whole printer manager for this one request.
+static bool deleteLocalQueue(const QString &name)
+{
+    char uri[HTTP_MAX_URI] = {0};
+    const QByteArray utf8 = name.toUtf8();
+    httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr,
+                     "localhost", 0, "/printers/%s", utf8.constData());
+
+    ipp_t *request = ippNewRequest(CUPS_DELETE_PRINTER);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, uri);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", nullptr, cupsUser());
+    ippDelete(cupsDoRequest(CUPS_HTTP_DEFAULT, request, "/admin/"));
+
+    if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
+        qCWarning(COMMONMOUDLE) << "delete queue failed:" << cupsLastErrorString();
+        return false;
+    }
+    return true;
+}
+
 bool DefaultAddPrinter::removeQueue(const QString &name)
 {
-    return RemoveSystemPrinter(name) == 0;
+    return deleteLocalQueue(name);
 }
 
 void DefaultAddPrinter::rememberExistingQueue()

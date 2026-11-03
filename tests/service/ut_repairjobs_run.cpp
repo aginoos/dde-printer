@@ -112,7 +112,12 @@ protected:
         return path;
     }
 
-    QFile::Permissions permissionsOf(const QString &path) const { return QFileInfo(path).permissions(); }
+    // QFileInfo reports each owner bit twice (ReadOwner and ReadUser, ...); drop the *User
+    // aliases so the result compares equal to permissions built from *Owner/*Group/*Other.
+    QFile::Permissions permissionsOf(const QString &path) const
+    {
+        return QFileInfo(path).permissions() & ~(QFile::ReadUser | QFile::WriteUser | QFile::ExeUser);
+    }
 
     QTemporaryDir m_dir;
 };

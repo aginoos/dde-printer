@@ -26,6 +26,10 @@
         <source> not found</source>
         <translation> не знайдено</translation>
     </message>
+    <message>
+        <source>This driver needs administrator authorization. Please add the printer in the Print Manager.</source>
+        <translation>Для цього драйвера потрібні права адміністратора. Додайте принтер у Диспетчері друку.</translation>
+    </message>
 </context>
 <context>
     <name>CheckAttributes</name>
@@ -106,6 +110,14 @@
         <location filename="../../Common/vendor/ztroubleshoot.cpp" line="294"/>
         <source>The connection is valid</source>
         <translation>З&apos;єднання є коректним</translation>
+    </message>
+    <message>
+        <source>The USB port is used by ipp-usb. Add the printer again with the driverless (network) option.</source>
+        <translation>USB-порт використовується службою ipp-usb. Додайте принтер знову, вибравши варіант без драйвера (через мережу).</translation>
+    </message>
+    <message>
+        <source>ipp-usb reports a problem with this printer: %1</source>
+        <translation>ipp-usb повідомляє про проблему з цим принтером: %1</translation>
     </message>
 </context>
 <context>
@@ -687,6 +699,46 @@
         <source>Install Driver</source>
         <translation>Встановити драйвер</translation>
     </message>
+    <message>
+        <source>Canon capt printer does not support name modification.</source>
+        <translation>Принтер Canon CAPT не підтримує зміну назви.</translation>
+    </message>
+    <message>
+        <source>Applying settings, please wait...</source>
+        <translation>Застосування налаштувань, зачекайте...</translation>
+    </message>
+    <message>
+        <source>Failed to change the server settings. Please authenticate as an administrator and try again.</source>
+        <translation>Не вдалося змінити налаштування сервера. Пройдіть автентифікацію від імені адміністратора та повторіть спробу.</translation>
+    </message>
+    <message>
+        <source>Log out and log in again to turn on print notifications</source>
+        <translation>Вийдіть із системи та увійдіть знову, щоб увімкнути сповіщення про друк</translation>
+    </message>
+    <message>
+        <source>Default printer</source>
+        <translation>Типовий принтер</translation>
+    </message>
+    <message>
+        <source>Shared printer</source>
+        <translation>Спільний принтер</translation>
+    </message>
+    <message>
+        <source>Advanced sharing options</source>
+        <translation>Додаткові параметри спільного доступу</translation>
+    </message>
+    <message>
+        <source>Shared address:</source>
+        <translation>Спільна адреса:</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Копіювати</translation>
+    </message>
+    <message>
+        <source>Management Tools</source>
+        <translation>Засоби керування</translation>
+    </message>
 </context>
 <context>
     <name>DPropertySetDlg</name>
@@ -893,6 +945,38 @@
         <source>Failed to install %1</source>
         <translation>Не вдалося встановити %1</translation>
     </message>
+    <message>
+        <source>The driver package information is invalid.</source>
+        <translation>Недійсні відомості про пакунок драйвера.</translation>
+    </message>
+    <message>
+        <source>The package %1 is not an accepted printer driver package.</source>
+        <translation>Пакунок %1 не є допустимим пакунком драйвера принтера.</translation>
+    </message>
+    <message>
+        <source>The package %1 is already installed in a higher version (%2) than the driver requires (%3); installing the driver would downgrade it.</source>
+        <translation>Пакунок %1 уже встановлено у версії (%2), новішій, ніж потрібна драйверу (%3); встановлення драйвера призведе до пониження версії.</translation>
+    </message>
+    <message>
+        <source>The driver package %1 is not available from the software sources.</source>
+        <translation>Пакунок драйвера %1 недоступний у джерелах програм.</translation>
+    </message>
+    <message>
+        <source>No package installer is available on this system.</source>
+        <translation>У системі немає доступного засобу встановлення пакунків.</translation>
+    </message>
+    <message>
+        <source>The driver installation was cancelled.</source>
+        <translation>Встановлення драйвера скасовано.</translation>
+    </message>
+    <message>
+        <source>Administrator authorization was denied.</source>
+        <translation>У авторизації адміністратора відмовлено.</translation>
+    </message>
+    <message>
+        <source>The package %1 is already installed in a higher version (%2) than the driver requires (%3)</source>
+        <translation>Пакунок %1 уже встановлено у версії (%2), новішій, ніж потрібна драйверу (%3)</translation>
+    </message>
 </context>
 <context>
     <name>InstallPrinterWindow</name>
@@ -989,6 +1073,18 @@
         <location filename="../ui/installprinterwindow.cpp" line="244"/>
         <source>Installation failed</source>
         <translation>Встановлення завершилося невдало</translation>
+    </message>
+    <message>
+        <source>Installing printer driver... Please do not disconnect. This may take a few minutes. Thank you for your patience.</source>
+        <translation>Встановлення драйвера принтера... Не від’єднуйте пристрій. Це може тривати кілька хвилин. Дякуємо за терпіння.</translation>
+    </message>
+    <message>
+        <source>You have successfully added the printer.</source>
+        <translation>Принтер успішно додано.</translation>
+    </message>
+    <message>
+        <source>After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window.</source>
+        <translation>Після успішного встановлення драйвера потрібно налаштувати принтер. Зробіть це у вікні навігації.</translation>
     </message>
 </context>
 <context>
@@ -1284,6 +1380,30 @@
         <comment>button</comment>
         <translation>Гаразд</translation>
     </message>
+    <message>
+        <source>Please enter an IP address or hostname</source>
+        <translation>Введіть IP-адресу або назву вузла</translation>
+    </message>
+    <message>
+        <source>Windows Share</source>
+        <translation>Спільний ресурс Windows</translation>
+    </message>
+    <message>
+        <source>Protocol</source>
+        <translation>Протокол</translation>
+    </message>
+    <message>
+        <source>Auto Select</source>
+        <translation>Вибирати автоматично</translation>
+    </message>
+    <message>
+        <source>%1 shared</source>
+        <translation>Спільний доступ: %1</translation>
+    </message>
+    <message>
+        <source>(use %1 protocol)</source>
+        <translation>(використовувати протокол %1)</translation>
+    </message>
 </context>
 <context>
     <name>PrinterTestJob</name>
@@ -1561,7 +1681,167 @@
     <message>
         <location filename="../../Common/common.cpp" line="154"/>
         <source>%1 not found, please ask the administrator for help, or enter the printer IP address in URI of Properties.</source>
-        <translation type="unfinished"/>
+        <translation>%1 не знайдено, зверніться по допомогу до адміністратора або введіть IP-адресу принтера в полі URI у властивостях.</translation>
+    </message>
+    <message>
+        <source>Printer problem help: </source>
+        <translation>Довідка щодо проблем із принтером: </translation>
+    </message>
+    <message>
+        <source>Unable to connect to printer. Please check the IP address or hostname and try again. Make sure the printer is turned on and the IP address or hostname is correct.</source>
+        <translation>Не вдається підключитися до принтера. Перевірте IP-адресу або назву вузла та повторіть спробу. Переконайтеся, що принтер увімкнено, а IP-адресу або назву вузла вказано правильно.</translation>
+    </message>
+    <message>
+        <source>The Canon capt printer has been added and is not allowed to be added again.</source>
+        <translation>Принтер Canon CAPT уже додано, повторне додавання не дозволяється.</translation>
+    </message>
+    <message>
+        <source>Help on adding and using printers</source>
+        <translation>Довідка щодо додавання та використання принтерів</translation>
+    </message>
+    <message>
+        <source> not found, please ask the administrator for help</source>
+        <translation> не знайдено, зверніться по допомогу до адміністратора</translation>
+    </message>
+    <message>
+        <source>After the driver is successfully installed, you need to configure the printer. Please do so in the navigation window.</source>
+        <translation>Після успішного встановлення драйвера потрібно налаштувати принтер. Зробіть це у вікні навігації.</translation>
+    </message>
+    <message>
+        <source>Print Driver Download Navigation</source>
+        <translation>Навігація із завантаження драйверів принтерів</translation>
+    </message>
+    <message>
+        <source>Instructions for Use</source>
+        <translation>Інструкція з використання</translation>
+    </message>
+    <message>
+        <source>Can&apos;t print? Learn how to resolve</source>
+        <translation>Не вдається друкувати? Дізнайтеся, як це виправити</translation>
+    </message>
+    <message>
+        <source>UOS Ecology</source>
+        <translation>Екосистема UOS</translation>
+    </message>
+    <message>
+        <source>Canon</source>
+        <translation>Canon</translation>
+    </message>
+    <message>
+        <source>Fuji Xerox</source>
+        <translation>Fuji Xerox</translation>
+    </message>
+    <message>
+        <source>Brother</source>
+        <translation>Brother</translation>
+    </message>
+    <message>
+        <source>Dascom</source>
+        <translation>Dascom</translation>
+    </message>
+    <message>
+        <source>Toshiba</source>
+        <translation>Toshiba</translation>
+    </message>
+    <message>
+        <source>Lenovo</source>
+        <translation>Lenovo</translation>
+    </message>
+    <message>
+        <source>1. Check printer connection</source>
+        <translation>1. Перевірте підключення принтера</translation>
+    </message>
+    <message>
+        <source>Please make sure the printer is turned on and properly connected to this computer. Please check if the printer power, USB or network connection is normal.</source>
+        <translation>Переконайтеся, що принтер увімкнено та правильно підключено до цього комп’ютера. Перевірте живлення принтера, а також USB- або мережеве підключення.</translation>
+    </message>
+    <message>
+        <source>2. Check the printer status</source>
+        <translation>2. Перевірте стан принтера</translation>
+    </message>
+    <message>
+        <source>Please make sure that the printer is working normally, for example, there are no paper jams, ink cartridge exhaustion, etc.</source>
+        <translation>Переконайтеся, що принтер працює нормально: наприклад, немає застрягання паперу, не закінчилося чорнило в картриджі тощо.</translation>
+    </message>
+    <message>
+        <source>3. Check the printer driver</source>
+        <translation>3. Перевірте драйвер принтера</translation>
+    </message>
+    <message>
+        <source>Make sure the printer driver is installed correctly. If the driver does not match the printer, it is recommended to try updating the driver or download the latest version of the driver from the printer manufacturer&apos;s official website.</source>
+        <translation>Переконайтеся, що драйвер принтера встановлено правильно. Якщо драйвер не підходить до принтера, рекомендовано оновити його або завантажити останню версію драйвера з офіційного сайту виробника принтера.</translation>
+    </message>
+    <message>
+        <source>4. Restart the print service</source>
+        <translation>4. Перезапустіть службу друку</translation>
+    </message>
+    <message>
+        <source>Open System Monitor, switch to System Services, search for "cups" and try to restart the service.</source>
+        <translation>Відкрийте «Системний монітор», перейдіть на вкладку «Системні служби», знайдіть «cups» і спробуйте перезапустити службу.</translation>
+    </message>
+    <message>
+        <source>5. Check the print queue</source>
+        <translation>5. Перевірте чергу друку</translation>
+    </message>
+    <message>
+        <source>In the print manager, find the printer in use and click the "Print Queue" icon button. Check for any pending print tasks, delete any pending tasks, and then try printing again.</source>
+        <translation>У Диспетчері друку знайдіть принтер, який використовуєте, і натисніть кнопку-значок «Черга друку». Перевірте наявність завдань друку в очікуванні, видаліть їх і спробуйте друкувати знову.</translation>
+    </message>
+    <message>
+        <source>6. Run troubleshooting</source>
+        <translation>6. Запустіть усунення несправностей</translation>
+    </message>
+    <message>
+        <source>In the print manager, find the printer in use, click the "Troubleshooting" icon button, run it and find solutions based on the detection results.</source>
+        <translation>У Диспетчері друку знайдіть принтер, який використовуєте, натисніть кнопку-значок «Усунення несправностей», запустіть перевірку та знайдіть рішення за її результатами.</translation>
+    </message>
+    <message>
+        <source>7. Check the default printer settings</source>
+        <translation>7. Перевірте типові налаштування принтера</translation>
+    </message>
+    <message>
+        <source>In Print Manager, find the printer you are using and confirm whether it is set as default.</source>
+        <translation>У Диспетчері друку знайдіть принтер, який використовуєте, і переконайтеся, що його призначено типовим.</translation>
+    </message>
+    <message>
+        <source>8. Clean up temporary printer files</source>
+        <translation>8. Очистьте тимчасові файли принтера</translation>
+    </message>
+    <message>
+        <source>Open the terminal and enter the following commands in sequence and press Enter. This will stop the print service, delete the printer&apos;s temporary files, and finally restart the print service.</source>
+        <translation>Відкрийте термінал і по черзі введіть наведені нижче команди, натискаючи Enter. Це зупинить службу друку, видалить тимчасові файли принтера, а потім знову запустить службу друку.</translation>
+    </message>
+    <message>
+        <source>9. Update your print manager or operating system</source>
+        <translation>9. Оновіть Диспетчер друку або операційну систему</translation>
+    </message>
+    <message>
+        <source>Make sure your print manager or operating system is up to date. You can install the latest version of Print Manager through the App Store, and install the latest version of UOS through the Control Center-Update Module.</source>
+        <translation>Переконайтеся, що Диспетчер друку або операційну систему оновлено. Останню версію Диспетчера друку можна встановити через Магазин застосунків, а останню версію UOS — через модуль оновлення Центру керування.</translation>
+    </message>
+    <message>
+        <source>10. Reinstall the printer</source>
+        <translation>10. Перевстановіть принтер</translation>
+    </message>
+    <message>
+        <source>In Print Manager, select the printer you are using, click the "Minus" button to remove it, and then try to reinstall the printer.</source>
+        <translation>У Диспетчері друку виберіть принтер, який використовуєте, натисніть кнопку «Мінус», щоб видалити його, а потім спробуйте встановити принтер знову.</translation>
+    </message>
+    <message>
+        <source>11. Check antivirus software</source>
+        <translation>11. Перевірте антивірусне ПЗ</translation>
+    </message>
+    <message>
+        <source>Some antivirus software may block printing operations. Try turning off your antivirus software and retesting the printing functionality.</source>
+        <translation>Деяке антивірусне ПЗ може блокувати друк. Спробуйте вимкнути антивірус і повторити перевірку друку.</translation>
+    </message>
+    <message>
+        <source>12. Check for hardware failure</source>
+        <translation>12. Перевірте обладнання на несправність</translation>
+    </message>
+    <message>
+        <source>If none of the above steps solve the problem, you need to consider whether the printer has a hardware failure. It is recommended to try connecting to another computer to test, or contact the manufacturer&apos;s technical support.</source>
+        <translation>Якщо жоден із наведених кроків не розв’язав проблему, можливо, несправний сам принтер. Рекомендовано спробувати підключити його до іншого комп’ютера або звернутися до технічної підтримки виробника.</translation>
     </message>
 </context>
 <context>
@@ -1624,6 +1904,10 @@
         <source>Save debugging information for troubleshooting</source>
         <translation>Зберегти діагностичні відомості для усування вад</translation>
     </message>
+    <message>
+        <source>To share your printer, turn on these settings</source>
+        <translation>Щоб надати спільний доступ до принтера, увімкніть ці параметри</translation>
+    </message>
 </context>
 <context>
     <name>TroubleShootDialog</name>
@@ -1643,6 +1927,508 @@
         <source>OK</source>
         <comment>button</comment>
         <translation>Гаразд</translation>
+    </message>
+    <message>
+        <source>There is no information to copy.</source>
+        <translation>Немає даних для копіювання.</translation>
+    </message>
+    <message>
+        <source>Copied</source>
+        <translation>Скопійовано</translation>
+    </message>
+    <message>
+        <source>The repair service is not available.</source>
+        <translation>Служба відновлення недоступна.</translation>
+    </message>
+    <message>
+        <source>Can&apos;t print? Learn how to resolve</source>
+        <translation>Не вдається друкувати? Дізнайтеся, як це виправити</translation>
+    </message>
+</context>
+<context>
+    <name>TroubleShootItem</name>
+    <message>
+        <source>Expand more</source>
+        <translation>Показати більше</translation>
+    </message>
+    <message>
+        <source>Troubleshoot: </source>
+        <translation>Усунення несправностей: </translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <comment>button</comment>
+        <translation>Скасувати</translation>
+    </message>
+    <message>
+        <source>Can&apos;t print? Learn how to resolve</source>
+        <translation>Не вдається друкувати? Дізнайтеся, як це виправити</translation>
+    </message>
+</context>
+<context>
+    <name>CustomPageDialog</name>
+    <message>
+        <source>Custom Paper</source>
+        <translation>Нестандартний папір</translation>
+    </message>
+    <message>
+        <source>Millimeters</source>
+        <translation>Міліметри</translation>
+    </message>
+    <message>
+        <source>Inches</source>
+        <translation>Дюйми</translation>
+    </message>
+    <message>
+        <source>Paper Name</source>
+        <translation>Назва паперу</translation>
+    </message>
+    <message>
+        <source>Unit</source>
+        <translation>Одиниці</translation>
+    </message>
+    <message>
+        <source>Width</source>
+        <translation>Ширина</translation>
+    </message>
+    <message>
+        <source>Height</source>
+        <translation>Висота</translation>
+    </message>
+    <message>
+        <source>Margins</source>
+        <translation>Поля</translation>
+    </message>
+    <message>
+        <source>Top</source>
+        <translation>Зверху</translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation>Ліворуч</translation>
+    </message>
+    <message>
+        <source>Bottom</source>
+        <translation>Знизу</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation>Праворуч</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <comment>button</comment>
+        <translation>Скасувати</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <comment>button</comment>
+        <translation>Зберегти</translation>
+    </message>
+    <message>
+        <source>Custom paper %1</source>
+        <translation>Нестандартний папір %1</translation>
+    </message>
+    <message>
+        <source>Please enter a paper name</source>
+        <translation>Введіть назву паперу</translation>
+    </message>
+    <message>
+        <source>The paper name is too long</source>
+        <translation>Назва паперу задовга</translation>
+    </message>
+    <message>
+        <source>The paper name contains characters that are not allowed</source>
+        <translation>Назва паперу містить недопустимі символи</translation>
+    </message>
+    <message>
+        <source>The paper width is outside the range supported by the printer</source>
+        <translation>Ширина паперу виходить за межі, які підтримує принтер</translation>
+    </message>
+    <message>
+        <source>The paper height is outside the range supported by the printer</source>
+        <translation>Висота паперу виходить за межі, які підтримує принтер</translation>
+    </message>
+    <message>
+        <source>Margins cannot be negative</source>
+        <translation>Поля не можуть бути від’ємними</translation>
+    </message>
+    <message>
+        <source>The margins are larger than the paper</source>
+        <translation>Поля більші за розмір паперу</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <comment>button</comment>
+        <translation>OK</translation>
+    </message>
+    <message>
+        <source>Failed to save the custom paper sizes</source>
+        <translation>Не вдалося зберегти розміри нестандартного паперу</translation>
+    </message>
+</context>
+<context>
+    <name>SmbPrinterPage</name>
+    <message>
+        <source>Find Windows Shared Printer</source>
+        <translation>Пошук спільного принтера Windows</translation>
+    </message>
+    <message>
+        <source>Enter IP Address</source>
+        <translation>Введіть IP-адресу</translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <comment>button</comment>
+        <translation>Огляд</translation>
+    </message>
+    <message>
+        <source>No printers found</source>
+        <translation>Принтери не знайдено</translation>
+    </message>
+    <message>
+        <source>Enter IP, then Browse</source>
+        <translation>Введіть IP-адресу та натисніть «Огляд»</translation>
+    </message>
+    <message>
+        <source>Authentication Completed</source>
+        <translation>Автентифікацію виконано</translation>
+    </message>
+    <message>
+        <source>Select Printer</source>
+        <translation>Вибір принтера</translation>
+    </message>
+    <message>
+        <source>Please enter a valid IP address or hostname</source>
+        <translation>Введіть коректну IP-адресу або назву вузла</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
+</context>
+<context>
+    <name>IppUsbSwitch</name>
+    <message>
+        <source>The ipp-usb printer is not published on the network, so it cannot be added with the driverless solution.</source>
+        <translation>Принтер ipp-usb не опубліковано в мережі, тому його не можна додати за допомогою рішення без драйвера.</translation>
+    </message>
+    <message>
+        <source>ipp-usb does not list this printer.</source>
+        <translation>ipp-usb не містить цей принтер у списку.</translation>
+    </message>
+    <message>
+        <source>Failed to add the printer to ipp-usb blacklist.</source>
+        <translation>Не вдалося додати принтер до чорного списку ipp-usb.</translation>
+    </message>
+    <message>
+        <source>The USB address of the printer did not appear after switching off ipp-usb.</source>
+        <translation>USB-адреса принтера не з’явилася після вимкнення ipp-usb.</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Username</source>
+        <translation>Ім’я користувача</translation>
+    </message>
+    <message>
+        <source>Domain</source>
+        <translation>Домен</translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation>Пароль</translation>
+    </message>
+    <message>
+        <source>Remember Password</source>
+        <translation>Запам’ятати пароль</translation>
+    </message>
+    <message>
+        <source>Connection Identity</source>
+        <translation>Тип підключення</translation>
+    </message>
+    <message>
+        <source>Guest</source>
+        <translation>Гість</translation>
+    </message>
+    <message>
+        <source>Registered User</source>
+        <translation>Зареєстрований користувач</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Скасувати</translation>
+    </message>
+    <message>
+        <source>Connect</source>
+        <translation>Підключитися</translation>
+    </message>
+    <message>
+        <source>Authentication Required for %1</source>
+        <translation>Потрібна автентифікація для %1</translation>
+    </message>
+    <message>
+        <source>Authentication required to connect to printer "%1"</source>
+        <translation>Для підключення до принтера «%1» потрібна автентифікація</translation>
+    </message>
+</context>
+<context>
+    <name>RefreshDevicesSmbTask</name>
+    <message>
+        <source>Please enter a valid IP address or hostname</source>
+        <translation>Введіть коректну IP-адресу або назву вузла</translation>
+    </message>
+    <message>
+        <source>Windows sharing support (libsmbclient) is not available</source>
+        <translation>Підтримка спільного доступу Windows (libsmbclient) недоступна</translation>
+    </message>
+    <message>
+        <source>Failed to access %1. Please check if the username or password is correct, and ensure the Windows sharing service is configured correctly.</source>
+        <translation>Не вдалося отримати доступ до %1. Перевірте правильність імені користувача та пароля й переконайтеся, що службу спільного доступу Windows налаштовано правильно.</translation>
+    </message>
+</context>
+<context>
+    <name>AddCanonCAPTPrinter</name>
+    <message>
+        <source>The Canon driver needs administrator authorization. Please add the printer in the Print Manager.</source>
+        <translation>Для драйвера Canon потрібні права адміністратора. Додайте принтер у Диспетчері друку.</translation>
+    </message>
+    <message>
+        <source>Canon capt install fail.</source>
+        <translation>Не вдалося встановити Canon CAPT.</translation>
+    </message>
+</context>
+<context>
+    <name>TroubleShootJob</name>
+    <message>
+        <source>The repair has been completed.</source>
+        <translation>Відновлення завершено.</translation>
+    </message>
+    <message>
+        <source>The repair did not succeed.</source>
+        <translation>Відновити не вдалося.</translation>
+    </message>
+</context>
+<context>
+    <name>CheckCupsErrorLog</name>
+    <message>
+        <source>Check CUPS error log</source>
+        <translation>Перевірка журналу помилок CUPS</translation>
+    </message>
+    <message>
+        <source>View log</source>
+        <translation>Переглянути журнал</translation>
+    </message>
+    <message>
+        <source>Copy info</source>
+        <translation>Копіювати відомості</translation>
+    </message>
+    <message>
+        <source>One-click fix</source>
+        <translation>Виправити одним кліком</translation>
+    </message>
+    <message>
+        <source>Possible cause: %1</source>
+        <translation>Можлива причина: %1</translation>
+    </message>
+    <message>
+        <source>Recommended action: %1</source>
+        <translation>Рекомендована дія: %1</translation>
+    </message>
+    <message>
+        <source>The print service has been repaired.</source>
+        <translation>Службу друку відновлено.</translation>
+    </message>
+    <message>
+        <source>The print service could not be repaired.</source>
+        <translation>Не вдалося відновити службу друку.</translation>
+    </message>
+    <message>
+        <source>Checking CUPS error log...</source>
+        <translation>Перевірка журналу помилок CUPS...</translation>
+    </message>
+    <message>
+        <source>The CUPS error log could not be checked</source>
+        <translation>Не вдалося перевірити журнал помилок CUPS</translation>
+    </message>
+    <message>
+        <source>No CUPS error found</source>
+        <translation>Помилок CUPS не знайдено</translation>
+    </message>
+</context>
+<context>
+    <name>CheckSpecificModel</name>
+    <message>
+        <source>Check model-specific issues</source>
+        <translation>Перевірка проблем, специфічних для моделі</translation>
+    </message>
+    <message>
+        <source>One-click fix</source>
+        <translation>Виправити одним кліком</translation>
+    </message>
+    <message>
+        <source>Checking model-specific issues...</source>
+        <translation>Перевірка проблем, специфічних для моделі...</translation>
+    </message>
+    <message>
+        <source>No model-specific issue found</source>
+        <translation>Проблем, специфічних для моделі, не знайдено</translation>
+    </message>
+    <message>
+        <source>Model-specific issues were found</source>
+        <translation>Виявлено проблеми, специфічні для моделі</translation>
+    </message>
+</context>
+<context>
+    <name>CanonI386</name>
+    <message>
+        <source>32-bit support required</source>
+        <translation>Потрібна підтримка 32-бітних програм</translation>
+    </message>
+    <message>
+        <source>The Canon CAPT driver needs 32-bit (i386) runtime libraries. 32-bit support will be enabled and the required libraries installed. This needs the administrator password.</source>
+        <translation>Для драйвера Canon CAPT потрібні 32-бітні (i386) бібліотеки часу виконання. Буде ввімкнено підтримку 32-бітних програм і встановлено потрібні бібліотеки. Для цього потрібен пароль адміністратора.</translation>
+    </message>
+    <message>
+        <source>Enable and Install</source>
+        <translation>Увімкнути та встановити</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Скасувати</translation>
+    </message>
+    <message>
+        <source>The Canon printer was not added because the 32-bit (i386) support it needs was not enabled.</source>
+        <translation>Принтер Canon не додано, оскільки не було ввімкнено потрібну йому підтримку 32-бітних (i386) програм.</translation>
+    </message>
+    <message>
+        <source>Could not enable 32-bit (i386) support.</source>
+        <translation>Не вдалося ввімкнути підтримку 32-бітних (i386) програм.</translation>
+    </message>
+    <message>
+        <source>Could not update the package lists. Please check the network connection and try again.</source>
+        <translation>Не вдалося оновити списки пакунків. Перевірте підключення до мережі та повторіть спробу.</translation>
+    </message>
+    <message>
+        <source>Could not install the 32-bit libraries needed by the Canon driver.</source>
+        <translation>Не вдалося встановити 32-бітні бібліотеки, потрібні драйверу Canon.</translation>
+    </message>
+    <message>
+        <source>Another program is using the package manager. Please try again in a few minutes.</source>
+        <translation>Менеджер пакунків зайнятий іншою програмою. Повторіть спробу за кілька хвилин.</translation>
+    </message>
+</context>
+<context>
+    <name>CanonI386Prompt</name>
+    <message>
+        <source>The repair service is not available.</source>
+        <translation>Служба відновлення недоступна.</translation>
+    </message>
+    <message>
+        <source>The 32-bit support could not be set up.</source>
+        <translation>Не вдалося налаштувати підтримку 32-бітних програм.</translation>
+    </message>
+</context>
+<context>
+    <name>ModelFixMap</name>
+    <message>
+        <source>The Canon LBP2900 print service could not be repaired. Please try again.</source>
+        <translation>Не вдалося відновити службу друку Canon LBP2900. Повторіть спробу.</translation>
+    </message>
+</context>
+<context>
+    <name>Common</name>
+    <message>
+        <source>Administrator authorization was denied.</source>
+        <translation>У авторизації адміністратора відмовлено.</translation>
+    </message>
+    <message>
+        <source>The Canon capt printer has been added and is not allowed to be added again.</source>
+        <translation>Принтер Canon CAPT уже додано, повторне додавання не дозволяється.</translation>
+    </message>
+    <message>
+        <source>The Canon driver could not be configured.</source>
+        <translation>Не вдалося налаштувати драйвер Canon.</translation>
+    </message>
+    <message>
+        <source>The printer management service did not respond in time.</source>
+        <translation>Служба керування принтерами не відповіла вчасно.</translation>
+    </message>
+    <message>
+        <source>The printer management service is not available.</source>
+        <translation>Служба керування принтерами недоступна.</translation>
+    </message>
+    <message>
+        <source>The printer name, driver or device information is not valid for the Canon driver.</source>
+        <translation>Назва принтера, драйвер або відомості про пристрій недійсні для драйвера Canon.</translation>
+    </message>
+    <message>
+        <source>The printer service is busy. Please try again later.</source>
+        <translation>Служба принтера зайнята. Повторіть спробу пізніше.</translation>
+    </message>
+</context>
+<context>
+    <name>CupsErrorMap</name>
+    <message>
+        <source>CUPS reported an error</source>
+        <translation>CUPS повідомила про помилку</translation>
+    </message>
+    <message>
+        <source>Copy the information and contact support.</source>
+        <translation>Скопіюйте відомості та зверніться до служби підтримки.</translation>
+    </message>
+    <message>
+        <source>The print service logged an error for the last job.</source>
+        <translation>Служба друку зареєструвала помилку під час останнього завдання.</translation>
+    </message>
+</context>
+<context>
+    <name>DriverInstallConfirm</name>
+    <message>
+        <source>Cancel</source>
+        <translation>Скасувати</translation>
+    </message>
+    <message>
+        <source>Install</source>
+        <translation>Встановити</translation>
+    </message>
+    <message>
+        <source>Install the following driver packages?</source>
+        <translation>Встановити такі пакунки драйверів?</translation>
+    </message>
+</context>
+<context>
+    <name>PrinterUi</name>
+    <message>
+        <source>Local Match</source>
+        <translation>Локальний добір</translation>
+    </message>
+    <message>
+        <source>Online Match</source>
+        <translation>Добір у мережі</translation>
+    </message>
+    <message>
+        <source>Use Driverless Solution</source>
+        <translation>Використовувати рішення без драйвера</translation>
+    </message>
+</context>
+<context>
+    <name>ManagementToolWidget</name>
+    <message>
+        <source>Management Tools</source>
+        <translation>Засоби керування</translation>
+    </message>
+</context>
+<context>
+    <name>PrinterHelpWindow</name>
+    <message>
+        <source>Learn how to fix issues with not being able to print</source>
+        <translation>Дізнайтеся, як усунути проблеми з друком</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Копіювати</translation>
     </message>
 </context>
 </TS>

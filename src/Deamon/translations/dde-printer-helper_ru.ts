@@ -219,12 +219,16 @@
     <message>
         <location filename="../dbus/zcupsmonitor.cpp" line="383"/>
         <source>%1 has been sent to the printer, please take away the paper in time!</source>
-        <translation type="unfinished"/>
+        <translation>%1 отправлено на принтер, вовремя заберите бумагу!</translation>
     </message>
     <message>
         <location filename="../dbus/zcupsmonitor.cpp" line="385"/>
         <source>%1 %2, reason: %3</source>
         <translation>%1 %2, причина: %3</translation>
+    </message>
+    <message>
+        <source>%1 printed successfully, please take away the paper in time!</source>
+        <translation>%1 успешно напечатан, вовремя заберите бумагу!</translation>
     </message>
 </context>
 <context>
@@ -302,7 +306,11 @@
     <message>
         <location filename="../../Common/common.cpp" line="154"/>
         <source>%1 not found, please ask the administrator for help, or enter the printer IP address in URI of Properties.</source>
-        <translation type="unfinished"/>
+        <translation>%1 не найден, обратитесь за помощью к администратору или введите IP-адрес принтера в поле URI в свойствах.</translation>
+    </message>
+    <message>
+        <source> not found, please ask the administrator for help</source>
+        <translation> не найден, обратитесь за помощью к администратору</translation>
     </message>
 </context>
 <context>
@@ -310,17 +318,64 @@
     <message>
         <location filename="../usbprinter/usbthread.cpp" line="260"/>
         <source>Configuring the printer %1 ...</source>
-        <translation type="unfinished"/>
+        <translation>Настройка принтера %1 ...</translation>
     </message>
     <message>
         <location filename="../usbprinter/usbthread.cpp" line="306"/>
         <source>Configuration successful. Click to view %1.</source>
-        <translation type="unfinished"/>
+        <translation>Настройка выполнена. Нажмите, чтобы просмотреть %1.</translation>
     </message>
     <message>
         <location filename="../usbprinter/usbthread.cpp" line="310"/>
         <source>Configuration failed. Click to add the printer %1.</source>
-        <translation type="unfinished"/>
+        <translation>Не удалось выполнить настройку. Нажмите, чтобы добавить принтер %1.</translation>
+    </message>
+</context>
+<context>
+    <name>SmbCredentialDialog</name>
+    <message>
+        <source>Username</source>
+        <translation>Имя пользователя</translation>
+    </message>
+    <message>
+        <source>Domain</source>
+        <translation>Домен</translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation>Пароль</translation>
+    </message>
+    <message>
+        <source>Remember Password</source>
+        <translation>Запомнить пароль</translation>
+    </message>
+    <message>
+        <source>Connection Identity</source>
+        <translation>Тип подключения</translation>
+    </message>
+    <message>
+        <source>Guest</source>
+        <translation>Гость</translation>
+    </message>
+    <message>
+        <source>Registered User</source>
+        <translation>Зарегистрированный пользователь</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <source>Connect</source>
+        <translation>Подключиться</translation>
+    </message>
+    <message>
+        <source>Authentication Required for %1</source>
+        <translation>Требуется аутентификация для %1</translation>
+    </message>
+    <message>
+        <source>Authentication required to connect to printer "%1"</source>
+        <translation>Для подключения к принтеру «%1» требуется аутентификация</translation>
     </message>
 </context>
 </TS>

@@ -135,11 +135,18 @@ public:
 protected:
     int addPrinter();
 
+    // Seams for the cleanup of a queue that lpadmin left behind after failing.
+    virtual QStringList existingQueueNames();
+    virtual bool removeQueue(const QString &name);
+    void rememberExistingQueue();
+    void rollbackFailedQueue();
+
 protected slots:
     void slotProcessFinished(int iCode, QProcess::ExitStatus exitStatus);
 
 private:
     QProcess m_proc;
+    bool m_queueExistedBefore = false;
 };
 
 class FixHplipBackend : public QObject

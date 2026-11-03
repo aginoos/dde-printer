@@ -48,8 +48,13 @@ struct SmbApi
     }
 };
 
+// Seam for tests (they include this file): when set, replaces the dlopen'ed libsmbclient.
+const SmbApi *g_smbApiOverride = nullptr;
+
 const SmbApi &smbApi()
 {
+    if (g_smbApiOverride)
+        return *g_smbApiOverride;
     static const SmbApi api = [] {
         SmbApi loaded;
         QLibrary lib(QStringLiteral("libsmbclient"), 0);

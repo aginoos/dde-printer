@@ -419,7 +419,7 @@ struct PeerBus
         object.replies = replies;
         QObject::connect(&server, &QDBusServer::newConnection, &server, [this](const QDBusConnection &incoming) {
             serverSide = incoming;
-            serverSide.registerVirtualObject("/", &object, QDBusVirtualObject::SubPath);
+            serverSide.registerVirtualObject("/", &object, QDBusConnection::SubPath);
         });
         client = QDBusConnection::connectToPeer(server.address(), QString("ut-installinterface-%1").arg(counter++));
         pumpUntil([this] { return serverSide.isConnected() && client.isConnected(); });
@@ -578,7 +578,7 @@ TEST(ut_InstallInterface, daemonRestartIsRetriedUntilItAnswers)
     BackendGuard guard;
     LastoreFixture fx;
     const QString gone = "Message recipient disconnected from message bus without replying";
-    fx.replies = {errorReply(QDBusError::Other, gone), errorReply(QDBusError::Other, gone), errorReply(QDBusError::Other, gone)};
+    fx.replies = {errorReply(QDBusError::Failed, gone), errorReply(QDBusError::Failed, gone), errorReply(QDBusError::Failed, gone)};
     fx.apply();
     InstallInterface installer;
     StatusLog log(installer);

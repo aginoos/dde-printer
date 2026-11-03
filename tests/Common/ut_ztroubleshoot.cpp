@@ -1123,19 +1123,21 @@ TEST(ut_TroubleShoot, aJobThatStopsTheTaskPreventsTheLaterOnes)
 {
     struct StoppingJob : FakeJob
     {
-        StoppingJob(TroubleShoot *t) : FakeJob("stopper", true), task(t) {}
+        StoppingJob() : FakeJob("stopper", true) {}
         bool isPass() override
         {
             task->m_bQuit = true;
             return FakeJob::isPass();
         }
-        TroubleShoot *task;
+        TroubleShoot *task = nullptr;
     };
 
+    // The jobs must outlive the task: its destructor calls stop() on each.
+    StoppingJob stopper;
+    FakeJob later("later", false);
     TroubleShoot task("Q");
     task.m_jobs.clear();
-    StoppingJob stopper(&task);
-    FakeJob later("later", false);
+    stopper.task = &task;
     task.addJob(&stopper);
     task.addJob(&later);
 

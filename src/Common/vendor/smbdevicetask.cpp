@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <cstddef>
 #include <cstring>
 
 namespace {
@@ -186,7 +187,10 @@ int RefreshDevicesSmbTask::listShares(const Identity &identity)
         if (entry->smbc_type != SMBC_PRINTER_SHARE)
             continue;
 
-        share.share = QString::fromUtf8(entry->name);
+        // smbc_dirent::name is a trailing variable-length array declared as name[1]; read it through
+        // a plain pointer so the compiler does not treat the string as one byte long.
+        const char *shareName = reinterpret_cast<const char *>(entry) + offsetof(struct smbc_dirent, name);
+        share.share = QString::fromUtf8(shareName);
         const QString comment = QString::fromUtf8(entry->comment);
 
         TDeviceInfo info;

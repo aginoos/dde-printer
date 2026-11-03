@@ -2388,4 +2388,96 @@
         <translation>无法修复佳能 LBP2900 打印服务，请重试。</translation>
     </message>
 </context>
+<context>
+    <name>Common</name>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>Administrator authorization was denied.</source>
+        <translation>管理员授权被拒绝。</translation>
+    </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>The Canon capt printer has been added and is not allowed to be added again.</source>
+        <translation>该佳能 CAPT 打印机已添加，不能重复添加。</translation>
+    </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>The Canon driver could not be configured.</source>
+        <translation>无法配置佳能驱动。</translation>
+    </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>The printer management service did not respond in time.</source>
+        <translation>打印管理服务未能及时响应。</translation>
+    </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>The printer management service is not available.</source>
+        <translation>打印管理服务不可用。</translation>
+    </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>The printer name, driver or device information is not valid for the Canon driver.</source>
+        <translation>打印机名称、驱动或设备信息对佳能驱动无效。</translation>
+    </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>The printer service is busy. Please try again later.</source>
+        <translation>打印服务正忙，请稍后重试。</translation>
+    </message>
+</context>
+<context>
+    <name>CupsErrorMap</name>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>CUPS reported an error</source>
+        <translation>CUPS 报告了错误</translation>
+    </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>Copy the information and contact support.</source>
+        <translation>请复制这些信息并联系技术支持。</translation>
+    </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>The print service logged an error for the last job.</source>
+        <translation>打印服务记录了上一个作业的错误。</translation>
+    </message>
+</context>
+<context>
+    <name>DriverInstallConfirm</name>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>Install</source>
+        <translation>安装</translation>
+    </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>Install the following driver packages?</source>
+        <translation>是否安装以下驱动包？</translation>
+    </message>
+</context>
+<context>
+    <name>PrinterUi</name>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>Local Match</source>
+        <translation>本地匹配</translation>
+    </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>Online Match</source>
+        <translation>在线匹配</translation>
+    </message>
+    <message>
+        <location filename="../ui/printerapplication.cpp" line="1"/>
+        <source>Use Driverless Solution</source>
+        <translation>使用免驱方案</translation>
+    </message>
+</context>
 </TS>

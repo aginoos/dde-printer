@@ -35,4 +35,5 @@ SOURCES += $$PWD/ut_common.cpp \
     $$PWD/ut_smbdevicetask.cpp \
     $$PWD/ut_printerservice.cpp \
     $$PWD/ut_driverplatformconfig.cpp \
-    $$PWD/ut_pluginstatus.cpp
+    $$PWD/ut_pluginstatus.cpp \
+    $$PWD/ut_taskinterface.cpp

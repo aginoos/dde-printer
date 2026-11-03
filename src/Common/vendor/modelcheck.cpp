@@ -12,21 +12,36 @@ namespace {
 
 constexpr int kQueryTimeoutMs = 5000;
 
+ModelCheckRunner::CommandRunner g_commandRunner;
+
+SafeProcess::Result runQuery(const QString &program, const QStringList &args)
+{
+    return g_commandRunner ? g_commandRunner(program, args, kQueryTimeoutMs)
+                           : SafeProcess::run(program, args, kQueryTimeoutMs);
+}
+
 bool systemctlSucceeds(const QString &verb, const QString &unit)
 {
-    return SafeProcess::run("systemctl", {verb, "--quiet", "--", unit}, kQueryTimeoutMs).ok();
+    return runQuery("systemctl", {verb, "--quiet", "--", unit}).ok();
 }
 
 bool packageInstalled(const QString &package)
 {
-    const SafeProcess::Result r = SafeProcess::run(
-        "dpkg-query", {"-W", "-f=${Status}", "--", package}, kQueryTimeoutMs);
+    const SafeProcess::Result r = runQuery(
+        "dpkg-query", {"-W", "-f=${Status}", "--", package});
     return r.ok() && ModelCheckRunner::isInstalledStatus(r.out);
 }
 
 }  // namespace
 
 namespace ModelCheckRunner {
+
+CommandRunner setCommandRunner(CommandRunner runner)
+{
+    CommandRunner previous = std::move(g_commandRunner);
+    g_commandRunner = std::move(runner);
+    return previous;
+}
 
 bool isInstalledStatus(const QString &statusOutput)
 {

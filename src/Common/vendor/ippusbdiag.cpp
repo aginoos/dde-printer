@@ -18,9 +18,18 @@ QString normalized(const QString &text)
     return result;
 }
 
+IppUsbDiag::DeviceLister g_deviceLister;
+
 }  // namespace
 
 namespace IppUsbDiag {
+
+DeviceLister setDeviceLister(DeviceLister lister)
+{
+    DeviceLister previous = std::move(g_deviceLister);
+    g_deviceLister = std::move(lister);
+    return previous;
+}
 
 QString modelFromDeviceUri(const QString &uri)
 {
@@ -64,7 +73,7 @@ Result diagnoseLocal(const QString &deviceUri)
 {
     if (modelFromDeviceUri(deviceUri).isEmpty())
         return Result();
-    return diagnose(deviceUri, AvahiTool::ippUsbDevices());
+    return diagnose(deviceUri, g_deviceLister ? g_deviceLister() : AvahiTool::ippUsbDevices());
 }
 
 }  // namespace IppUsbDiag

@@ -19,6 +19,7 @@
 #include "modelcheck.h"
 #include "modelfixmap.h"
 #include "troubleshootservice.h"
+#include "ztroubleshoot_env.h"
 
 #include <QTcpSocket>
 #include <QUrl>
@@ -94,9 +95,7 @@ static QString printerMakeAndModel(const QString &printerName)
     vector<string> reqs {CUPS_OP_MAKE_MODEL};
 
     try {
-        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-        if (conPtr)
-            attrs = conPtr->getPrinterAttributes(printerName.toUtf8().data(), nullptr, &reqs);
+        attrs = troubleShootEnv().printerAttributes(printerName, reqs);
     } catch (const std::exception &ex) {
         qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
         return QString();
@@ -104,6 +103,48 @@ static QString printerMakeAndModel(const QString &printerName)
 
     const auto it = attrs.find(CUPS_OP_MAKE_MODEL);
     return it == attrs.end() ? QString() : attrValueToQString(it->second);
+}
+
+TroubleShootEnv defaultTroubleShootEnv()
+{
+    TroubleShootEnv env;
+    env.cupsReachable = []() { return static_cast<bool>(g_cupsConnection); };
+    env.printerPpd = [](const QString &printer) { return getPrinterPPD(printer.toUtf8().data()); };
+    env.driverDepends = [](const QString &ppd) { return g_driverManager->getDriverDepends(ppd.toUtf8().data()); };
+    env.packageExists = [](const QString &package) { return isPackageExists(package); };
+    env.printerUri = [](const QString &printer) { return getPrinterUri(printer.toUtf8().data()); };
+    env.resolveHost = [](const QString &host) { return reslovedHost(host); };
+    env.tcpProbe = [](const QString &host, quint16 port, int timeoutMs) {
+        QTcpSocket socket;
+        socket.connectToHost(host, port);
+        if (socket.waitForConnected(timeoutMs))
+            return QString();
+        // an empty text would read as success
+        return socket.errorString().isEmpty() ? QStringLiteral("unknown error") : socket.errorString();
+    };
+    env.directDevices = []() { return getDirectDevices(); };
+    env.ippUsb = [](const QString &uri) { return IppUsbDiag::diagnoseLocal(uri); };
+    env.ping = [](const QString &host) {
+        return SafeProcess::isValidHost(host)
+            && SafeProcess::run("ping", {"-c", "3", "-W", "2", "--", host}, 8000).out.contains("ttl=");
+    };
+    env.printerAttributes = [](const QString &printer, const std::vector<std::string> &requested) {
+        std::map<std::string, std::string> attrs;
+        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
+        if (conPtr)
+            attrs = conPtr->getPrinterAttributes(printer.toUtf8().data(), nullptr, &requested);
+        return attrs;
+    };
+    env.readErrorLog = [](const QString &printer) { return TroubleshootService::readJobErrorLog(printer); };
+    env.errorTable = []() { return CupsErrorMap::load(); };
+    env.modelTable = []() { return ModelFixMap::load(); };
+    return env;
+}
+
+TroubleShootEnv &troubleShootEnv()
+{
+    static TroubleShootEnv env = defaultTroubleShootEnv();
+    return env;
 }
 
 QString TroubleShootJob::repairResultText(bool success) const
@@ -125,7 +166,7 @@ QString CheckCupsServer::getJobName()
 bool CheckCupsServer::isPass()
 {
     emit signalStateChanged(TStat_Running, tr("Checking CUPS server..."));
-    if (!g_cupsConnection) {
+    if (!troubleShootEnv().cupsReachable()) {
         m_strMessage = tr("CUPS server is invalid");
         emit signalStateChanged(TStat_Fail, m_strMessage);
         return false;
@@ -155,7 +196,7 @@ bool CheckDriver::isPass()
         return true;
     }
 
-    strPPD = getPrinterPPD(m_printerName.toUtf8().data());
+    strPPD = troubleShootEnv().printerPpd(m_printerName);
     if (!QFile::exists(strPPD)) {
         qCWarning(COMMONMOUDLE) << strPPD << "not found";
         m_strMessage = tr("PPD file %1 not found").arg(strPPD);
@@ -192,9 +233,9 @@ bool CheckDriver::isPass()
         }
     }
 
-    depends = g_driverManager->getDriverDepends(strPPD.toUtf8().data());
+    depends = troubleShootEnv().driverDepends(strPPD);
     foreach (QString package, depends) {
-        if (!isPackageExists(package)) {
+        if (!troubleShootEnv().packageExists(package)) {
             qCWarning(COMMONMOUDLE) << package << "is not exists";
             m_strMessage = tr("%1 is not installed, cannot print now").arg(package);
             emit signalStateChanged(TStat_Fail, m_strMessage);
@@ -263,7 +304,7 @@ bool CheckConnected::isPass()
         return true;
     }
 
-    strUri = getPrinterUri(m_printerName.toUtf8().data());
+    strUri = troubleShootEnv().printerUri(m_printerName);
 
     url.setUrl(strUri);
     strScheme = url.scheme();
@@ -281,7 +322,7 @@ bool CheckConnected::isPass()
     strHost = connectableHost(strUri, getHostFromUri(strUri));
     qCDebug(COMMONMOUDLE) << strUri << "scheme:" << strScheme << "host:" << strHost << "port:" << iPort;
 
-    m_strMessage = reslovedHost(strHost);
+    m_strMessage = troubleShootEnv().resolveHost(strHost);
     if (!m_strMessage.isEmpty()) {
         qCWarning(COMMONMOUDLE) << strHost << "is not found";
         emit signalStateChanged(TStat_Fail, m_strMessage);
@@ -292,18 +333,17 @@ bool CheckConnected::isPass()
         return false;
 
     if (0 != iPort && !strHost.isEmpty()) {
-        QTcpSocket socket;
-        socket.connectToHost(strHost, iPort);
-        if (!socket.waitForConnected(3000)) {
-            qCWarning(COMMONMOUDLE) << "Can't connect to host,because " << socket.errorString();
-            m_strMessage = tr("Cannot connect to the printer, error: %1").arg(socket.errorString());
+        const QString connectError = troubleShootEnv().tcpProbe(strHost, iPort, 3000);
+        if (!connectError.isEmpty()) {
+            qCWarning(COMMONMOUDLE) << "Can't connect to host,because " << connectError;
+            m_strMessage = tr("Cannot connect to the printer, error: %1").arg(connectError);
             emit signalStateChanged(TStat_Fail, m_strMessage);
             return false;
         }
     } else if (strHost.isEmpty() && ("hp" == strScheme || "usb" == strScheme)) {
-        QStringList uris = getDirectDevices();
+        QStringList uris = troubleShootEnv().directDevices();
         if (!uris.contains(strUri)) {
-            const IppUsbDiag::Result ippUsb = IppUsbDiag::diagnoseLocal(strUri);
+            const IppUsbDiag::Result ippUsb = troubleShootEnv().ippUsb(strUri);
             if (IppUsbDiag::Verdict::NotInvolved != ippUsb.verdict) {
                 qCWarning(COMMONMOUDLE) << "USB device is handled by ipp-usb, status:" << ippUsb.status;
                 m_strMessage = IppUsbDiag::Verdict::TakenOver == ippUsb.verdict
@@ -330,9 +370,7 @@ bool CheckConnected::isPass()
             return false;
         }
     } else if (!strHost.isEmpty()) {
-        const bool reachable = SafeProcess::isValidHost(strHost)
-            && SafeProcess::run("ping", {"-c", "3", "-W", "2", "--", strHost}, 8000).out.contains("ttl=");
-        if (!reachable) {
+        if (!troubleShootEnv().ping(strHost)) {
             m_strMessage = tr("Cannot connect to the printer");
             emit signalStateChanged(TStat_Fail, m_strMessage);
             return false;
@@ -367,9 +405,7 @@ bool CheckAttributes::isPass()
     }
 
     try {
-        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-        if (conPtr)
-            attrs = conPtr->getPrinterAttributes(m_printerName.toUtf8().data(), nullptr, &reqs);
+        attrs = troubleShootEnv().printerAttributes(m_printerName, reqs);
     } catch (const std::exception &ex) {
         qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
         emit signalStateChanged(TStat_Fail, tr("Failed to get printer attributes, error: ") + QString::fromUtf8(ex.what()));
@@ -447,7 +483,7 @@ bool CheckCupsErrorLog::isPass()
 {
     emit signalStateChanged(TStat_Running, tr("Checking CUPS error log..."));
 
-    const TroubleshootService::LogResult reply = TroubleshootService::readJobErrorLog(m_printerName);
+    const TroubleshootService::LogResult reply = troubleShootEnv().readErrorLog(m_printerName);
     if (!reply.ok) {
         m_strMessage = tr("The CUPS error log could not be checked");
         emit signalStateChanged(TStat_Fail, m_strMessage);
@@ -456,7 +492,7 @@ bool CheckCupsErrorLog::isPass()
 
     m_log = reply.text;
     if (!m_log.isEmpty())
-        m_match = CupsErrorMap::match(CupsErrorMap::load(), m_log);
+        m_match = CupsErrorMap::match(troubleShootEnv().errorTable(), m_log);
 
     if (m_match) {
         qCWarning(COMMONMOUDLE) << m_printerName << "CUPS error id" << m_match->id;
@@ -504,7 +540,7 @@ QString CheckSpecificModel::repairResultText(bool success) const
 bool CheckSpecificModel::isPass()
 {
     const QString makeAndModel = printerMakeAndModel(m_printerName);
-    m_entry = ModelFixMap::match(ModelFixMap::load(), makeAndModel);
+    m_entry = ModelFixMap::match(troubleShootEnv().modelTable(), makeAndModel);
     if (!m_entry.isValid()) {
         // Nothing is known about this model: the row stays out of the way.
         m_hidden = true;

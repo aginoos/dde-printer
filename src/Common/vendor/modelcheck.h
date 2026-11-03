@@ -6,15 +6,26 @@
 #define MODELCHECK_H
 
 #include "modelfixmap.h"
+#include "safeprocess.h"
 
 #include <QFileDevice>
 #include <QList>
 #include <QString>
 
+#include <functional>
+
 // Evaluates the declarative checks of a model entry with the rights of the
 // calling user: only read-only queries (systemctl is-active / is-enabled,
 // dpkg-query, file permissions) and always through argument lists.
 namespace ModelCheckRunner {
+
+// Runs the read-only queries; replaceable so that tests never start systemctl
+// or dpkg-query. Same arguments as SafeProcess::run.
+using CommandRunner = std::function<SafeProcess::Result(const QString &, const QStringList &, int)>;
+
+// Installs `runner` and returns the previous one; an empty function selects
+// SafeProcess::run again (the default).
+CommandRunner setCommandRunner(CommandRunner runner);
 
 // Checks that do not pass. Blocking; each query is bounded by a timeout.
 QList<ModelCheck> failedChecks(const QList<ModelCheck> &checks);

@@ -10,6 +10,8 @@
 #include "cupsconnectionfactory.h"
 
 
+#include <memory>
+
 #include <QMap>
 #include <QVariant>
 #include <QFile>
@@ -36,6 +38,119 @@ static const char *jattrs[] = /* Attributes we need for jobs... */
     nullptr
 };
 
+namespace {
+
+std::unique_ptr<Connection> openConnection()
+{
+    return CupsConnectionFactory::createConnectionBySettings();
+}
+
+JobBackend &defaultBackend()
+{
+    static JobBackend instance;
+    return instance;
+}
+
+}  // namespace
+
+void JobBackend::getJobs(map<int, map<string, string>> &jobs, const char *which, int myJobs,
+                         int limit, int firstJobId, const vector<string> *attrs)
+{
+    auto conPtr = openConnection();
+    if (conPtr)
+        jobs = conPtr->getJobs(which, myJobs, limit, firstJobId, attrs);
+}
+
+bool JobBackend::cancelJob(int jobId, int purge)
+{
+    auto conPtr = openConnection();
+    if (!conPtr)
+        return false;
+    conPtr->cancelJob(jobId, purge);
+    return true;
+}
+
+bool JobBackend::cancelAllJobs(const char *dest)
+{
+    auto conPtr = openConnection();
+    if (!conPtr)
+        return false;
+    conPtr->cancelAllJobs(dest, nullptr, 1, 1);
+    return true;
+}
+
+void JobBackend::holdJob(int jobId)
+{
+    auto conPtr = openConnection();
+    if (conPtr)
+        conPtr->holdJob(jobId);
+}
+
+void JobBackend::releaseJob(int jobId)
+{
+    auto conPtr = openConnection();
+    if (conPtr)
+        conPtr->releaseJob(jobId);
+}
+
+void JobBackend::restartJob(int jobId)
+{
+    auto conPtr = openConnection();
+    if (conPtr)
+        conPtr->restartJob(jobId, nullptr);
+}
+
+void JobBackend::moveJob(const char *destUri, int jobId, const char *srcUri)
+{
+    auto conPtr = openConnection();
+    if (conPtr)
+        conPtr->moveJob(destUri, jobId, srcUri);
+}
+
+void JobBackend::setJobPriority(int jobId, int priority)
+{
+    auto conPtr = openConnection();
+    if (conPtr)
+        conPtr->setJobPriority(jobId, priority);
+}
+
+void JobBackend::printTestPage(const char *dest, const char *file, const char *title,
+                               const char *format, int &jobId)
+{
+    auto conPtr = openConnection();
+    if (conPtr)
+        jobId = conPtr->printTestPage(dest, file, title, format, nullptr);
+}
+
+QString JobBackend::testPageFile() const
+{
+    return QStringLiteral("/usr/share/cups/data/testprint");
+}
+
+std::function<bool(int)> JobBackend::purgedCheck()
+{
+    auto interface = std::make_shared<QDBusInterface>(SERVICE_INTERFACE_NAME, SERVICE_INTERFACE_PATH,
+                                                      SERVICE_INTERFACE_NAME, QDBusConnection::sessionBus());
+    if (!interface->isValid())
+        return nullptr;
+    return [interface](int jobId) {
+        QDBusReply<bool> result = interface->call("isJobPurged", jobId);
+        return result.isValid() && result.value();
+    };
+}
+
+JobBackend *JobManager::backend()
+{
+    return m_backend ? m_backend : &defaultBackend();
+}
+
+JobBackend *JobManager::setBackend(JobBackend *backend)
+{
+    JobBackend *previous = m_backend;
+    m_backend = backend;
+    return previous;
+}
+
 int JobManager::getJobs(map<int, map<string, string>> &jobs, int which, int myJobs)
 {
     vector<string> requst;
@@ -47,9 +162,7 @@ int JobManager::getJobs(map<int, map<string, string>> &jobs, int which, int myJo
     }
 
     try {
-        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-        if (conPtr)
-            jobs = conPtr->getJobs(g_whichs[which], myJobs, 0, 0, &requst);
+        backend()->getJobs(jobs, g_whichs[which], myJobs, 0, 0, &requst);
     } catch (const std::exception &ex) {
         qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
         return -1;
@@ -57,18 +170,14 @@ int JobManager::getJobs(map<int, map<string, string>> &jobs, int which, int myJo
 
     qCDebug(COMMONMOUDLE) << "Got jobs count: " << jobs.size();
     map<int, map<string, string>>::iterator itJobs = jobs.begin();
-    QDBusInterface interface(SERVICE_INTERFACE_NAME, SERVICE_INTERFACE_PATH, SERVICE_INTERFACE_NAME, QDBusConnection::sessionBus());
+    const std::function<bool(int)> isPurged = backend()->purgedCheck();
 
     while (itJobs != jobs.end()) {
         map<string, string> info = itJobs->second;
         qCDebug(COMMONMOUDLE) << JOB_ATTR_ID << itJobs->first;
-        if (interface.isValid()) {
-            QDBusReply<bool> result = interface.call("isJobPurged", itJobs->first);
-            if (result.isValid() && result.value()) {
-                qCInfo(COMMONMOUDLE) << itJobs->first << "is purged";
-                itJobs = jobs.erase(itJobs);
-            } else
-                itJobs++;
+        if (isPurged && isPurged(itJobs->first)) {
+            qCInfo(COMMONMOUDLE) << itJobs->first << "is purged";
+            itJobs = jobs.erase(itJobs);
         } else
             itJobs++;
         dumpStdMapValue(info);
@@ -87,9 +196,7 @@ int JobManager::getJobById(map<string, string> &job, int jobId, int myJob)
     }
 
     try {
-        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-        if (conPtr)
-            jobs = conPtr->getJobs(g_whichs[WHICH_JOB_ALL], myJob, 1, jobId, &requst);
+        backend()->getJobs(jobs, g_whichs[WHICH_JOB_ALL], myJob, 1, jobId, &requst);
     } catch (const std::exception &ex) {
         qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
         return -1;
@@ -112,9 +219,7 @@ int JobManager::cancelJob(int job_id)
     qCInfo(COMMONMOUDLE) << "Job: " << job_id;
 
     try {
-        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-        if (conPtr)
-            conPtr->cancelJob(job_id, 0);
+        backend()->cancelJob(job_id, 0);
     } catch (const std::exception &ex) {
         qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
         return -1;
@@ -128,14 +233,9 @@ int JobManager::deleteJob(int job_id, const char *dest)
     qCInfo(COMMONMOUDLE) << "Job: " << job_id;
 
     try {
-        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-        if (!conPtr)
+        const bool reached = dest ? backend()->cancelAllJobs(dest) : backend()->cancelJob(job_id, 1);
+        if (!reached)
             return -1;
-        if (dest) {
-            conPtr->cancelAllJobs(dest, nullptr, 1, 1);
-        } else {
-            conPtr->cancelJob(job_id, 1);
-        }
     } catch (const std::exception &ex) {
         qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
         return -1;
@@ -149,9 +249,7 @@ int JobManager::holdJob(int job_id)
     qCInfo(COMMONMOUDLE) << "Job: " << job_id;
 
     try {
-        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-        if (conPtr)
-            conPtr->holdJob(job_id);
+        backend()->holdJob(job_id);
     } catch (const std::exception &ex) {
         qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
         return -1;
@@ -185,9 +283,7 @@ int JobManager::releaseJob(int job_id)
     qCInfo(COMMONMOUDLE) << "Job: " << job_id;
 
     try {
-        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-        if (conPtr)
-            conPtr->releaseJob(job_id);
+        backend()->releaseJob(job_id);
     } catch (const std::exception &ex) {
         qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
         return -1;
@@ -201,9 +297,7 @@ int JobManager::restartJob(int job_id)
     qCInfo(COMMONMOUDLE) << "Job: " << job_id;
 
     try {
-        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-        if (conPtr)
-            conPtr->restartJob(job_id, nullptr);
+        backend()->restartJob(job_id);
     } catch (const std::exception &ex) {
         qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
         return -1;
@@ -217,9 +311,7 @@ int JobManager::moveJob(const char *destUri, int job_id, const char *srcUri)
     qCInfo(COMMONMOUDLE) << "Job: " << job_id;
 
     try {
-        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-        if (conPtr)
-            conPtr->moveJob(destUri, job_id, srcUri);
+        backend()->moveJob(destUri, job_id, srcUri);
     } catch (const std::exception &ex) {
         qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
         return -1;
@@ -228,14 +320,12 @@ int JobManager::moveJob(const char *destUri, int job_id, const char *srcUri)
     return 0;
 }
 
-static int setJobPriority(int job_id, int iPriority)
+static int setJobPriority(JobBackend *backend, int job_id, int iPriority)
 {
     qCInfo(COMMONMOUDLE) << "Job: " << job_id << iPriority;
 
     try {
-        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-        if (conPtr)
-            conPtr->setJobPriority(job_id, iPriority);
+        backend->setJobPriority(job_id, iPriority);
     } catch (const std::exception &ex) {
         qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
         return -1;
@@ -271,19 +361,19 @@ int JobManager::priorityJob(int job_id, int &iPriority)
                 if (++iPriority > HIGHEST_Priority) {
                     iPriority = HIGHEST_Priority;
                     qCDebug(COMMONMOUDLE) << "Change " << itmaps->first << "to" << HIGHEST_Priority - 1;
-                    setJobPriority(itmaps->first, HIGHEST_Priority - 1);
+                    setJobPriority(backend(), itmaps->first, HIGHEST_Priority - 1);
                 }
             }
         }
     }
 
     qCDebug(COMMONMOUDLE) << "Set" << job_id << iPriority;
-    return setJobPriority(job_id, iPriority);
+    return setJobPriority(backend(), job_id, iPriority);
 }
 
 QString JobManager::printTestPage(const char *dest, int &jobId, const char *format)
 {
-    const char *testFile = "/usr/share/cups/data/testprint";
+    const QString testFile = backend()->testPageFile();
 
     if (!QFile::exists(testFile)) {
         qCWarning(COMMONMOUDLE) << "No test file: " << testFile;
@@ -291,9 +381,7 @@ QString JobManager::printTestPage(const char *dest, int &jobId, const char *form
     }
 
     try {
-        auto conPtr = CupsConnectionFactory::createConnectionBySettings();
-        if (conPtr)
-            jobId = conPtr->printTestPage(dest, testFile, PrintTestTitle, format, nullptr);
+        backend()->printTestPage(dest, testFile.toUtf8().constData(), PrintTestTitle, format, jobId);
     } catch (const std::exception &ex) {
         qCWarning(COMMONMOUDLE) << "Got execpt: " << QString::fromUtf8(ex.what());
         return QString::fromUtf8(ex.what());

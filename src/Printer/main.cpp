@@ -4,8 +4,11 @@
 
 #include "printerapplication.h"
 #include "reviselogger.h"
+#include "addprinter.h"
+#include "canoni386prompt.h"
 
 #include <DApplication>
+#include <QApplication>
 #include <DLog>
 
 DWIDGET_USE_NAMESPACE
@@ -19,6 +22,11 @@ int main(int argc, char *argv[])
     int iRet = 0;
     /*需要在构造app之前设置这个属性,自适应屏幕缩放*/
     DApplication a(argc, argv);
+
+    // Canon CAPT drivers need i386 libraries: ask before the driver is installed.
+    setCanonPrerequisite([](const QString &ppdName, QString *error) {
+        return CanonI386Prompt::ensureReadyForDriver(QApplication::activeWindow(), ppdName, error);
+    });
 
     if (0 != g_printerApplication->create()) {
         qCritical() << "Create printer application failed";

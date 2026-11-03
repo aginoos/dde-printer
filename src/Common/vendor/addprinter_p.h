@@ -114,6 +114,7 @@ public:
     void stop();
 
 protected:
+    int fixDriverDepends();
     int addPrinter();
 
 protected slots:

@@ -33,6 +33,7 @@ SOURCES += \
     util/connectedtask.cpp \
     ui/printertestpagedialog.cpp \
     ui/troubleshootdialog.cpp\
+    ui/canoni386prompt.cpp \
     util/dprintertanslator.cpp \
     ui/dprintersupplyshowdlg.cpp \
     util/refreshsnmpbackendtask.cpp \
@@ -69,6 +70,7 @@ HEADERS += \
     util/connectedtask.h \
     ui/printertestpagedialog.h \
     ui/troubleshootdialog.h\
+    ui/canoni386prompt.h \
     util/dprintertanslator.h \
     ui/dprinterpropertytemplate.h \
     ui/dprintersupplyshowdlg.h \

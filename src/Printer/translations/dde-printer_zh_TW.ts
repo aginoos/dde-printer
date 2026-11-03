@@ -2080,4 +2080,61 @@
         <translation>發現機型相關問題</translation>
     </message>
 </context>
+<context>
+    <name>CanonI386</name>
+    <message>
+        <source>32-bit support required</source>
+        <translation>需要 32 位支援</translation>
+    </message>
+    <message>
+        <source>The Canon CAPT driver needs 32-bit (i386) runtime libraries. 32-bit support will be enabled and the required libraries installed. This needs the administrator password.</source>
+        <translation>佳能 CAPT 驅動需要 32 位元（i386）執行函式庫。將啟用 32 位元支援並安裝所需的函式庫，需要輸入管理員密碼。</translation>
+    </message>
+    <message>
+        <source>Enable and Install</source>
+        <translation>啟用並安裝</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <source>The Canon printer was not added because the 32-bit (i386) support it needs was not enabled.</source>
+        <translation>未新增佳能印表機：所需的 32 位元（i386）支援沒有啟用。</translation>
+    </message>
+    <message>
+        <source>Could not enable 32-bit (i386) support.</source>
+        <translation>無法啟用 32 位元（i386）支援。</translation>
+    </message>
+    <message>
+        <source>Could not update the package lists. Please check the network connection and try again.</source>
+        <translation>無法更新套件清單，請檢查網路連線後重試。</translation>
+    </message>
+    <message>
+        <source>Could not install the 32-bit libraries needed by the Canon driver.</source>
+        <translation>無法安裝佳能驅動所需的 32 位元函式庫。</translation>
+    </message>
+    <message>
+        <source>Another program is using the package manager. Please try again in a few minutes.</source>
+        <translation>其他程式正在使用套件管理員，請幾分鐘後重試。</translation>
+    </message>
+</context>
+<context>
+    <name>CanonI386Prompt</name>
+    <message>
+        <source>The repair service is not available.</source>
+        <translation>修復服務不可用。</translation>
+    </message>
+    <message>
+        <source>The 32-bit support could not be set up.</source>
+        <translation>無法設定 32 位元支援。</translation>
+    </message>
+</context>
+<context>
+    <name>ModelFixMap</name>
+    <message>
+        <source>The Canon LBP2900 print service could not be repaired. Please try again.</source>
+        <translation>無法修復佳能 LBP2900 列印服務，請重試。</translation>
+    </message>
+</context>
 </TS>

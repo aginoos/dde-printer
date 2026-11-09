@@ -305,7 +305,6 @@ void DPrintersShowWindow::initUI()
     DFontSizeManager::instance()->bind(m_pShareCopyIpAddr, DFontSizeManager::T8, QFont::Light);
 
     m_pShareWidget = new QWidget();
-    m_pShareWidget->setVisible(true);
     m_pShareWidget->setContentsMargins(0, 0, 0, 0);
 
     m_pAdminTool = new AdvanceShareWidget();

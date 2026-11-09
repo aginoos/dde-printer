@@ -1,3 +1,9 @@
+dde-printer (1.0.20+agino6-1) unstable; urgency=medium
+
+  * Do not show the share widget as a window before it is in the layout: it was mapped as a short-lived top-level window while the main window was built, took the startup notification, and the main window opened on the primary screen instead of the screen the printer manager was launched from (agino D-258).
+
+ -- agino Team <admin@aginoos.com>  Mon, 09 Nov 2026 23:50:00 +0800
+
 dde-printer (1.0.20+agino5-1) unstable; urgency=medium
 
   * Drop the 201-page Uniontech FAQ PDF and the help-popup entry that opened it. agino excludes /usr/share/deepin-manual/* (no deepin-manual viewer), so the file was never installed and the entry did nothing.
